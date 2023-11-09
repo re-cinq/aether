@@ -40,16 +40,16 @@ var (
 
 func main() {
 	start := time.Now()
-	// Termination Handeling
+	// termination Handeling
 	termChan := make(chan os.Signal, 1)
 	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM)
 
 	klog.InitFlags(nil)
 	flag.Parse()
 
-	// String formatting to join the host and port
+	// string formatting to join the host and port
 	addr := fmt.Sprintf("%s:%s", *host, *port)
-	// Setup Server
+	// setup Server
 	srv := &http.Server{
 		Addr:         addr,
 		WriteTimeout: 15 * time.Second,
@@ -62,10 +62,10 @@ func main() {
 	prometheus.MustRegister(version.NewCollector("cloud_carbon_exporter"))
 	http.Handle(*metricsPath, promhttp.Handler())
 
-	//register health endpoint
+	// register health endpoint
 	http.HandleFunc("/healthz", healthProbe)
 
-	//run server
+	// run server
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			klog.Fatalf("%s", fmt.Sprintf("failed to bind on %s: %v", addr, err))
@@ -75,11 +75,9 @@ func main() {
 	klog.Infof("started in %v\n%v", time.Since(start), startUpLog)
 
 	<-termChan
-	// Any Code to Gracefully Shutdown should be done here
+	// any Code to Gracefully Shutdown should be done here
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer func() {
-		cancel()
-	}()
+	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		klog.Fatal("Graceful Shutdown Failed")
 	}
