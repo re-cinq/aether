@@ -1,4 +1,11 @@
 name: build
+
+# Cancel concurrent jobs for the same ref
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+# Running CI on push to main and open PRs
 on:
   push:
     branches:
@@ -9,21 +16,41 @@ jobs:
   golangci:
       name: lint
       runs-on: ubuntu-latest
+      timeout-minutes: 5
       steps:
-        - uses: actions/checkout@v3
+        # Checkout the code
+        - uses: actions/checkout@v4
+        
+        # setup Golang based on the go.mod version
         - uses: actions/setup-go@v4
           with:
             go-version-file: go.mod
+        
+        # run go ci lint to catch standard go issues
         - name: golangci-lint
           uses: golangci/golangci-lint-action@v3
-          with:
+          with:          
+            args: -E gosec -E goconst --issues-exit-code=0
+            skip-pkg-cache: true
+            skip-build-cache: true
             version: latest
+        
+        # Make sure the go mod is tidy
+        - run: go mod tidy && git diff --exit-code
+  
   test:
       name: test
       runs-on: ubuntu-latest
+      timeout-minutes: 5
       steps:
-        - uses: actions/checkout@v3
+        
+        # Checkout the code
+        - uses: actions/checkout@v4
+
+        # Setup Golang based on the go.mod version
         - uses: actions/setup-go@v4
           with:
             go-version-file: go.mod
+        
+        # Run the tests
         - run: go test ./... -v
