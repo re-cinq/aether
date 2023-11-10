@@ -7,6 +7,7 @@ jobs:
   golangci:
       name: lint
       runs-on: ubuntu-latest
+      timeout-minutes: 5
       steps:
         # Checkout the code
         - uses: actions/checkout@v4
@@ -31,6 +32,7 @@ jobs:
   test:
       name: test
       runs-on: ubuntu-latest
+      timeout-minutes: 5
       steps:
         
         # Checkout the code
