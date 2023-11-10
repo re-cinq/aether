@@ -1,5 +1,10 @@
 name: build
 
+# Cancel concurrent jobs for the same ref
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 # Running CI on push for all branches and PRs
 on: ["push", "pull_request"]
 
