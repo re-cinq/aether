@@ -197,3 +197,12 @@ func (r *Metric) SetEmissions(emissions ResourceEmissions) *Metric {
 	// Allows to use it as a builder
 	return r
 }
+
+// Set the labels for the resource
+func (r *Metric) SetLabels(labels Labels) *Metric {
+	// Assign the total
+	r.labels = labels
+
+	// Allows to use it as a builder
+	return r
+}
