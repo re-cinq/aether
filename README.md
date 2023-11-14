@@ -32,8 +32,6 @@ The name of the config file can be changed by setting the following environment 
 
 In the example above the new config file name will be: `carbon.yaml`
 
-
-
 ```YAML
 # Defines the address and port the carbon cloud api listens to
 api:
