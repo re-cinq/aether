@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,29 +8,25 @@ import (
 
 func TestMetricsParser(t *testing.T) {
 
-	testData := `{
-		"usage": 20.54,
-		"total": 4.0,
-		"unit": "core",
-		"service": "virtual machine",
-		"provider": "prometheus",
-		"emissions": {
-			"value": 1056.76,
-			"unit": "gCO2eqkWh"
-		}
+	// Create a valid resource
+	cpuResource := NewMetric("cpu")
+	assert.NotNil(t, cpuResource)
 
-	}`
+	cpuResource.SetUsagePercentage(20.54).SetTotal(4.0)
+	cpuResource.SetType(Cpu).SetResourceUnit(Core)
+	cpuResource.SetEmissions(NewResourceEmissions(1056.76, GCO2eqkWh))
 
-	var testResource Resource
-	err := json.Unmarshal([]byte(testData), &testResource)
-	assert.Nil(t, err)
+	assert.Equal(t, cpuResource.Usage(), Percentage(20.54))
+	assert.Equal(t, cpuResource.Total(), float64(4.0))
+	assert.Equal(t, cpuResource.Unit(), Core)
+	assert.Equal(t, cpuResource.Type(), Cpu)
+	assert.Equal(t, cpuResource.emissions.Value(), float64(1056.76))
+	assert.Equal(t, cpuResource.emissions.Unit(), GCO2eqkWh)
 
-	assert.Equal(t, testResource.Usage, Percentage(20.54))
-	assert.Equal(t, testResource.Total, float64(4.0))
-	assert.Equal(t, testResource.Unit, Core)
-	assert.Equal(t, testResource.Service, "virtual machine")
-	assert.Equal(t, testResource.Provider, Prometheus)
-	assert.Equal(t, testResource.Emissions.Value, float64(1056.76))
-	assert.Equal(t, testResource.Emissions.Emission, GCO2eqkWh)
+	metrics := Metrics{}
+	metrics.Upsert(*cpuResource)
+
+	existing := metrics[cpuResource.Name()]
+	assert.Equal(t, *cpuResource, existing)
 
 }
