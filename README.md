@@ -64,6 +64,10 @@ proxy:
 providers:
   # AWS Provider  
   aws:
+    # List of regions to read the cloud watch metrics for
+    regions:
+      - us-east-2
+      - us-west-1
     # If the credentials config is empty then, carbon cloud will try use the aws sdk default credentials chain:
     # 
     # 1. Environment variables.
