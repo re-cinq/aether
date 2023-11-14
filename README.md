@@ -32,6 +32,8 @@ The name of the config file can be changed by setting the following environment 
 
 In the example above the new config file name will be: `carbon.yaml`
 
+#### Example
+
 ```YAML
 # Defines the address and port the carbon cloud api listens to
 api:
@@ -66,20 +68,26 @@ providers:
     regions:
       - us-east-2
       - us-west-1
-    # If the credentials config is empty then, carbon cloud will try use the aws sdk default credentials chain:
+    # If the credentials config is empty then, carbon cloud will try use the aws sdk default 
+    # credentials chain:
     # 
     # 1. Environment variables.
     #    a. Static Credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN)
     #    b. Web Identity Token (AWS_WEB_IDENTITY_TOKEN_FILE)
     # 2. Shared configuration files.
-    #    a. SDK defaults to credentials file under .aws folder that is placed in the home folder on your computer.
-    #    b. SDK defaults to config file under .aws folder that is placed in the home folder on your computer.
-    # 3. If your application uses an ECS task definition or RunTask API operation, IAM role for tasks.
+    #    a. SDK defaults to credentials file under .aws folder that is placed in the home folder
+    #       on the computer.
+    #    b. SDK defaults to config file under .aws folder that is placed in the home folder 
+    #       on the computer.
+    # 3. If your application uses an ECS task definition or RunTask API operation, 
+    #    IAM role for tasks.
     # 4. If your application is running on an Amazon EC2 instance, IAM role for Amazon EC2.
 
-    # Otherwise you can specify one or more locations where to look for either the credentials or the config or both    
+    # Otherwise you can specify one or more locations where to look for either the credentials 
+    # or the config or both    
     credentials:
-      # Load the credentials for the specific profile, if not set it uses the [default] profile. Example:
+      # Load the credentials for the specific profile, if not set it uses the [default] profile. 
+      # Example:
       # [default]
       # aws_access_key_id = <YOUR_ACCESS_KEY_ID>
       # aws_secret_access_key = <YOUR_SECRET_ACCESS_KEY>      
@@ -89,7 +97,8 @@ providers:
         - 'full_credentials_file_path'
       
     config:
-      # Load the config for the specific profile, if not set it uses the [default] profile. Example:
+      # Load the config for the specific profile, if not set it uses the [default] profile.
+      # Example:
       # [default]
       # region = <REGION>
       profile: 'profile_name'
@@ -98,7 +107,8 @@ providers:
 
     # Allows to configure various TCP parameters for the connection to the AWS API
     transport:
-      # This setting represents the maximum amount of time to keep an idle network connection alive between HTTP requests.
+      # This setting represents the maximum amount of time to keep an idle network connection 
+      # alive between HTTP requests.
       # Set to 0 for no limit.
       # See https://golang.org/pkg/net/http/#Transport.IdleConnTimeout
       # Valid time units are: "ms", "s", "m"
@@ -106,8 +116,9 @@ providers:
       # Default is zero
       idleConnTimeout: 5s
 
-      # This setting represents the maximum number of idle (keep-alive) connections across all hosts. One use case for 
-      # increasing this value is when you are seeing many connections in a short period from the same clients
+      # This setting represents the maximum number of idle (keep-alive) connections across all hosts.
+      # One use case for increasing this value is when you are seeing many connections in a 
+      # short period from the same clients
       # 0 means no limit.
       # See https://golang.org/pkg/net/http/#Transport.MaxIdleConns
       # Default is zero
