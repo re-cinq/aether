@@ -112,43 +112,43 @@ providers:
       maxIdleConns: 0
 
       # This setting represents the maximum number of idle (keep-alive) connections
-	  # to keep per-host.
-	  # One use case for increasing this value is when you are seeing many connections
-	  # in a short period from the same clients
-	  #
-	  # Default is two idle connections per host.
-	  #
-	  # Set to 0 to use DefaultMaxIdleConnsPerHost (2).
-	  #
-	  # See https://golang.org/pkg/net/http/#Transport.MaxIdleConnsPerHost
+      # to keep per-host.
+      # One use case for increasing this value is when you are seeing many connections
+      # in a short period from the same clients
+      #
+      # Default is two idle connections per host.
+      #
+      # Set to 0 to use DefaultMaxIdleConnsPerHost (2).
+      #
+      # See https://golang.org/pkg/net/http/#Transport.MaxIdleConnsPerHost
       # Default is zero
       maxIdleConnsPerHost: 0
 
       # This setting represents the maximum amount of time to wait for a client to
-	  # read the response header.
-	  # If the client isn’t able to read the response’s header within this duration,
-	  # the request fails with a timeout error.
-	  # Be careful setting this value when using long-running Lambda functions,
-	  # as the operation does not return any response headers until the Lambda
-	  # function has finished or timed out.
-	  # However, you can still use this option with the ** InvokeAsync** API operation.
-	  #
-	  # Default is no timeout; wait forever.
-	  # 
-	  # See https://golang.org/pkg/net/http/#Transport.ResponseHeaderTimeout
+      # read the response header.
+      # If the client isn’t able to read the response’s header within this duration,
+      # the request fails with a timeout error.
+      # Be careful setting this value when using long-running Lambda functions,
+      # as the operation does not return any response headers until the Lambda
+      # function has finished or timed out.
+      # However, you can still use this option with the ** InvokeAsync** API operation.
+      #
+      # Default is no timeout; wait forever.
+      # 
+      # See https://golang.org/pkg/net/http/#Transport.ResponseHeaderTimeout
       # Valid time units are: "ms", "s", "m"
       # Default is zero
-	  responseHeaderTimeout: 10s
+      responseHeaderTimeout: 10s
 
       # This setting represents the maximum amount of time waiting for a
-	  # TLS handshake to be completed.
-	  #
-	  # Zero means no timeout.
-	  #
-	  # See https://golang.org/pkg/net/http/#Transport.TLSHandshakeTimeout
+      # TLS handshake to be completed.
+      #
+      # Zero means no timeout.
+      #
+      # See https://golang.org/pkg/net/http/#Transport.TLSHandshakeTimeout
       # Valid time units are: "ms", "s", "m"
       # Default is 10 seconds.
-	  tlsHandshakeTimeout: 10s
+      tlsHandshakeTimeout: 10s
 
 
 ```
