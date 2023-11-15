@@ -39,6 +39,7 @@ linters:
     # - depguard
     - dupl
     - errcheck
+    - gosec
     - goconst
     - gocritic
     - gocyclo

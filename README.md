@@ -68,6 +68,15 @@ providers:
     regions:
       - us-east-2
       - us-west-1
+
+    # A namespace is a container for CloudWatch metrics. 
+    # Metrics in different namespaces are isolated from each other, 
+    # so that metrics from different applications are not mistakenly aggregated into the same statistics.
+    # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/aws-services-cloudwatch-metrics.html
+    namespaces:
+      - 'AWS/EC2' # EC2
+      - 'ContainerInsights' # EKS
+
     # If the credentials config is empty then, carbon cloud will try use the aws sdk default 
     # credentials chain:
     # 

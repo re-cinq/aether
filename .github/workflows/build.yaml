@@ -30,7 +30,7 @@ jobs:
         - name: golangci-lint
           uses: golangci/golangci-lint-action@v3
           with:          
-            args: -E gosec -E goconst --issues-exit-code=0
+            args: --issues-exit-code=0
             skip-pkg-cache: true
             skip-build-cache: true
             version: latest
