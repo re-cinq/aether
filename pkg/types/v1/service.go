@@ -118,7 +118,7 @@ func NewService(name string, provider Provider) *Service {
 func (s *Service) UpsertMetric(resource *Metric) *Service {
 
 	// Upsert it
-	s.metrics.Upsert(*resource)
+	s.metrics.Upsert(resource)
 
 	return s
 }

@@ -24,7 +24,7 @@ func TestMetricsParser(t *testing.T) {
 	assert.Equal(t, cpuResource.emissions.Unit(), GCO2eqkWh)
 
 	metrics := Metrics{}
-	metrics.Upsert(*cpuResource)
+	metrics.Upsert(cpuResource)
 
 	existing := metrics[cpuResource.Name()]
 	assert.Equal(t, *cpuResource, existing)
