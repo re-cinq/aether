@@ -43,7 +43,7 @@ func (e *cloudWatchClient) getEc2Metrics(region awsRegion, instanceId string) []
 
 	// Get the cpu consumption
 	if cpuMetric := e.getEc2Cpu(region, instanceId); cpuMetric != nil {
-		serviceMetric.Metrics().Upsert(*cpuMetric)
+		serviceMetric.Metrics().Upsert(cpuMetric)
 		serviceMetrics = append(serviceMetrics, serviceMetric.Build())
 	}
 
