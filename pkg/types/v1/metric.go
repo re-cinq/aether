@@ -121,7 +121,6 @@ func (r *Metric) String() string {
 // - Storage
 // - Network
 func (r *Metric) SetType(resourceType ResourceType) *Metric {
-
 	// Set the type
 	r.resourceType = resourceType
 
@@ -132,7 +131,6 @@ func (r *Metric) SetType(resourceType ResourceType) *Metric {
 // Examples:
 // - 50.0 (indicates a 50% usage)
 func (r *Metric) SetUsagePercentage(usage float64) *Metric {
-
 	// Make sure we are not setting the usage to a negative value
 	if usage < 0 {
 		usage = 0
@@ -156,7 +154,6 @@ func (r *Metric) SetUsagePercentage(usage float64) *Metric {
 // - total amount of core of a VM
 // - disk size
 func (r *Metric) SetTotal(total float64) *Metric {
-
 	// No reason to have a negative total
 	if total < 0 {
 		total = 0
@@ -175,7 +172,6 @@ func (r *Metric) SetTotal(total float64) *Metric {
 // - Gb: in case of a Disk
 // - Gb: in case of Ram
 func (r *Metric) SetResourceUnit(unit ResourceUnit) *Metric {
-
 	// Assign the resource unit
 	r.unit = unit
 
@@ -185,7 +181,6 @@ func (r *Metric) SetResourceUnit(unit ResourceUnit) *Metric {
 
 // Automatically update the last updated time to now
 func (r *Metric) SetUpdatedAt() *Metric {
-
 	// Assign the updated at
 	r.updatedAt = time.Now().UTC()
 
@@ -195,7 +190,6 @@ func (r *Metric) SetUpdatedAt() *Metric {
 
 // Set the emissions for the resource
 func (r *Metric) SetEmissions(emissions ResourceEmissions) *Metric {
-
 	// Assign the total
 	r.emissions = emissions
 

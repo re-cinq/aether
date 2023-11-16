@@ -8,13 +8,11 @@ type Metrics map[string]Metric
 
 // Helper method for adding a specific metric
 func (m Metrics) Upsert(metric *Metric) {
-
-	// Make sure the map is initialised
+	// Make sure the map is initialized
 	if m == nil {
 		klog.Fatal("metrics map is nil")
 	}
 
 	// Assign the resource
 	m[metric.name] = *metric
-
 }
