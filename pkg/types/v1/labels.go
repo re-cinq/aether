@@ -7,8 +7,7 @@ type Labels map[string]string
 
 // Helper method for adding a label
 func (labels Labels) Add(key, value string) {
-
-	// Make sure the map is initialised
+	// Make sure the map is initialized
 	if labels == nil {
 		klog.Fatal("labels map is nil")
 	}
@@ -20,8 +19,7 @@ func (labels Labels) Add(key, value string) {
 
 // Helper method for getting a specific label
 func (labels Labels) Get(key string) (string, bool) {
-
-	// Make sure the map is initialised
+	// Make sure the map is initialized
 	if labels == nil {
 		return "", false
 	}
@@ -35,8 +33,7 @@ func (labels Labels) Get(key string) (string, bool) {
 
 // Helper method for getting a specific label
 func (labels Labels) Exists(key string) bool {
-
-	// Make sure the map is initialised
+	// Make sure the map is initialized
 	if labels == nil {
 		return false
 	}
@@ -50,8 +47,7 @@ func (labels Labels) Exists(key string) bool {
 
 // Helper method for deleting a specific label
 func (labels Labels) Delete(key string) {
-
-	// Make sure the map is initialised
+	// Make sure the map is initialized
 	if labels == nil {
 		return
 	}
