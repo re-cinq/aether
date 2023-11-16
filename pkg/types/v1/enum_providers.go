@@ -33,7 +33,7 @@ const (
 	prometheusString = "prometheus"
 )
 
-// Providers: Lookup map for listing all the supported providers
+// Providers Lookup map for listing all the supported providers
 // as well as deserializing them
 var Providers = map[string]Provider{
 	awsString:        Aws,
