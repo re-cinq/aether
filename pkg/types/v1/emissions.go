@@ -21,17 +21,14 @@ func NewResourceEmissions(value float64, unit EmissionUnit) ResourceEmissions {
 // Currently we support only Grams of carbon per kilowatt hour, however in the future
 // we might allow different scales, like KiloGrams of carbon per kilowatt hour
 func (re *ResourceEmissions) SetUnit(unit EmissionUnit) *ResourceEmissions {
-
 	// Set the unit
 	re.unit = unit
 
 	return re
-
 }
 
 // Set the emission value based on the Unit
 func (re *ResourceEmissions) SetValue(value float64) *ResourceEmissions {
-
 	// Negative emissions are not allowed
 	if value < 0 {
 		value = 0
@@ -41,7 +38,6 @@ func (re *ResourceEmissions) SetValue(value float64) *ResourceEmissions {
 	re.value = value
 
 	return re
-
 }
 
 // Return the emission value
