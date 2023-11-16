@@ -14,7 +14,6 @@ func (labels Labels) Add(key, value string) {
 
 	// Assign the label
 	labels[key] = value
-
 }
 
 // Helper method for getting a specific label

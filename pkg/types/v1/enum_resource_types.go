@@ -14,7 +14,7 @@ var ErrParsingResourceType = errors.New("unsupported ResourceType")
 // ResourceTypes: Lookup map for listing all the supported resources
 // as well as deserializing them
 var ResourceTypes = map[string]ResourceType{
-	cpuString:     Cpu,
+	cpuString:     CPU,
 	memoryString:  Memory,
 	storageString: Storage,
 	networkString: Network,
@@ -23,7 +23,7 @@ var ResourceTypes = map[string]ResourceType{
 const (
 
 	// CPU resource
-	Cpu ResourceType = cpuString
+	CPU ResourceType = cpuString
 
 	// Memory resource
 	Memory ResourceType = memoryString
