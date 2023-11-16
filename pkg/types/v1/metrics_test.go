@@ -7,7 +7,6 @@ import (
 )
 
 func TestMetricsParser(t *testing.T) {
-
 	// Create a valid resource
 	cpuResource := NewMetric("cpu")
 	assert.NotNil(t, cpuResource)
@@ -28,5 +27,4 @@ func TestMetricsParser(t *testing.T) {
 
 	existing := metrics[cpuResource.Name()]
 	assert.Equal(t, *cpuResource, existing)
-
 }

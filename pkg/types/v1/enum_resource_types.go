@@ -5,10 +5,10 @@ import (
 	"errors"
 )
 
-// The resource type that we are collecting data for
+// ResourceType The resource type that we are collecting data for
 type ResourceType string
 
-// Error parsing the ResourceType
+// ErrParsingResourceType parsing the ResourceType
 var ErrParsingResourceType = errors.New("unsupported ResourceType")
 
 // ResourceTypes: Lookup map for listing all the supported resources

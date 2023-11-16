@@ -12,7 +12,6 @@ type testEmissionStruct struct {
 }
 
 func TestEmissionUnitParser(t *testing.T) {
-
 	testData := `{
 		"emissionUnit": "gCO2eqkWh"
 	}`
@@ -22,5 +21,4 @@ func TestEmissionUnitParser(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, testEmissionUnit.TestUnit, GCO2eqkWh)
-
 }

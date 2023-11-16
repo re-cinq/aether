@@ -12,7 +12,6 @@ type testResourceUnitStruct struct {
 }
 
 func TestResourceUnitParser(t *testing.T) {
-
 	testData := `{
 		"unit": "core"
 	}`
@@ -22,5 +21,4 @@ func TestResourceUnitParser(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, testResourceUnit.TestResourceUnit, Core)
-
 }

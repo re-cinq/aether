@@ -7,7 +7,6 @@ import (
 )
 
 func TestResourceFunctionalities(t *testing.T) {
-
 	// Create a valid resource
 	r := NewMetric("cpu")
 	assert.NotNil(t, r)

@@ -8,7 +8,7 @@ import (
 // Provider where the resource consumption data is collected from
 type Provider string
 
-// Error parsing the Provider
+// ErrParsingProvider Error parsing the Provider
 var ErrParsingProvider = errors.New("unsupported Provider")
 
 // Provider constants

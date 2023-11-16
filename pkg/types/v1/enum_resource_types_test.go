@@ -12,7 +12,6 @@ type testResourceTypeStruct struct {
 }
 
 func TestResourceTypeParser(t *testing.T) {
-
 	testData := `{
 		"type": "cpu"
 	}`
@@ -22,5 +21,4 @@ func TestResourceTypeParser(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, testResource.TestResource, CPU)
-
 }

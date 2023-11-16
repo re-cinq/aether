@@ -5,10 +5,10 @@ import (
 	"errors"
 )
 
-// The unit of the resource type that we are collecting data for
+// ResourceUnit The unit of the resource type that we are collecting data for
 type ResourceUnit string
 
-// Error parsing the ResourceUnits
+// ErrParsingResourceUnits Error parsing the ResourceUnits
 var ErrParsingResourceUnits = errors.New("unsupported ResourceUnits")
 
 // ResourceUnits: Lookup map for listing all the supported resource units

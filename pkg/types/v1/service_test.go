@@ -7,13 +7,12 @@ import (
 )
 
 func TestServiceOperations(t *testing.T) {
-
 	// Make sure we get a nil back in case the service name is empty
 	failedService := NewService("", Prometheus)
 	assert.Nil(t, failedService)
 
 	// Mocking the service id
-	serviceId := "1234"
+	serviceID := "1234"
 
 	// Mocking the metric
 	r := NewMetric("cpu")
@@ -25,10 +24,10 @@ func TestServiceOperations(t *testing.T) {
 	assert.Equal(t, Percentage(100), r.Usage())
 
 	// Create a new service
-	service := NewService(serviceId, Prometheus).SetRegion("europe-west4-a").SetKind("n2-standard-8")
+	service := NewService(serviceID, Prometheus).SetRegion("europe-west4-a").SetKind("n2-standard-8")
 
 	// Make sure the region is assigned correctly
-	assert.Equal(t, serviceId, service.Name())
+	assert.Equal(t, serviceID, service.Name())
 	assert.Equal(t, Prometheus, service.Provider())
 	assert.Equal(t, "europe-west4-a", service.Region())
 	assert.Equal(t, "n2-standard-8", service.Kind())
@@ -64,5 +63,4 @@ func TestServiceOperations(t *testing.T) {
 
 	// Make sure the two are actually different
 	assert.NotEqual(t, updatedService, currentService)
-
 }
