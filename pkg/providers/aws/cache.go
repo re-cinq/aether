@@ -29,16 +29,20 @@ type awsResource struct {
 	// The service the resource belongs to
 	service awsService
 
+	// The instance kind for example
+	kind string
+
 	// When was the last time it was updated
 	lastUpdated time.Time
 }
 
 // / Helper which creates a new awsResource
-func newAWSResource(region awsRegion, service awsService, id awsResourceId) *awsResource {
+func newAWSResource(region awsRegion, service awsService, id awsResourceId, kind, lifecycle string) *awsResource {
 	return &awsResource{
 		id:          id,
 		service:     service,
 		region:      region,
+		kind:        kind,
 		lastUpdated: time.Now().UTC(),
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"net"
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/re-cinq/cloud-carbon/pkg/config"
@@ -145,12 +147,35 @@ func buildAWSConfig(currentConfig config.Provider) (aws.Config, error) {
 		d.KeepAlive = -1
 		d.Timeout = time.Millisecond * 500
 	})
-	// .WithTransportOptions(func(tr *http.Transport) {
-	// 	proxyURL, err := url.Parse("PROXY_URL")
-	// 	if err != nil {
-	// 		log.Fatal(err)
+
+	// Override the transport settings
+	var proxyURL *url.URL
+	if currentConfig.Transport.Proxy.HttpProxy != "" {
+		proxyURL, err = url.Parse(currentConfig.Transport.Proxy.HttpProxy)
+		if err != nil {
+			klog.Fatalf("failed to parse config 'httpProxy' url")
+		}
+	}
+
+	if currentConfig.Transport.Proxy.HttpsProxy != "" {
+		proxyURL, err = url.Parse(currentConfig.Transport.Proxy.HttpsProxy)
+		if err != nil {
+			klog.Fatalf("failed to parse config 'httpsProxy' url")
+		}
+	}
+
+	var customTransport *http.Transport
+	if proxyURL != nil {
+		customTransport.Proxy = http.ProxyURL(proxyURL)
+	}
+
+	// TODO: check all the additional transport settings and if different from the default override them
+
+	// httpClient.WithTransportOptions(func(t *http.Transport) {
+	// 	if customTransport.Proxy != nil {
+	// 		t.Proxy = customTransport.Proxy
 	// 	}
-	// 	tr.Proxy = http.ProxyURL(proxyURL)
+
 	// })
 
 	loadExternalConfigs = append(loadExternalConfigs, awsConfig.WithHTTPClient(httpClient))

@@ -76,6 +76,23 @@ func (s *Service) Metric(metricName string) (Metric, bool) {
 
 }
 
+// Makes a copy of the current service
+// This allows to reuse the service and just update its values and call build
+// in case when a provider returns an array of resource metrics.
+// See here as an example: pkg/providers/aws/cloudwatch.go (func getEc2Metrics())
+func (s *Service) Build() Service {
+
+	return Service{
+		provider: s.provider,
+		name:     s.name,
+		region:   s.region,
+		kind:     s.kind,
+		metrics:  s.metrics,
+		labels:   s.labels,
+	}
+
+}
+
 // ---------------------------------------------------------------------
 
 // Create a new service.

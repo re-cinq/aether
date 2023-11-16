@@ -13,6 +13,7 @@ import (
 // Helper service to get EC2 data
 type ec2Client struct {
 	client *ec2.Client
+	cache  *awsCache
 }
 
 // New instance
@@ -32,6 +33,7 @@ func NewEc2Client(cfg aws.Config) *ec2Client {
 	// Return the ec2 service
 	return &ec2Client{
 		client: client,
+		cache:  newAWSCache(),
 	}
 
 }
@@ -68,8 +70,13 @@ func (e *ec2Client) list(region awsRegion) {
 
 		for _, reservation := range output.Reservations {
 			for _, instance := range reservation.Instances {
+				klog.Infof("TYPE: %s", instance.InstanceType)
+				klog.Infof("LIFE: %+v", instance.InstanceLifecycle)
 				klog.Infof("ID: %s", *instance.InstanceId)
 				klog.Infof("NAME: %s", getInstanceTag(instance.Tags, "Name"))
+
+				e.cache.Add(newAWSResource(region, "AWS/EC2", *instance.InstanceId,
+					string(instance.InstanceType), string(instance.InstanceLifecycle)))
 			}
 		}
 	}

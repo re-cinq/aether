@@ -51,4 +51,18 @@ func TestServiceOperations(t *testing.T) {
 	// Make sure the resource is the same
 	assert.Equal(t, *r, existingResource)
 
+	// Test the Build functionality
+
+	// Build the current view of the service
+	currentService := service.Build()
+
+	// Change the region
+	service.SetRegion("new-region")
+
+	// Build the updated view of the service
+	updatedService := service.Build()
+
+	// Make sure the two are actually different
+	assert.NotEqual(t, updatedService, currentService)
+
 }
