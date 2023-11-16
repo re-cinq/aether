@@ -45,7 +45,8 @@ func NewMetric(name string) *Metric {
 
 	// Build the service
 	return &Metric{
-		name: name,
+		name:      name,
+		updatedAt: time.Now().UTC(),
 	}
 }
 
