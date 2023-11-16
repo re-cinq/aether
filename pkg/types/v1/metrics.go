@@ -17,5 +17,4 @@ func (m Metrics) Upsert(metric *Metric) {
 	if metric != nil {
 		m[metric.name] = *metric
 	}
-
 }
