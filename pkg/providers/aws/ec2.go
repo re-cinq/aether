@@ -38,8 +38,8 @@ func NewEc2Client(cfg aws.Config) *ec2Client {
 
 }
 
-// List all the instances for a specific region
-func (e *ec2Client) list(region awsRegion) {
+// refresh stores all the instances for a specific region in cache
+func (e *ec2Client) refresh(region awsRegion) {
 
 	// Override the region
 	withRegion := func(o *ec2.Options) {
@@ -70,13 +70,15 @@ func (e *ec2Client) list(region awsRegion) {
 
 		for _, reservation := range output.Reservations {
 			for _, instance := range reservation.Instances {
-				klog.Infof("TYPE: %s", instance.InstanceType)
-				klog.Infof("LIFE: %+v", instance.InstanceLifecycle)
-				klog.Infof("ID: %s", *instance.InstanceId)
-				klog.Infof("NAME: %s", getInstanceTag(instance.Tags, "Name"))
 
-				e.cache.Add(newAWSResource(region, "AWS/EC2", *instance.InstanceId,
-					string(instance.InstanceType), string(instance.InstanceLifecycle)))
+				e.cache.Add(newAWSResource(
+					region,
+					ec2Service,
+					*instance.InstanceId,
+					string(instance.InstanceType),
+					string(instance.InstanceLifecycle),
+					getInstanceTag(instance.Tags, "Name"),
+				))
 			}
 		}
 	}
