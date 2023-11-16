@@ -11,7 +11,7 @@ type EmissionUnit string
 // ErrParsingEmissionUnit Error parsing the EmissionUnit
 var ErrParsingEmissionUnit = errors.New("unsupported EmissionUnit")
 
-// EmissionUnits: Lookup map for listing all the supported emissions
+// EmissionUnits Lookup map for listing all the supported emissions
 // as well as deserializing them
 var EmissionUnits = map[string]EmissionUnit{
 	GCO2eqkWhString: GCO2eqkWhString,

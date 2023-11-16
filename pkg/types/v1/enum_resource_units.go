@@ -11,7 +11,7 @@ type ResourceUnit string
 // ErrParsingResourceUnits Error parsing the ResourceUnits
 var ErrParsingResourceUnits = errors.New("unsupported ResourceUnits")
 
-// ResourceUnits: Lookup map for listing all the supported resource units
+// ResourceUnits Lookup map for listing all the supported resource units
 // as well as deserializing them
 var ResourceUnits = map[string]ResourceUnit{
 	coreString: Core,
