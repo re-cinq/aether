@@ -7,7 +7,6 @@ import (
 )
 
 func TestLabelsOperations(t *testing.T) {
-
 	key := "name"
 	value := "test"
 
@@ -30,5 +29,4 @@ func TestLabelsOperations(t *testing.T) {
 
 	// Make sure the entry was deleted
 	assert.False(t, labels.Exists(key))
-
 }

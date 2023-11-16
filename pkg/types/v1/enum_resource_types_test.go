@@ -12,7 +12,6 @@ type testResourceTypeStruct struct {
 }
 
 func TestResourceTypeParser(t *testing.T) {
-
 	testData := `{
 		"type": "cpu"
 	}`
@@ -21,6 +20,5 @@ func TestResourceTypeParser(t *testing.T) {
 	err := json.Unmarshal([]byte(testData), &testResource)
 	assert.Nil(t, err)
 
-	assert.Equal(t, testResource.TestResource, Cpu)
-
+	assert.Equal(t, testResource.TestResource, CPU)
 }

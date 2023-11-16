@@ -12,7 +12,6 @@ type testProviderStruct struct {
 }
 
 func TestProviderParser(t *testing.T) {
-
 	testData := `{
 		"provider": "prometheus"
 	}`
@@ -22,5 +21,4 @@ func TestProviderParser(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, testProvider.TestProvider, Prometheus)
-
 }

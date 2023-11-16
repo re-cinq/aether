@@ -5,10 +5,10 @@ import "k8s.io/klog/v2"
 // The service for which we are collecting the metrics
 // The fields are not exported for several reasons:
 //   - We will expose the information of this struct via prometheus endpoint
-//     so we have no reasons so serialise this.
+//     so we have no reasons so serialize this.
 //   - Some of the fields in the struct need to be carefully validated, so we cannot allow
 //     the structs fields to be passed manually
-//   - If there is the need for serialising this then we can have a model dedicated for the View
+//   - If there is the need for serializing this then we can have a model dedicated for the View
 //     functionality
 type Service struct {
 
@@ -67,13 +67,11 @@ func (s *Service) Labels() Labels {
 
 // Get the specific metric
 func (s *Service) Metric(metricName string) (Metric, bool) {
-
 	// Get it
 	resource, exists := s.metrics[metricName]
 
 	// Return it
 	return resource, exists
-
 }
 
 // Makes a copy of the current service
@@ -81,7 +79,7 @@ func (s *Service) Metric(metricName string) (Metric, bool) {
 // in case when a provider returns an array of resource metrics.
 // See here as an example: pkg/providers/aws/cloudwatch.go (func getEc2Metrics())
 func (s *Service) Build() Service {
-
+	// Buils a copy of the service
 	return Service{
 		provider: s.provider,
 		name:     s.name,
@@ -90,7 +88,6 @@ func (s *Service) Build() Service {
 		metrics:  s.metrics,
 		labels:   s.labels,
 	}
-
 }
 
 // ---------------------------------------------------------------------
@@ -98,7 +95,6 @@ func (s *Service) Build() Service {
 // Create a new service.
 // We need both the name and the provider
 func NewService(name string, provider Provider) *Service {
-
 	// Make sure the service name is set
 	if name == "" {
 		klog.Error("failed to create service, got an empty name")
@@ -116,9 +112,8 @@ func NewService(name string, provider Provider) *Service {
 
 // Upsert the metric for the resource
 func (s *Service) UpsertMetric(resource *Metric) *Service {
-
 	// Upsert it
-	s.metrics.Upsert(*resource)
+	s.metrics.Upsert(resource)
 
 	return s
 }
@@ -129,7 +124,6 @@ func (s *Service) UpsertMetric(resource *Metric) *Service {
 // - us-east-2 (AWS)
 // - eu-east-rack-1 (Baremetal)
 func (s *Service) SetRegion(region string) *Service {
-
 	// Assign the region
 	s.region = region
 
@@ -142,7 +136,6 @@ func (s *Service) SetRegion(region string) *Service {
 // - n2-standard-8 (GCP)
 // - m6.2xlarge (AWS)
 func (s *Service) SetKind(kind string) *Service {
-
 	// Assign the region
 	s.kind = kind
 
@@ -152,7 +145,6 @@ func (s *Service) SetKind(kind string) *Service {
 
 // Insert a label to the service
 func (s *Service) AddLabel(key, value string) *Service {
-
 	// Insert the label
 	s.labels.Add(key, value)
 

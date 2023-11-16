@@ -5,13 +5,13 @@ import (
 	"errors"
 )
 
-// Defines the unit of emission of CO2 equivalent
+// EmissionUnits Defines the unit of emission of CO2 equivalent
 type EmissionUnit string
 
-// Error parsing the Provider
+// ErrParsingEmissionUnit Error parsing the EmissionUnit
 var ErrParsingEmissionUnit = errors.New("unsupported EmissionUnit")
 
-// Providers: Lookup map for listing all the supported emissions
+// EmissionUnits Lookup map for listing all the supported emissions
 // as well as deserializing them
 var EmissionUnits = map[string]EmissionUnit{
 	GCO2eqkWhString: GCO2eqkWhString,
