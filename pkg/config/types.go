@@ -37,7 +37,7 @@ type Provider struct {
 	// For example, Amazon EC2 uses the AWS/EC2 namespace.
 	// For the list of AWS namespaces, see AWS services that publish CloudWatch metrics.
 	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/aws-services-cloudwatch-metrics.html
-	Namespaces []string `mapstructure:"regions"`
+	Namespaces []string `mapstructure:"namespaces"`
 
 	// The location from where to load the credentials
 	Credentials ProviderConfig `mapstructure:"credentials"`

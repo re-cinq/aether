@@ -18,15 +18,15 @@ func TestCloudWatchMetrics(t *testing.T) {
 
 	// Init the ec2 client
 	ec2Client := NewEc2Client(cfg)
-	ec2Client.refresh(region)
 	assert.NotNil(t, ec2Client)
+	ec2Client.Refresh(region)
 
 	// Init the cloudwatch client
 	client := NewCloudWatchClient(cfg)
 	assert.NotNil(t, client)
 
-	client.getEc2Metrics(region, ec2Client.cache)
+	client.GetEc2Metrics(region, ec2Client.cache)
 
-	// assert.True(t, false)
+	assert.True(t, false)
 
 }

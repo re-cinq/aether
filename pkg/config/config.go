@@ -87,10 +87,10 @@ func parseApplicationConfig() *ApplicationConfig {
 	var config ApplicationConfig
 
 	// Override the config file via the environment variables
-	for _, k := range viper.AllKeys() {
-		v := viper.GetString(k)
-		viper.Set(k, os.ExpandEnv(v))
-	}
+	// for _, k := range viper.AllKeys() {
+	// 	v := viper.GetString(k)
+	// 	viper.Set(k, os.ExpandEnv(v))
+	// }
 
 	// Parse the config file
 	if err := viper.Unmarshal(&config); err != nil {

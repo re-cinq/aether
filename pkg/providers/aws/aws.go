@@ -101,6 +101,10 @@ func NewAWSClient() (*AWSClient, error) {
 	}, nil
 }
 
+func (client *AWSClient) Config() aws.Config {
+	return client.cfg
+}
+
 // Helper function to builde the AWS config
 func buildAWSConfig(currentConfig config.Provider) (aws.Config, error) {
 

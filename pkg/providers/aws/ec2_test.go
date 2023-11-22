@@ -18,7 +18,7 @@ func TestEc2InstanceListing(t *testing.T) {
 	ec2Client := NewEc2Client(cfg)
 	assert.NotNil(t, ec2Client)
 
-	ec2Client.refresh("eu-north-1")
+	ec2Client.Refresh("eu-north-1")
 
 	// assert.True(t, false)
 

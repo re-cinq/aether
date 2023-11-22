@@ -32,6 +32,9 @@ type awsResource struct {
 	// For example spot, reserved
 	lifecycle string
 
+	// Amount of cores
+	coreCount int
+
 	// The instance kind for example
 	kind string
 
@@ -43,14 +46,16 @@ type awsResource struct {
 }
 
 // / Helper which creates a new awsResource
-func newAWSResource(region awsRegion, service awsService, id awsResourceId, kind, lifecycle, name string) *awsResource {
+func newAWSResource(region awsRegion, service awsService, id awsResourceId,
+	kind, lifecycle, name string, coreCount int) *awsResource {
 	return &awsResource{
 		id:          id,
 		service:     service,
 		region:      region,
 		lifecycle:   lifecycle,
-		name:        name,
+		coreCount:   coreCount,
 		kind:        kind,
+		name:        name,
 		lastUpdated: time.Now().UTC(),
 	}
 }

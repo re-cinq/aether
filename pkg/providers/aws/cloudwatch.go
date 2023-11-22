@@ -38,7 +38,7 @@ func NewCloudWatchClient(cfg aws.Config) *cloudWatchClient {
 }
 
 // Get the resource consumption of an ec2 instance
-func (e *cloudWatchClient) getEc2Metrics(region awsRegion, cache *awsCache) map[string]v1.Service {
+func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) map[string]v1.Service {
 
 	serviceMetrics := make(map[string]v1.Service)
 
@@ -75,19 +75,36 @@ func (e *cloudWatchClient) getEc2Metrics(region awsRegion, cache *awsCache) map[
 			}
 
 			// Build the resource
-			cpu := v1.NewMetric(v1.CPU.String()).SetResourceUnit(cpuMetric.unit)
+			cpu := v1.NewMetric(v1.CPU.String()).SetResourceUnit(cpuMetric.unit).SetTotal(float64(instanceMetadata.coreCount))
 			cpu.SetUsagePercentage(cpuMetric.value).SetType(cpuMetric.kind)
+			cpu.SetEmissions(e.emissions(cpuMetric.value))
 
 			// Update the CPU information now
 			instanceService.Metrics().Upsert(cpu)
 
-			klog.Infof("Collected metric: %s %s | %s", ec2Service, instanceService.Name(), cpu)
+			klog.Infof("Collected metric: %s %s %s %s | %s", ec2Service, instanceService.Region(), instanceService.Name(), instanceService.Kind(), cpu)
 
 		}
 	}
 
 	// Return the collected metrics
 	return serviceMetrics
+
+}
+
+func (e *cloudWatchClient) emissions(cpuUsage float64) v1.ResourceEmissions {
+
+	// 0.0000212 kg/CPU-hour
+	cpuEmission := (0.0212 / 60.0) * cpuUsage
+
+	// 0.0009696kg/instance-hour
+	embodied := 0.9696 / 60
+
+	emissionsKgPerMinute := embodied + cpuEmission
+
+	windowedEmissions := (emissionsKgPerMinute * 5)
+
+	return v1.NewResourceEmissions(windowedEmissions, v1.GCO2eqkWh)
 
 }
 

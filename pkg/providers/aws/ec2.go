@@ -38,8 +38,12 @@ func NewEc2Client(cfg aws.Config) *ec2Client {
 
 }
 
+func (e *ec2Client) Cache() *awsCache {
+	return e.cache
+}
+
 // refresh stores all the instances for a specific region in cache
-func (e *ec2Client) refresh(region awsRegion) {
+func (e *ec2Client) Refresh(region awsRegion) {
 
 	// Override the region
 	withRegion := func(o *ec2.Options) {
@@ -78,6 +82,7 @@ func (e *ec2Client) refresh(region awsRegion) {
 					string(instance.InstanceType),
 					string(instance.InstanceLifecycle),
 					getInstanceTag(instance.Tags, "Name"),
+					int(*instance.CpuOptions.CoreCount),
 				))
 			}
 		}

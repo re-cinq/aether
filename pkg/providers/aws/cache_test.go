@@ -12,7 +12,7 @@ func TestAwsCache(t *testing.T) {
 	service := "my-service"
 	id := "my-id"
 
-	resource := newAWSResource(region, service, id, "t2.micro", "spot", "test-instance")
+	resource := newAWSResource(region, service, id, "t2.micro", "spot", "test-instance", 2)
 	assert.Equal(t, region, resource.region)
 	assert.Equal(t, service, resource.service)
 	assert.Equal(t, id, resource.id)
