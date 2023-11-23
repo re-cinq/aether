@@ -189,6 +189,7 @@ func (g *GCP) instanceMetrics(
 		totalCores := resp.GetLabelValues()[5].GetStringValue()
 
 		m := v1.NewMetric("cpu")
+		m.SetResourceUnit(v1.Core)
 		m.SetType(v1.CPU).SetUsagePercentage(resp.GetPointData()[0].GetValues()[0].GetDoubleValue() * 100)
 
 		f, err := strconv.ParseFloat(totalCores, 64)
