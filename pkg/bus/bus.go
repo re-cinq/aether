@@ -208,14 +208,10 @@ func (bus *EventBus) startWorker(id uint32) {
 				// Send the signal back that we are done here
 				workerChan.closing <- true
 
-				klog.Infof("event bus worker %d shutdown successfully", id)
-
 				// Exit the for loop
 				return
 			}
 		}
 	}()
-
-	klog.Infof("event bus worker %d started", id)
 
 }

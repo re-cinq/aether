@@ -11,8 +11,6 @@ type ApplicationConfig struct {
 	APIConfig APIConfig                `mapstructure:"api"`
 	Proxy     ProxyConfig              `mapstructure:"proxy"`
 	Providers map[v1.Provider]Provider `mapstructure:"providers"`
-	// ServiceConfig ServiceConfig   `mapstructure:"service"`
-	// DBConfig      DBConfig        `mapstructure:"pg"`
 }
 
 // Defines the configuration for the API
@@ -29,7 +27,19 @@ type APIConfig struct {
 
 // Defines the general configuration for a provider
 type Provider struct {
-	// The regions we should scrape the data for
+
+	// A provider can have different accounts and scraping credentials and settings
+	Accounts []Account `mapstructure:"accounts"`
+
+	// The SDK Http Client transport configuration for the whole provider
+	Transport TransportConfig `mapstructure:"transport"`
+}
+
+type Account struct {
+	// How often we should scrape the data
+	Interval time.Duration `mapstructure:"scrapingInterval"`
+
+	// AWS: The regions we should scrape the data for
 	Regions []string `mapstructure:"regions"`
 
 	// AWS Specific:
@@ -42,14 +52,14 @@ type Provider struct {
 	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/aws-services-cloudwatch-metrics.html
 	Namespaces []string `mapstructure:"namespaces"`
 
+	// GCP: The project
+	Project string `mapstructure:"project"`
+
 	// The location from where to load the credentials
 	Credentials ProviderConfig `mapstructure:"credentials"`
 
 	// The location from where to load the additional configuration
 	Config ProviderConfig `mapstructure:"config"`
-
-	// The SDK Http Client transport configuration
-	Transport TransportConfig `mapstructure:"transport"`
 }
 
 type ProviderConfig struct {

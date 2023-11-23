@@ -3,6 +3,7 @@ package scheduler
 import (
 	"github.com/re-cinq/cloud-carbon/pkg/bus"
 	amazon "github.com/re-cinq/cloud-carbon/pkg/providers/aws"
+	"github.com/re-cinq/cloud-carbon/pkg/providers/gcp"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 )
 
@@ -12,10 +13,16 @@ type ScrapingManager struct {
 
 func NewScrapingManager(eventBus *bus.EventBus) *ScrapingManager {
 
+	var schedulers []v1.Scheduler
+
+	// Add AWS
+	schedulers = append(schedulers, amazon.NewScheduler(eventBus)...)
+
+	// Add GCP
+	schedulers = append(schedulers, gcp.NewScheduler(eventBus)...)
+
 	return &ScrapingManager{
-		schedulers: []v1.Scheduler{
-			amazon.NewScheduler(eventBus),
-		},
+		schedulers: schedulers,
 	}
 
 }

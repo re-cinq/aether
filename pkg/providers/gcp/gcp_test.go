@@ -9,6 +9,7 @@ import (
 
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	"cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
+	"github.com/re-cinq/cloud-carbon/pkg/config"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/option"
@@ -156,7 +157,7 @@ func TestGetCPUMetrics(t *testing.T) {
 			)
 			assert.NoError(err)
 
-			g, teardown, err := New(ctx, withTestClient(client))
+			g, teardown, err := New(config.Account{}, newGCPCache(), withTestClient(client))
 			assert.NoError(err)
 			defer teardown()
 

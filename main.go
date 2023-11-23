@@ -36,6 +36,9 @@ func main() {
 	// Record when the program is started
 	start := time.Now()
 
+	// print the logo
+	klog.Infof("%v", startUpLog)
+
 	// check if we got args passed
 	args := os.Args
 
@@ -49,6 +52,9 @@ func main() {
 	klog.InitFlags(nil)
 	flag.Parse()
 
+	// At this point load the config
+	config.InitConfig()
+
 	// Init the application bus
 	eventBus := bus.NewEventBus(8192, runtime.NumCPU())
 
@@ -56,30 +62,28 @@ func main() {
 	eventBus.Subscribe(v1.MetricsCollectedTopic, calculator.NewEmissionCalculator(eventBus))
 
 	// Subscribe to update the prometheus exporter
-	eventBus.Subscribe(v1.MetricsCollectedTopic, exporter.NewPrometheusEventHandler(eventBus))
+	eventBus.Subscribe(v1.EmissionsCalculatedTopic, exporter.NewPrometheusEventHandler(eventBus))
 
 	// Subscribe to update the pathfinder handler
-	eventBus.Subscribe(v1.MetricsCollectedTopic, pathfinder.NewPahfinderEventHandler(eventBus))
+	eventBus.Subscribe(v1.EmissionsCalculatedTopic, pathfinder.NewPahfinderEventHandler(eventBus))
 
 	// Start the bus
 	eventBus.Start()
 
-	// At this point load the config
-	config.InitConfig()
-
-	// Scheduler manager
-
-	scheduler := scheduler.NewScrapingManager(eventBus)
-	scheduler.Start()
-
 	// Create the API object
 	apiServer := api.NewApiServer()
+
+	// Scheduler manager
+	scheduler := scheduler.NewScrapingManager(eventBus)
 
 	// Start the API
 	go apiServer.Start()
 
 	// Print the start
-	klog.Infof("started in %v\n%v", time.Since(start), startUpLog)
+	klog.Infof("started in %v", time.Since(start))
+
+	// Start the scheduler manager
+	scheduler.Start()
 
 	// Graceful shutdown
 	// Await for the signals to teminate the program

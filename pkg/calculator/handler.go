@@ -21,12 +21,12 @@ func (c *EmissionCalculator) Apply(event bus.Event) {
 	// Make sure we got the right event
 	if metricsCollected, ok := event.(v1.MetricsCollected); ok {
 
+		// TODO: remove this, which is only for debugging purposes
+		instance := metricsCollected.Instance
+
 		// TODO: do the calculation
 
 		// TODO: emit the calculation event in the bus
-
-		// TODO: remove this, which is only for debugging purposes
-		instance := metricsCollected.Instance
 
 		for _, metric := range instance.Metrics() {
 			klog.Infof("Collected metric: %s %s %s %s | %s", instance.Service(), instance.Region(), instance.Name(), instance.Kind(), metric.String())

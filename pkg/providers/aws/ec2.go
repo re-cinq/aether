@@ -56,35 +56,39 @@ func (e *ec2Client) Refresh(region awsRegion) {
 		klog.Errorf("failed to retrieve ec2 instances %s", err)
 	}
 
+	if output == nil {
+		klog.Errorf("failed to retrieve the list of EC2 instances from %s", region)
+		return
+	}
+
 	// Make sure the first request is successful
-	if output != nil {
-		// Collect all the responses for all the pages
-		instances := []ec2.DescribeInstancesOutput{*output}
 
-		for output.NextToken != nil {
-			output, err = e.client.DescribeInstances(context.TODO(), buildListPaginationRequest(output.NextToken), withRegion)
-			if err != nil {
-				klog.Errorf("failed to retrieve ec2 instances %s", err)
-			}
-			// Collect the response
-			if output != nil {
-				instances = append(instances, *output)
-			}
+	// Collect all the responses for all the pages
+	instances := []ec2.DescribeInstancesOutput{*output}
+
+	for output.NextToken != nil {
+		output, err = e.client.DescribeInstances(context.TODO(), buildListPaginationRequest(output.NextToken), withRegion)
+		if err != nil {
+			klog.Errorf("failed to retrieve ec2 instances %s", err)
 		}
+		// Collect the response
+		if output != nil {
+			instances = append(instances, *output)
+		}
+	}
 
-		for _, reservation := range output.Reservations {
-			for _, instance := range reservation.Instances {
+	for _, reservation := range output.Reservations {
+		for _, instance := range reservation.Instances {
 
-				e.cache.Add(newAWSResource(
-					region,
-					ec2Service,
-					*instance.InstanceId,
-					string(instance.InstanceType),
-					string(instance.InstanceLifecycle),
-					getInstanceTag(instance.Tags, "Name"),
-					int(*instance.CpuOptions.CoreCount),
-				))
-			}
+			e.cache.Add(newAWSResource(
+				region,
+				ec2Service,
+				*instance.InstanceId,
+				string(instance.InstanceType),
+				string(instance.InstanceLifecycle),
+				getInstanceTag(instance.Tags, "Name"),
+				int(*instance.CpuOptions.CoreCount),
+			))
 		}
 	}
 
