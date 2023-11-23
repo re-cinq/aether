@@ -15,6 +15,9 @@ type Service struct {
 	// The provider used as source for this metric
 	provider Provider
 
+	// The service type (Instance, Database etc..)
+	service string
+
 	// Unique name of the service
 	// Can be the VM name
 	name string
@@ -40,6 +43,11 @@ type Service struct {
 // GCP, AWS, Prometheus etc...
 func (s *Service) Provider() Provider {
 	return s.provider
+}
+
+// The service type
+func (s *Service) Service() string {
+	return s.service
 }
 
 // Returns the service unique name
@@ -129,6 +137,12 @@ func (s *Service) UpsertMetric(resource *Metric) *Service {
 // Set the embodied emissions for the service
 func (s *Service) SetEmbodiedEmissions(embodied ResourceEmissions) *Service {
 	s.embodiedEmissions = embodied
+	return s
+}
+
+// Set the service type
+func (s *Service) SetService(service string) *Service {
+	s.service = service
 	return s
 }
 

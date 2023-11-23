@@ -54,3 +54,43 @@ jobs:
         
         # Run the tests
         - run: go test ./... -v
+
+  build:
+      name: test
+      runs-on: ubuntu-latest
+      timeout-minutes: 5
+      steps:
+
+        # Checkout the code
+        - uses: actions/checkout@v4
+
+        # Setup Golang based on the go.mod version
+        - uses: actions/setup-go@v4
+          with:
+            go-version-file: go.mod
+
+        # Set the ldflags
+        - run: echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
+
+        # Set the build timestamp
+        - run: echo -n " -X 'main.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
+
+        # Set the build git hash
+        - run: echo -n " -X 'main.gitSHA=${{ github.sha }}'" >> .ldflags
+
+        # Set the build ref type
+        - run: echo -n " -X 'main.refType=${{ github.ref_type }}'" >> .ldflags
+
+        # Set the build ref name
+        - run: echo -n " -X 'main.refName=${{ github.ref_name }}'" >> .ldflags
+
+        # Print the ldflags
+        - run: cat .ldflags
+
+        # Build the executable now
+        - name: Run build
+          run: go build -ldflags "$(cat .ldflags)" -o cloud-carbon
+
+        # Run the version command to make sure the build was successful
+        - name: Run Version
+          run: ./cloud-carbon version

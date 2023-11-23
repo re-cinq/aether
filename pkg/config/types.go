@@ -22,6 +22,9 @@ type APIConfig struct {
 
 	// The port to listen to
 	Port string `mapstructure:"port"`
+
+	// The prometheus metrics path
+	MetricsPath string `mapstructure:"metricsPath"`
 }
 
 // Defines the general configuration for a provider
