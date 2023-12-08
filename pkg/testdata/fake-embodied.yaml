@@ -1,0 +1,14 @@
+- type: e2-standard-2
+  additionalmemory: 155.46
+  additionalstorage: 0
+  additionalcpus: 100
+  additionalgpus: 0
+  total: 1255.46
+  architecture: Skylake
+- type: n1-standard-2
+  additionalmemory: 477.48
+  additionalstorage: 100
+  additionalcpus: 100
+  additionalgpus: 0
+  total: 1677.48
+  architecture: Broadwell

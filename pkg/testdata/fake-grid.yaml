@@ -1,0 +1,12 @@
+- region: us-central1
+  co2e: 0.000479
+- region: us-east1
+  co2e: 0.0005
+- region: ap-northeast-1
+  co2e: 0.000506
+- region: ca-central-1
+  co2e: 0.00013
+- region: France Central
+  co2e: 6.7e-05
+- region: Finland Central
+  co2e: 77

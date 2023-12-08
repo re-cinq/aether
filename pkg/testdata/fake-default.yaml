@@ -1,0 +1,8 @@
+name: fake
+minWatts: 0.71
+maxWatts: 3.5
+hddStorageWatts: 0.65
+ssdStorageWatts: 1.22
+networkingKilloWattHours: 0.001 # per Gigabyte
+memoryKilloWattHours: 0.000392 # per Gigabyte
+averagePUE: 1.125 

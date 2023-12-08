@@ -1,0 +1,8 @@
+region: us-central1
+  co2e: 0.000479
+- region: us-east1
+  co2e: 0.0005
+- region: us-east4
+  co2e: 0.000383
+- region: us-west1
+  co2e: 0.000117
