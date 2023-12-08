@@ -1,0 +1,14 @@
+- type: c1.medium
+  additionalmemory: 36.09
+  additionalstorage: 400
+  additionalcpus: 100
+  additionalgpus: 0
+  total: 1536.09
+  architecture: ""
+- type: B1MS
+  additionalmemory: 88.83
+  additionalstorage: 50
+  additionalcpus: 100
+  additionalgpus: 0
+  total: 1238.83
+  architecture: Unknown
