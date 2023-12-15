@@ -3,6 +3,7 @@ module github.com/re-cinq/cloud-carbon
 go 1.21.4
 
 require (
+	cloud.google.com/go/compute v1.23.1
 	cloud.google.com/go/monitoring v1.16.3
 	github.com/aws/aws-sdk-go-v2 v1.22.2
 	github.com/aws/aws-sdk-go-v2/config v1.24.0
@@ -21,7 +22,6 @@ require (
 )
 
 require (
-	cloud.google.com/go/compute v1.23.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.15.2 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.3 // indirect

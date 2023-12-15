@@ -19,7 +19,7 @@ type gcpScheduler struct {
 	done chan bool
 
 	// Event bus
-	eventBus *bus.EventBus
+	eventBus bus.Bus
 
 	// Project ID
 	project string
@@ -38,7 +38,7 @@ type gcpScheduler struct {
 }
 
 // Return the scheduler interface
-func NewScheduler(eventBus *bus.EventBus) []v1.Scheduler {
+func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 
 	// Load the config
 	gcpConfig, exists := config.AppConfig().Providers[gcpProvider]

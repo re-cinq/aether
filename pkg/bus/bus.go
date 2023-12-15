@@ -35,7 +35,7 @@ type EventBus struct {
 }
 
 // NewEventBus instance
-func NewEventBus(queueSize int, workerPoolSize int) *EventBus {
+func NewEventBus(queueSize int, workerPoolSize int) Bus {
 
 	// Init the event bus
 	bus := EventBus{

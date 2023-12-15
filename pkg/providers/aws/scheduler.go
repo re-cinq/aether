@@ -21,7 +21,7 @@ type awsScheduler struct {
 	regions []string
 
 	// Event bus
-	eventBus *bus.EventBus
+	eventBus bus.Bus
 
 	// AWS Client
 	// awsClient *AWSClient
@@ -34,7 +34,7 @@ type awsScheduler struct {
 }
 
 // Return the scheduler interface
-func NewScheduler(eventBus *bus.EventBus) []v1.Scheduler {
+func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 
 	// Load the config
 	awsConfig, exists := config.AppConfig().Providers[awsProvider]

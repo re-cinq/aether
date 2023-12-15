@@ -7,10 +7,10 @@ import (
 )
 
 type PrometheusEventHandler struct {
-	eventBus *bus.EventBus
+	eventBus bus.Bus
 }
 
-func NewPrometheusEventHandler(eventBus *bus.EventBus) *PrometheusEventHandler {
+func NewPrometheusEventHandler(eventBus bus.Bus) *PrometheusEventHandler {
 	return &PrometheusEventHandler{
 		eventBus: eventBus,
 	}

@@ -11,7 +11,7 @@ type ScrapingManager struct {
 	schedulers []v1.Scheduler
 }
 
-func NewScrapingManager(eventBus *bus.EventBus) *ScrapingManager {
+func NewScrapingManager(eventBus bus.Bus) *ScrapingManager {
 
 	var schedulers []v1.Scheduler
 

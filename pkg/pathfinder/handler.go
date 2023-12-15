@@ -7,10 +7,10 @@ import (
 )
 
 type PahfinderEventHandler struct {
-	eventBus *bus.EventBus
+	eventBus bus.Bus
 }
 
-func NewPahfinderEventHandler(eventBus *bus.EventBus) *PahfinderEventHandler {
+func NewPahfinderEventHandler(eventBus bus.Bus) *PahfinderEventHandler {
 	return &PahfinderEventHandler{
 		eventBus: eventBus,
 	}

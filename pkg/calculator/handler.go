@@ -7,10 +7,10 @@ import (
 )
 
 type EmissionCalculator struct {
-	eventBus *bus.EventBus
+	eventBus bus.Bus
 }
 
-func NewEmissionCalculator(eventBus *bus.EventBus) *EmissionCalculator {
+func NewEmissionCalculator(eventBus bus.Bus) *EmissionCalculator {
 	return &EmissionCalculator{
 		eventBus: eventBus,
 	}
