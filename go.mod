@@ -1,6 +1,6 @@
 module github.com/re-cinq/cloud-carbon
 
-go 1.21.4
+go 1.21.5
 
 require (
 	cloud.google.com/go/compute v1.23.1
@@ -51,6 +51,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
 	github.com/prometheus/procfs v0.11.1 // indirect
+	github.com/re-cinq/go-bus v0.0.0-20231215131127-5e676cc538c5 // indirect
 	github.com/sagikazarmark/locafero v0.3.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect

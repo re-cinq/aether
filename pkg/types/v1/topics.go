@@ -1,6 +1,6 @@
 package v1
 
-import "github.com/re-cinq/cloud-carbon/pkg/bus"
+import bus "github.com/re-cinq/go-bus"
 
 const (
 	// Topic to be subscribed to when interested in metrics

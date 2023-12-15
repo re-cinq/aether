@@ -1,6 +1,6 @@
 package v1
 
-import "github.com/re-cinq/cloud-carbon/pkg/bus"
+import bus "github.com/re-cinq/go-bus"
 
 type MetricsCollected struct {
 	bus.Event
@@ -13,6 +13,6 @@ func (e MetricsCollected) Topic() bus.Topic {
 }
 
 // Returns the unique name of the instance or service
-func (e MetricsCollected) Id() string {
+func (e MetricsCollected) Identifier() string {
 	return e.Instance.name
 }

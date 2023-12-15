@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"github.com/re-cinq/cloud-carbon/pkg/api"
-	"github.com/re-cinq/cloud-carbon/pkg/bus"
 	"github.com/re-cinq/cloud-carbon/pkg/calculator"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
 	"github.com/re-cinq/cloud-carbon/pkg/exporter"
 	"github.com/re-cinq/cloud-carbon/pkg/pathfinder"
 	"github.com/re-cinq/cloud-carbon/pkg/scheduler"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	bus "github.com/re-cinq/go-bus"
 	"k8s.io/klog/v2"
 )
 
@@ -56,7 +56,7 @@ func main() {
 	config.InitConfig()
 
 	// Init the application bus
-	eventBus := bus.NewEventBus(8192, runtime.NumCPU())
+	eventBus := bus.NewEventBus(8192, runtime.NumCPU(), klog.NewKlogr())
 
 	// Subscribe to the metrics collections
 	eventBus.Subscribe(v1.MetricsCollectedTopic, calculator.NewEmissionCalculator(eventBus))

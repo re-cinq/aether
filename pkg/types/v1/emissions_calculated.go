@@ -1,6 +1,6 @@
 package v1
 
-import "github.com/re-cinq/cloud-carbon/pkg/bus"
+import bus "github.com/re-cinq/go-bus"
 
 type EmissionsCalculated struct {
 	Instance Service
@@ -12,6 +12,6 @@ func (e *EmissionsCalculated) Topic() bus.Topic {
 }
 
 // Returns the unique name of the instance or service
-func (e *EmissionsCalculated) Id() string {
+func (e *EmissionsCalculated) Identifier() string {
 	return e.Instance.name
 }

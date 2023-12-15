@@ -1,10 +1,10 @@
 package scheduler
 
 import (
-	"github.com/re-cinq/cloud-carbon/pkg/bus"
 	amazon "github.com/re-cinq/cloud-carbon/pkg/providers/aws"
 	"github.com/re-cinq/cloud-carbon/pkg/providers/gcp"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	bus "github.com/re-cinq/go-bus"
 )
 
 type ScrapingManager struct {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/re-cinq/cloud-carbon/pkg/bus"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	bus "github.com/re-cinq/go-bus"
 	"k8s.io/klog/v2"
 )
 
