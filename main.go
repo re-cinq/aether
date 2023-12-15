@@ -56,7 +56,7 @@ func main() {
 	config.InitConfig()
 
 	// Init the application bus
-	eventBus := bus.NewEventBus(8192, runtime.NumCPU(), klog.NewKlogr())
+	eventBus := bus.NewEventBus(8192, runtime.NumCPU())
 
 	// Subscribe to the metrics collections
 	eventBus.Subscribe(v1.MetricsCollectedTopic, calculator.NewEmissionCalculator(eventBus))
