@@ -27,6 +27,7 @@ type Coefficient struct {
 // Based on Dell PowerEdge R740 Life-Cycle Assessment
 // = 533 kgCO₂eq for 12*32GB DIMMs Memory (384 GB).
 
+// TODO: Need to add machine lifespan for embodied carbon
 type Embodied struct {
 	MachineType                   string  `yaml:"type"`
 	AdditionalMemoryKiloWattCO2e  float64 `yaml:"additionalmemory"`
