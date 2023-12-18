@@ -7,11 +7,15 @@ type EmissionsCalculated struct {
 }
 
 // The topic this event is about
-func (e *EmissionsCalculated) Topic() bus.Topic {
+//
+//nolint:all
+func (e EmissionsCalculated) Topic() bus.Topic {
 	return EmissionsCalculatedTopic
 }
 
 // Returns the unique name of the instance or service
-func (e *EmissionsCalculated) Identifier() string {
+//
+//nolint:all
+func (e EmissionsCalculated) Identifier() string {
 	return e.Instance.name
 }
