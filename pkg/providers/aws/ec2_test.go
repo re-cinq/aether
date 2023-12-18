@@ -10,7 +10,7 @@ import (
 func TestEc2InstanceListing(t *testing.T) {
 
 	// Pass an empty provider config so that it loads the default credentials
-	cfg, err := buildAWSConfig(config.Account{}, nil)
+	cfg, err := buildAWSConfig(&config.Account{}, nil)
 	assert.NotNil(t, cfg)
 	assert.Nil(t, err)
 

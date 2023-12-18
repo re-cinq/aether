@@ -37,54 +37,13 @@ func (awsClient *AWSClient) GetMetrics(c context.Context, api CWGetMetricDataAPI
 	return api.GetMetricData(c, input)
 }
 
-// // Calls the AWS API to retrieve the metrics
-// func (awsClient *AWSClient) getMetrics(namespace string, interval time.Duration) {
-
-// 	// Load the current config
-// 	currentConfig := config.AppConfig().Providers[v1.Aws]
-
-// 	// Build the client
-// 	client := cloudwatch.NewFromConfig(awsClient.cfg)
-
-// 	input := &cloudwatch.GetMetricDataInput{
-// 		EndTime:   aws.Time(time.Unix(time.Now().Unix(), 0)),
-// 		StartTime: aws.Time(time.Unix(time.Now().Add(-interval).Unix(), 0)),
-// 		MetricDataQueries: []types.MetricDataQuery{
-// 			types.MetricDataQuery{
-// 				Id: aws.String(*id),
-// 				MetricStat: &types.MetricStat{
-// 					Metric: &types.Metric{
-// 						Namespace:  aws.String(*namespace),
-// 						MetricName: aws.String(*metricName),
-// 						Dimensions: []types.Dimension{
-// 							types.Dimension{
-// 								Name:  aws.String(*dimensionName),
-// 								Value: aws.String(*dimensionValue),
-// 							},
-// 						},
-// 					},
-// 					Period: aws.Int32(int32(*period)),
-// 					Stat:   aws.String(*stat),
-// 				},
-// 			},
-// 		},
-// 	}
-
-// 	result, err := GetMetrics(context.TODO(), client, input)
-// 	if err != nil {
-// 		fmt.Println("Could not fetch metric data")
-// 	}
-
-// 	fmt.Println("Metric Data:", result)
-// }
-
 // NewAWSClient creates a new instance of the AWSClient
 // It allows to pass:
 //   - configFile: the location of the config file to load. If empty the default
 //     location of the credentials file (~/.aws/config) is used
 //   - profile: the name of the profile to use to load the credentials
 //     if empty the default credentials will be used
-func NewAWSClient(currentConfig config.Account, customTransportConfig *config.TransportConfig) (*AWSClient, error) {
+func NewAWSClient(currentConfig *config.Account, customTransportConfig *config.TransportConfig) (*AWSClient, error) {
 
 	cfg, err := buildAWSConfig(currentConfig, customTransportConfig)
 
@@ -103,7 +62,7 @@ func (client *AWSClient) Config() aws.Config {
 }
 
 // Helper function to builde the AWS config
-func buildAWSConfig(currentConfig config.Account, customTransportConfig *config.TransportConfig) (aws.Config, error) {
+func buildAWSConfig(currentConfig *config.Account, customTransportConfig *config.TransportConfig) (aws.Config, error) {
 
 	// Define the variables to be populated based on the provider configuration
 	// AWS config file

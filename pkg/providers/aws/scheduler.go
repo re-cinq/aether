@@ -50,7 +50,7 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 	for _, account := range awsConfig.Accounts {
 
 		// Init the AWS client
-		awsClient, err := NewAWSClient(account, nil)
+		awsClient, err := NewAWSClient(&account, nil)
 		if err != nil {
 			klog.Errorf("failed to initialise AWS provider %s", err)
 			return nil
