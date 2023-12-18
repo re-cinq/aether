@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/re-cinq/cloud-carbon/internal/metrics"
+
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/version"
 	"k8s.io/klog/v2"
 )
 
@@ -36,30 +36,37 @@ var (
 	metricsPath = flag.String("metrics-path", "/metrics", "metrics path")
 	port        = flag.String("port", "8000", "")
 	host        = flag.String("host", "127.0.0.1", "")
+	meterName   = flag.String("meter-name", "cloud-carbon", "")
 )
 
 func main() {
 	start := time.Now()
+
+	// setup
+	ctx := context.Background()
+	klog.InitFlags(nil)
+	flag.Parse()
+
 	// termination Handeling
 	termChan := make(chan os.Signal, 1)
 	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM)
 
-	klog.InitFlags(nil)
-	flag.Parse()
-
-	// string formatting to join the host and port
-	addr := fmt.Sprintf("%s:%s", *host, *port)
 	// setup Server
 	srv := &http.Server{
-		Addr:         addr,
+		Addr:         fmt.Sprintf("%s:%s", *host, *port),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 
-	// setup prometheus metrics
-	// TODO: move this to an intertnal package so we dont have to change the main
-	// function when adding new metrics
-	prometheus.MustRegister(version.NewCollector("cloud_carbon_exporter"))
+	// setup metrics
+	metricshandler := metrics.New(*meterName)
+
+	err := metricshandler.Setup(ctx)
+	if err != nil {
+		klog.Fatalf("failed initilizing metric handler: %v", err)
+	}
+
+	// register metrics endpoint
 	http.Handle(*metricsPath, promhttp.Handler())
 
 	// register health endpoint
@@ -68,18 +75,22 @@ func main() {
 	// run server
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			klog.Fatalf("%s", fmt.Sprintf("failed to bind on %s: %v", addr, err))
+			klog.Fatalf("%s", fmt.Sprintf("failed to bind on %s: %v", *port, err))
 		}
 	}()
 
 	klog.Infof("started in %v\n%v", time.Since(start), startUpLog)
 
+	// wait for termination signals
 	<-termChan
+
 	// any Code to Gracefully Shutdown should be done here
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+
 	if err := srv.Shutdown(ctx); err != nil {
 		klog.Fatal("Graceful Shutdown Failed")
 	}
+
 	klog.Info("Shutting Down Gracefully")
 }
