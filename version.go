@@ -27,5 +27,4 @@ func PrintVersion() {
 	fmt.Printf("OS / Arch:      %s / %s\n", runtime.GOOS, runtime.GOARCH)
 	fmt.Printf("Source:         %s\n", source)
 	fmt.Printf("Built:          %s\n", buildTimestamp)
-
 }

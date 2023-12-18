@@ -18,7 +18,6 @@ type cloudWatchClient struct {
 
 // New cloudwatch client instance
 func NewCloudWatchClient(cfg aws.Config) *cloudWatchClient {
-
 	emptyOptions := func(o *cloudwatch.Options) {}
 
 	// Init the Cloudwatch client
@@ -34,12 +33,10 @@ func NewCloudWatchClient(cfg aws.Config) *cloudWatchClient {
 	return &cloudWatchClient{
 		client: client,
 	}
-
 }
 
 // Get the resource consumption of an ec2 instance
 func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) map[string]v1.Service {
-
 	serviceMetrics := make(map[string]v1.Service)
 
 	// Define the period
@@ -48,30 +45,28 @@ func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) map[
 
 	// Get the cpu consumption for all the instances in the region
 	if cpuMetrics := e.getEc2Cpu(region, start, end); len(cpuMetrics) > 0 {
-
 		for _, cpuMetric := range cpuMetrics {
-
 			// load the instance metadata from the cache, because the query does not give us
 
-			instanceMetadata := cache.Get(region, ec2Service, cpuMetric.instanceId)
+			instanceMetadata := cache.Get(region, ec2Service, cpuMetric.instanceID)
 			if instanceMetadata == nil {
-				klog.Warningf("instance id %s is not present in the metadata, temporarily skipping collecting metrics", cpuMetric.instanceId)
+				klog.Warningf("instance id %s is not present in the metadata, temporarily skipping collecting metrics", cpuMetric.instanceID)
 				continue
 			}
 
 			// if we got here it means that we do have the instance metadata
 
-			instanceService, exists := serviceMetrics[cpuMetric.instanceId]
+			instanceService, exists := serviceMetrics[cpuMetric.instanceID]
 			if !exists {
 				// Then create a new one
-				s := v1.NewService(cpuMetric.instanceId, awsProvider)
+				s := v1.NewService(cpuMetric.instanceID, awsProvider)
 				s.SetService("EC2")
 				s.SetKind(instanceMetadata.kind).SetRegion(region)
 				s.AddLabel("Name", instanceMetadata.name)
-				serviceMetrics[cpuMetric.instanceId] = *s
+				serviceMetrics[cpuMetric.instanceID] = *s
 
 				// Makes it easier to use it
-				instanceService = serviceMetrics[cpuMetric.instanceId]
+				instanceService = serviceMetrics[cpuMetric.instanceID]
 				instanceService.SetKind(instanceMetadata.kind).SetRegion(region)
 			}
 
@@ -81,18 +76,15 @@ func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) map[
 
 			// Update the CPU information now
 			instanceService.Metrics().Upsert(cpu)
-
 		}
 	}
 
 	// Return the collected metrics
 	return serviceMetrics
-
 }
 
 // Get the CPU resource consumption of an ec2 instance
 func (e *cloudWatchClient) getEc2Cpu(region awsRegion, start, end time.Time) []awsMetric {
-
 	// Override the region
 	withRegion := func(o *cloudwatch.Options) {
 		o.Region = region
@@ -105,7 +97,7 @@ func (e *cloudWatchClient) getEc2Cpu(region awsRegion, start, end time.Time) []a
 		MetricDataQueries: []types.MetricDataQuery{
 			{
 				Id:         aws.String(v1.CPU.String()),
-				Expression: aws.String(`SELECT AVG(CPUUtilization) FROM "AWS/EC2" GROUP BY InstanceId`),
+				Expression: aws.String(`SELECT AVG(CPUUtilization) FROM "AWS/EC2" GROUP BY instanceID`),
 				Period:     aws.Int32(300), // 5 minutes
 			},
 		},
@@ -122,20 +114,16 @@ func (e *cloudWatchClient) getEc2Cpu(region awsRegion, start, end time.Time) []a
 
 	// Loop through the result and build the intermediate awsMetric model
 	for _, metric := range output.MetricDataResults {
-
 		if len(metric.Values) > 0 {
-
 			cpuMetric := awsMetric{
 				value:      metric.Values[0],
-				instanceId: *metric.Label,
+				instanceID: *metric.Label,
 				kind:       v1.CPU,
 				unit:       v1.Core,
 				name:       v1.CPU.String(),
 			}
 
 			cpuMetrics = append(cpuMetrics, cpuMetric)
-
-			// fmt.Printf("%+v\n", cpuMetric)
 		}
 	}
 

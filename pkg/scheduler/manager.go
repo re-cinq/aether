@@ -12,7 +12,6 @@ type ScrapingManager struct {
 }
 
 func NewScrapingManager(eventBus bus.Bus) *ScrapingManager {
-
 	var schedulers []v1.Scheduler
 
 	// Add AWS
@@ -24,25 +23,20 @@ func NewScrapingManager(eventBus bus.Bus) *ScrapingManager {
 	return &ScrapingManager{
 		schedulers: schedulers,
 	}
-
 }
 
 func (m ScrapingManager) Start() {
-
 	for _, scheduler := range m.schedulers {
 		if scheduler != nil {
 			scheduler.Schedule()
 		}
 	}
-
 }
 
 func (m ScrapingManager) Stop() {
-
 	for _, scheduler := range m.schedulers {
 		if scheduler != nil {
 			scheduler.Cancel()
 		}
 	}
-
 }

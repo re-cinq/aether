@@ -18,7 +18,6 @@ type ec2Client struct {
 
 // New instance
 func NewEc2Client(cfg aws.Config) *ec2Client {
-
 	emptyOptions := func(o *ec2.Options) {}
 
 	// Init the EC2 client
@@ -35,7 +34,6 @@ func NewEc2Client(cfg aws.Config) *ec2Client {
 		client: client,
 		cache:  newAWSCache(),
 	}
-
 }
 
 func (e *ec2Client) Cache() *awsCache {
@@ -44,7 +42,6 @@ func (e *ec2Client) Cache() *awsCache {
 
 // refresh stores all the instances for a specific region in cache
 func (e *ec2Client) Refresh(region awsRegion) {
-
 	// Override the region
 	withRegion := func(o *ec2.Options) {
 		o.Region = region
@@ -78,7 +75,8 @@ func (e *ec2Client) Refresh(region awsRegion) {
 	}
 
 	for _, reservation := range output.Reservations {
-		for _, instance := range reservation.Instances {
+		for index := range reservation.Instances {
+			instance := reservation.Instances[index]
 
 			e.cache.Add(newAWSResource(
 				region,
@@ -91,7 +89,6 @@ func (e *ec2Client) Refresh(region awsRegion) {
 			))
 		}
 	}
-
 }
 
 func getInstanceTag(tags []types.Tag, key string) string {

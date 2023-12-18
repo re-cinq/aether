@@ -23,9 +23,8 @@ type API struct {
 	server      *http.Server
 }
 
-// NewApiServer instance
-func NewApiServer() *API {
-
+// NewAPIServer instance
+func NewAPIServer() *API {
 	// Local variable
 	host := config.AppConfig().APIConfig.Address
 	port := config.AppConfig().APIConfig.Port
@@ -44,7 +43,7 @@ func NewApiServer() *API {
 		hostPort:    fmt.Sprintf("%s:%s", host, port),
 	}
 
-	// Initialise it
+	// Initialize it
 	api.init()
 
 	// Return it
@@ -52,7 +51,6 @@ func NewApiServer() *API {
 }
 
 func (api *API) createRouter() *httprouter.Router {
-
 	// Configure the HTTP router
 	router := httprouter.Router{
 		RedirectTrailingSlash:  true,
@@ -73,7 +71,6 @@ func (api *API) createRouter() *httprouter.Router {
 
 // Start the api server
 func (api *API) init() {
-
 	// Create the router and all the handlers
 	router := api.createRouter()
 
@@ -103,7 +100,6 @@ func (api *API) Start() {
 
 // Stop the api server
 func (api *API) Stop() {
-
 	klog.Infof("Shutting down the API server...")
 
 	// Create a timeout for shutting down
@@ -116,5 +112,4 @@ func (api *API) Stop() {
 	if err := api.server.Shutdown(ctxTimeout); err != nil {
 		klog.Errorf("failed to gracefully shutdown the API: %s", err)
 	}
-
 }

@@ -13,15 +13,15 @@ type gcpRegion = string
 type gcpService = string
 
 // Resource id
-type gcpResourceId = string
+type gcpResourceID = string
 
 // The list of resources for a specific service and region
-type gcpResources = map[gcpResourceId]gcpResource
+type gcpResources = map[gcpResourceID]gcpResource
 
 // The GCP Resource representation
 type gcpResource struct {
 	// The GCP resource id
-	id gcpResourceId
+	id gcpResourceID
 
 	// The region where the resource is located
 	region gcpRegion
@@ -46,7 +46,7 @@ type gcpResource struct {
 }
 
 // / Helper which creates a new awsResource
-func newGCPResource(region gcpRegion, service gcpService, id gcpResourceId,
+func newGCPResource(region gcpRegion, service gcpService, id gcpResourceID,
 	kind, lifecycle, name string, coreCount int) *gcpResource {
 	return &gcpResource{
 		id:          id,
@@ -64,7 +64,7 @@ func newGCPResource(region gcpRegion, service gcpService, id gcpResourceId,
 type serviceCache = map[gcpService]gcpResources
 
 // We do not need to expose the cache outside of this modules
-// since its main purpose is to optimise the GCP API queries
+// since its main purpose is to optimize the GCP API queries
 // and reduce them overall
 type gcpCache struct {
 	// Sync for concurrent mutations of the cache
@@ -74,17 +74,16 @@ type gcpCache struct {
 	entries map[gcpRegion]serviceCache
 }
 
-// Initialise the empty cache
+// Initialize the empty cache
 func newGCPCache() *gcpCache {
 	return &gcpCache{
 		lock:    sync.RWMutex{},
-		entries: make(map[gcpRegion]map[gcpService]map[gcpResourceId]gcpResource),
+		entries: make(map[gcpRegion]map[gcpService]map[gcpResourceID]gcpResource),
 	}
 }
 
 // Add an entry to the cache
 func (cache *gcpCache) Add(entry *gcpResource) {
-
 	// Lock the map cause we are writing
 	cache.lock.Lock()
 
@@ -93,14 +92,14 @@ func (cache *gcpCache) Add(entry *gcpResource) {
 	// If the region does not exist, init the cache for that region
 	if !exists {
 		// Init the cache
-		serviceCache = make(map[gcpService]map[gcpResourceId]gcpResource)
+		serviceCache = make(map[gcpService]map[gcpResourceID]gcpResource)
 		cache.entries[entry.region] = serviceCache
 	}
 
 	serviceEntries, exists := serviceCache[entry.service]
-	// if the entries for the service are missing, initialise them
+	// if the entries for the service are missing, Initialize them
 	if !exists {
-		serviceEntries = make(map[gcpResourceId]gcpResource)
+		serviceEntries = make(map[gcpResourceID]gcpResource)
 		serviceCache[entry.service] = serviceEntries
 	}
 
@@ -109,12 +108,10 @@ func (cache *gcpCache) Add(entry *gcpResource) {
 
 	// Unlock it
 	cache.lock.Unlock()
-
 }
 
 // Deletes an entry from the cache, in case it was removed from AWS
 func (cache *gcpCache) Delete(region gcpRegion, service gcpService, name string) {
-
 	// Lock the map cause we are writing
 	cache.lock.Lock()
 
@@ -127,7 +124,7 @@ func (cache *gcpCache) Delete(region gcpRegion, service gcpService, name string)
 	}
 
 	serviceEntries, exists := serviceCache[service]
-	// if the entries for the service are missing, initialise them
+	// if the entries for the service are missing, Initialize them
 	if !exists {
 		// well...nothing to do here
 		return
@@ -148,20 +145,16 @@ func (cache *gcpCache) Delete(region gcpRegion, service gcpService, name string)
 
 	// Unlock it
 	cache.lock.Unlock()
-
 }
 
 // Check if an entry exists
 func (cache *gcpCache) Exists(region gcpRegion, service gcpService, name string) bool {
-
 	// Check if the entry exists
 	return cache.Get(region, service, name) != nil
-
 }
 
 // Get a specific resource
 func (cache *gcpCache) Get(region gcpRegion, service gcpService, name string) *gcpResource {
-
 	// Read lock the cache
 	cache.lock.RLock()
 	defer cache.lock.RUnlock()
@@ -185,5 +178,4 @@ func (cache *gcpCache) Get(region gcpRegion, service gcpService, name string) *g
 	}
 
 	return &entry
-
 }

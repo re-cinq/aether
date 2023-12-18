@@ -26,7 +26,6 @@ func newGCECLient(account config.Account) *gceClient {
 
 	if account.Credentials.IsPresent() {
 		credentialFile := account.Credentials.FilePaths[0]
-		// klog.Infof("loading GCP credentials from %s", credentialFile)
 		clientOptions = append(clientOptions, option.WithCredentialsFile(credentialFile))
 	}
 
@@ -48,7 +47,6 @@ func (e *gceClient) Close() {
 
 // refresh stores all the instances for a specific project
 func (e *gceClient) Refresh(project string) {
-
 	ctx := context.Background()
 	req := &computepb.AggregatedListInstancesRequest{
 		Project: project,
@@ -66,45 +64,38 @@ func (e *gceClient) Refresh(project string) {
 		}
 
 		for _, instance := range resp.Value.Instances {
-
 			zone := getValueFromURL(instance.GetZone())
-			instanceId := strconv.FormatUint(instance.GetId(), 10)
+			instanceID := strconv.FormatUint(instance.GetId(), 10)
 			name := instance.GetName()
 
-			if len(zone) == 0 {
+			if zone == "" {
 				continue
 			}
-
-			// klog.Infof("GCP: %+v\n", instance)
 
 			if instance.GetStatus() == "TERMINATED" {
 				// delete the entry from the cache
 				e.cache.Delete(zone, gceService, name)
-
 			} else if instance.GetStatus() == "RUNNING" {
-
 				// If it's running add it
 				e.cache.Add(newGCPResource(
 					zone,
 					gceService,
-					instanceId,
+					instanceID,
 					getValueFromURL(instance.GetMachineType()),
-					string(instance.GetScheduling().GetProvisioningModel()),
+					instance.GetScheduling().GetProvisioningModel(),
 					name,
 					0, // GCE does not give us the amount of CPUs the instance has
 				))
 			}
-
 		}
 	}
-
 }
 
 // string example: https://www.googleapis.com/compute/v1/projects/cloud-carbon-project/zones/europe-north1-a/machineTypes/e2-micro
-func getValueFromURL(gceUrl string) string {
-	parsed, err := url.Parse(gceUrl)
+func getValueFromURL(gceURL string) string {
+	parsed, err := url.Parse(gceURL)
 	if err != nil {
-		klog.Errorf("failed to parse value from %s %s", gceUrl, err)
+		klog.Errorf("failed to parse value from %s %s", gceURL, err)
 		return ""
 	}
 

@@ -77,7 +77,7 @@ func TestGetCPUMetrics(t *testing.T) {
 	assert := require.New(t)
 	ctx := context.TODO()
 
-	//TODO see if we can use v1.Metric instead of this
+	// TODO see if we can use v1.Metric instead of this
 	type testMetric struct {
 		Name   string
 		Total  float64

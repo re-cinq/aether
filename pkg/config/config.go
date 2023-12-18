@@ -25,7 +25,6 @@ var (
 )
 
 func InitConfig() {
-
 	viper.SetEnvPrefix("CARBON")        // sets an environment variable prefix CARBON_
 	viper.SetConfigName(getEnvConfig()) // name of config file (without extension)
 	viper.SetConfigType("yaml")         // REQUIRED if the config file does not have the extension in the name
@@ -67,7 +66,6 @@ func InitConfig() {
 
 	// Setup a watch in case the config file is changed
 	viper.WatchConfig()
-
 }
 
 // AppConfig returns the app config
@@ -107,13 +105,11 @@ func parseApplicationConfig() *ApplicationConfig {
 
 // Defines the name of the config file
 func getEnvConfig() string {
-
 	// First check if the name is defined in an environment variable
 	environment := os.Getenv(DefaultEnvironmentConfigName)
 
 	// If it's not defined then load the default config name
 	if environment == "" {
-
 		// fall back to the default config file name which is `local`
 		environment = DefaultEnvironment
 	}

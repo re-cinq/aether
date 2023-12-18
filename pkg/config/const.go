@@ -1,4 +1,4 @@
-// This package contains all the constants used througout the application
+// This package contains all the constants used throughout the application
 package config
 
 // This is the default name for the application config file: local.yaml

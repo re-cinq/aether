@@ -8,11 +8,10 @@ import (
 )
 
 func TestCloudWatchMetrics(t *testing.T) {
-
 	region := "eu-north-1"
 
 	// Pass an empty provider config so that it loads the default credentials
-	cfg, err := buildAWSConfig(&config.Account{}, nil)
+	cfg, err := buildAWSConfig(config.Account{}, nil)
 	assert.NotNil(t, cfg)
 	assert.Nil(t, err)
 
@@ -28,5 +27,4 @@ func TestCloudWatchMetrics(t *testing.T) {
 	client.GetEc2Metrics(region, ec2Client.cache)
 
 	assert.True(t, false)
-
 }

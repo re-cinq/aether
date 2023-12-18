@@ -39,7 +39,6 @@ type gcpScheduler struct {
 
 // Return the scheduler interface
 func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
-
 	// Load the config
 	gcpConfig, exists := config.AppConfig().Providers[gcpProvider]
 
@@ -51,7 +50,8 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 	// Schedulers for each account
 	var schedulers []v1.Scheduler
 
-	for _, account := range gcpConfig.Accounts {
+	for index := range gcpConfig.Accounts {
+		account := gcpConfig.Accounts[index]
 
 		// Init the ticket
 		ticker := time.NewTicker(account.Interval)
@@ -59,14 +59,14 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 		// Init the GCE client
 		gce := newGCECLient(account)
 		if gce == nil {
-			klog.Error("failed to initialise GCP provider")
+			klog.Error("failed to Initialize GCP provider")
 			return nil
 		}
 
 		// Init the GCP metrics Client
 		metrics, shutdown, err := New(account, gce.cache)
 		if err != nil {
-			klog.Errorf("failed to initialise GCP provider %s", err)
+			klog.Errorf("failed to Initialize GCP provider %s", err)
 			return nil
 		}
 
@@ -85,21 +85,17 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 		}
 
 		schedulers = append(schedulers, &accountScheduler)
-
 	}
 
 	return schedulers
-
 }
 
 func (s *gcpScheduler) process() {
-
-	if len(s.project) == 0 {
+	if s.project == "" {
 		klog.Error("no GCP project defined in the config")
 		return
 	}
 
-	// s.account.Interval.String()
 	instances, err := s.metrics.GetMetricsForInstances(context.TODO(), "5m")
 
 	if err != nil {
@@ -107,20 +103,15 @@ func (s *gcpScheduler) process() {
 		return
 	}
 
-	// klog.Infof("INSTANCES: %+v", instances)
-
 	for _, instance := range instances {
-
 		// // Publish the metrics
 		s.eventBus.Publish(v1.MetricsCollected{
 			Instance: instance,
 		})
 	}
-
 }
 
-func (s gcpScheduler) Schedule() {
-
+func (s *gcpScheduler) Schedule() {
 	go func() {
 		for {
 			select {
@@ -136,11 +127,9 @@ func (s gcpScheduler) Schedule() {
 
 	// Do the first call
 	s.process()
-
 }
 
-func (s gcpScheduler) Cancel() {
-
+func (s *gcpScheduler) Cancel() {
 	// We are done
 	s.done <- true
 
@@ -152,5 +141,4 @@ func (s gcpScheduler) Cancel() {
 
 	// Close the GCE client
 	s.gce.Close()
-
 }

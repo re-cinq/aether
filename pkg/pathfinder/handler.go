@@ -17,15 +17,12 @@ func NewPahfinderEventHandler(eventBus bus.Bus) *PahfinderEventHandler {
 }
 
 func (c *PahfinderEventHandler) Apply(event bus.Event) {
-
 	// Make sure we got the right event
 	if _, ok := event.(*v1.EmissionsCalculated); ok {
-
 		// TODO: update the prometheus registry
 
 		return
 	}
 
 	klog.Errorf("PahfinderEventHandler got an unknown event: %+v", event)
-
 }

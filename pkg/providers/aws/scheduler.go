@@ -35,7 +35,6 @@ type awsScheduler struct {
 
 // Return the scheduler interface
 func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
-
 	// Load the config
 	awsConfig, exists := config.AppConfig().Providers[awsProvider]
 
@@ -47,12 +46,13 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 	// Schedulers for each account
 	var schedulers []v1.Scheduler
 
-	for _, account := range awsConfig.Accounts {
+	for index := range awsConfig.Accounts {
+		account := awsConfig.Accounts[index]
 
 		// Init the AWS client
-		awsClient, err := NewAWSClient(&account, nil)
+		awsClient, err := NewAWSClient(account, nil)
 		if err != nil {
-			klog.Errorf("failed to initialise AWS provider %s", err)
+			klog.Errorf("failed to Initialize AWS provider %s", err)
 			return nil
 		}
 
@@ -91,37 +91,30 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 
 		// Append the scheduler
 		schedulers = append(schedulers, &scheduler)
-
 	}
 
 	return schedulers
 }
 
 func (s *awsScheduler) process() {
-
 	if len(s.regions) == 0 {
 		klog.Error("no AWS regions defined in the config")
 		return
 	}
 
 	for _, region := range s.regions {
-
 		instances := s.cloudwatchClient.GetEc2Metrics(region, s.ec2Client.Cache())
 
 		for _, instance := range instances {
-
 			// Publish the metrics
 			s.eventBus.Publish(v1.MetricsCollected{
 				Instance: instance,
 			})
 		}
-
 	}
-
 }
 
-func (s awsScheduler) Schedule() {
-
+func (s *awsScheduler) Schedule() {
 	go func() {
 		for {
 			select {
@@ -137,15 +130,12 @@ func (s awsScheduler) Schedule() {
 
 	// Do the first call
 	s.process()
-
 }
 
-func (s awsScheduler) Cancel() {
-
+func (s *awsScheduler) Cancel() {
 	// We are done
 	s.done <- true
 
 	// Stop the ticker
 	s.ticker.Stop()
-
 }

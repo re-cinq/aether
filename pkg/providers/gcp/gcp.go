@@ -64,7 +64,6 @@ func New(account config.Account, cache *gcpCache, opts ...options) (g *GCP, tear
 
 	if account.Credentials.IsPresent() {
 		credentialFile := account.Credentials.FilePaths[0]
-		// klog.Infof("loading GCP credentials from %s", credentialFile)
 		clientOptions = append(clientOptions, option.WithCredentialsFile(credentialFile))
 	}
 
@@ -99,7 +98,6 @@ func (g *GCP) GetMetricsForInstances(
 	ctx context.Context,
 	window string,
 ) ([]v1.Service, error) {
-
 	var services []v1.Service
 
 	metrics, err := g.instanceMetrics(
@@ -115,18 +113,14 @@ func (g *GCP) GetMetricsForInstances(
 
 		// Get the zone
 		if zone, ok := metric.Labels().Get("zone"); ok {
-
 			// Get the instance name
 			if instanceName, ok := metric.Labels().Get("name"); ok {
-
-				if instanceId, ok := metric.Labels().Get("id"); ok {
-
+				if instanceID, ok := metric.Labels().Get("id"); ok {
 					// Load the cacge
 					cachedInstance := g.cache.Get(zone, gceService, instanceName)
 
 					if cachedInstance != nil {
-
-						instance := v1.NewService(instanceId, gcpProvider).SetService(gceService)
+						instance := v1.NewService(instanceID, gcpProvider).SetService(gceService)
 
 						if machineType, ok := metric.Labels().Get("machine_type"); ok {
 							instance.SetKind(machineType)
@@ -136,16 +130,13 @@ func (g *GCP) GetMetricsForInstances(
 						instance.Metrics().Upsert(&metric)
 
 						services = append(services, *instance)
-
 					}
 				}
-
 			}
 		}
 	}
 
 	return services, nil
-
 }
 
 // GetCPUUtilization returns the utilization for instances and is a wrapper
@@ -179,9 +170,7 @@ func (g *GCP) instanceMetrics(
 			return nil, err
 		}
 
-		// klog.Infof("RESPONSE: %+v\n", resp)
-
-		instanceId := resp.GetLabelValues()[0].GetStringValue()
+		instanceID := resp.GetLabelValues()[0].GetStringValue()
 		instanceName := resp.GetLabelValues()[1].GetStringValue()
 		region := resp.GetLabelValues()[2].GetStringValue()
 		zone := resp.GetLabelValues()[3].GetStringValue()
@@ -193,7 +182,7 @@ func (g *GCP) instanceMetrics(
 		m.SetType(v1.CPU).SetUsagePercentage(resp.GetPointData()[0].GetValues()[0].GetDoubleValue() * 100)
 
 		f, err := strconv.ParseFloat(totalCores, 64)
-		//TODO: we should not fail here but collect errors
+		// TODO: we should not fail here but collect errors
 		if err != nil {
 			klog.Errorf("failed to parse GCP metric %s", err)
 			continue
@@ -201,7 +190,7 @@ func (g *GCP) instanceMetrics(
 
 		m.SetTotal(f)
 		m.SetLabels(v1.Labels{
-			"id":           instanceId,
+			"id":           instanceID,
 			"name":         instanceName,
 			"region":       region,
 			"zone":         zone,

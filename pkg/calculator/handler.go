@@ -17,10 +17,8 @@ func NewEmissionCalculator(eventBus bus.Bus) *EmissionCalculator {
 }
 
 func (c *EmissionCalculator) Apply(event bus.Event) {
-
 	// Make sure we got the right event
 	if metricsCollected, ok := event.(v1.MetricsCollected); ok {
-
 		// TODO: remove this, which is only for debugging purposes
 		instance := metricsCollected.Instance
 
@@ -36,5 +34,4 @@ func (c *EmissionCalculator) Apply(event bus.Event) {
 	}
 
 	klog.Errorf("EmissionCalculator got an unknown event: %+v", event)
-
 }

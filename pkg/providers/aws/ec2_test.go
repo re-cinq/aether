@@ -8,9 +8,8 @@ import (
 )
 
 func TestEc2InstanceListing(t *testing.T) {
-
 	// Pass an empty provider config so that it loads the default credentials
-	cfg, err := buildAWSConfig(&config.Account{}, nil)
+	cfg, err := buildAWSConfig(config.Account{}, nil)
 	assert.NotNil(t, cfg)
 	assert.Nil(t, err)
 
@@ -19,7 +18,4 @@ func TestEc2InstanceListing(t *testing.T) {
 	assert.NotNil(t, ec2Client)
 
 	ec2Client.Refresh("eu-north-1")
-
-	// assert.True(t, false)
-
 }

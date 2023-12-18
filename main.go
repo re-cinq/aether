@@ -32,7 +32,6 @@ const startUpLog = `
 // )
 
 func main() {
-
 	// Record when the program is started
 	start := time.Now()
 
@@ -71,10 +70,10 @@ func main() {
 	eventBus.Start()
 
 	// Create the API object
-	apiServer := api.NewApiServer()
+	apiServer := api.NewAPIServer()
 
 	// Scheduler manager
-	scheduler := scheduler.NewScrapingManager(eventBus)
+	scrapingScheduler := scheduler.NewScrapingManager(eventBus)
 
 	// Start the API
 	go apiServer.Start()
@@ -83,7 +82,7 @@ func main() {
 	klog.Infof("started in %v", time.Since(start))
 
 	// Start the scheduler manager
-	scheduler.Start()
+	scrapingScheduler.Start()
 
 	// Graceful shutdown
 	// Await for the signals to teminate the program
@@ -92,10 +91,9 @@ func main() {
 		apiServer.Stop()
 
 		// Stop all the scraping
-		scheduler.Stop()
+		scrapingScheduler.Stop()
 
 		// Shutdown the bus
 		eventBus.Stop()
 	})
-
 }

@@ -16,5 +16,5 @@ type awsMetric struct {
 	value float64
 
 	// instance id
-	instanceId string
+	instanceID string
 }

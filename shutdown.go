@@ -10,7 +10,6 @@ import (
 
 // await for the signals and run the shutdown function
 func await(shutdownHook func()) {
-
 	terminating := make(chan bool, 1)
 
 	// Signals channel
@@ -33,5 +32,4 @@ func await(shutdownHook func()) {
 
 	// Here we wait
 	<-terminating
-
 }

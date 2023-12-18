@@ -77,8 +77,8 @@ func (pc ProviderConfig) IsPresent() bool {
 
 // Generic proxy configuration
 type ProxyConfig struct {
-	HttpProxy  string `mapstructure:"httpProxy"`
-	HttpsProxy string `mapstructure:"httpsProxy"`
+	HTTPProxy  string `mapstructure:"httpProxy"`
+	HTTPSProxy string `mapstructure:"httpsProxy"`
 	NoProxy    string `mapstructure:"noProxy"`
 }
 

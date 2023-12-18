@@ -43,12 +43,12 @@ func (awsClient *AWSClient) GetMetrics(c context.Context, api CWGetMetricDataAPI
 //     location of the credentials file (~/.aws/config) is used
 //   - profile: the name of the profile to use to load the credentials
 //     if empty the default credentials will be used
-func NewAWSClient(currentConfig *config.Account, customTransportConfig *config.TransportConfig) (*AWSClient, error) {
+func NewAWSClient(currentConfig config.Account, customTransportConfig *config.TransportConfig) (*AWSClient, error) {
 
 	cfg, err := buildAWSConfig(currentConfig, customTransportConfig)
 
 	if err != nil {
-		klog.Errorf("failed to initialise AWS Client: %s", err)
+		klog.Errorf("failed to initialize AWS Client: %s", err)
 		return nil, err
 	}
 
@@ -57,12 +57,12 @@ func NewAWSClient(currentConfig *config.Account, customTransportConfig *config.T
 	}, nil
 }
 
-func (client *AWSClient) Config() aws.Config {
-	return client.cfg
+func (awsClient *AWSClient) Config() aws.Config {
+	return awsClient.cfg
 }
 
 // Helper function to builde the AWS config
-func buildAWSConfig(currentConfig *config.Account, customTransportConfig *config.TransportConfig) (aws.Config, error) {
+func buildAWSConfig(currentConfig config.Account, customTransportConfig *config.TransportConfig) (aws.Config, error) {
 
 	// Define the variables to be populated based on the provider configuration
 	// AWS config file
@@ -111,17 +111,17 @@ func buildAWSConfig(currentConfig *config.Account, customTransportConfig *config
 	if customTransportConfig != nil {
 		// Override the transport settings
 		var proxyURL *url.URL
-		if customTransportConfig.Proxy.HttpProxy != "" {
-			proxyURL, err = url.Parse(customTransportConfig.Proxy.HttpProxy)
+		if customTransportConfig.Proxy.HTTPProxy != "" {
+			proxyURL, err = url.Parse(customTransportConfig.Proxy.HTTPProxy)
 			if err != nil {
-				klog.Fatalf("failed to parse config 'httpProxy' url")
+				klog.Fatalf("failed to parse config 'HTTPProxy' url")
 			}
 		}
 
-		if customTransportConfig.Proxy.HttpsProxy != "" {
-			proxyURL, err = url.Parse(customTransportConfig.Proxy.HttpsProxy)
+		if customTransportConfig.Proxy.HTTPSProxy != "" {
+			proxyURL, err = url.Parse(customTransportConfig.Proxy.HTTPSProxy)
 			if err != nil {
-				klog.Fatalf("failed to parse config 'httpsProxy' url")
+				klog.Fatalf("failed to parse config 'HTTPSProxy' url")
 			}
 		}
 
@@ -138,7 +138,6 @@ func buildAWSConfig(currentConfig *config.Account, customTransportConfig *config
 		// 	}
 
 		// })
-
 	}
 
 	loadExternalConfigs = append(loadExternalConfigs, awsConfig.WithHTTPClient(httpClient))
@@ -148,5 +147,4 @@ func buildAWSConfig(currentConfig *config.Account, customTransportConfig *config
 	cfg, err = awsConfig.LoadDefaultConfig(context.TODO(), loadExternalConfigs...)
 
 	return cfg, err
-
 }

@@ -7,7 +7,6 @@ import (
 )
 
 func TestAwsCache(t *testing.T) {
-
 	region := "my-region"
 	service := "my-service"
 	id := "my-id"
@@ -38,5 +37,4 @@ func TestAwsCache(t *testing.T) {
 	// Make sure we basically have an empty map
 	_, exists := cache.entries[region]
 	assert.False(t, exists)
-
 }
