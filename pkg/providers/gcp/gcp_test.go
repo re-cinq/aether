@@ -60,10 +60,16 @@ func (f *fakeMonitoringServer) QueryTimeSeries(
 
 var defaultLabelValues = []*monitoringpb.LabelValue{
 	{
+		Value: &monitoringpb.LabelValue_StringValue{StringValue: "my-instance-id"},
+	},
+	{
 		Value: &monitoringpb.LabelValue_StringValue{StringValue: "foobar"},
 	},
 	{
 		Value: &monitoringpb.LabelValue_StringValue{StringValue: "europe-west-1"},
+	},
+	{
+		Value: &monitoringpb.LabelValue_StringValue{StringValue: "europe-west"},
 	},
 	{
 		Value: &monitoringpb.LabelValue_StringValue{StringValue: "e2-medium"},
@@ -110,9 +116,13 @@ func TestGetCPUMetrics(t *testing.T) {
 			expectedResponse: []*testMetric{
 				{
 					Type: v1.CPU,
+					// v1.Labels{"id":"my-instance-id", "machine_type":"e2-medium", "name":"foobar", "region":"europe-west-1", "zone":"europe-west"}
 					Labels: v1.Labels{
+						"id":           "my-instance-id",
 						"machine_type": "e2-medium",
+						"name":         "foobar",
 						"region":       "europe-west-1",
+						"zone":         "europe-west",
 					},
 					Usage: 1,
 					Total: 2.0000,

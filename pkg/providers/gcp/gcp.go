@@ -174,8 +174,16 @@ func (g *GCP) instanceMetrics(
 		instanceName := resp.GetLabelValues()[1].GetStringValue()
 		region := resp.GetLabelValues()[2].GetStringValue()
 		zone := resp.GetLabelValues()[3].GetStringValue()
-		instanceType := resp.GetLabelValues()[4].GetStringValue()
-		totalCores := resp.GetLabelValues()[5].GetStringValue()
+
+		var instanceType string
+		if len(resp.GetLabelValues()) > 4 {
+			instanceType = resp.GetLabelValues()[4].GetStringValue()
+		}
+
+		var totalCores string
+		if len(resp.GetLabelValues()) > 5 {
+			totalCores = resp.GetLabelValues()[5].GetStringValue()
+		}
 
 		m := v1.NewMetric("cpu")
 		m.SetResourceUnit(v1.Core)

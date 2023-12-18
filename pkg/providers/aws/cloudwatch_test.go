@@ -25,6 +25,4 @@ func TestCloudWatchMetrics(t *testing.T) {
 	assert.NotNil(t, client)
 
 	client.GetEc2Metrics(region, ec2Client.cache)
-
-	assert.True(t, false)
 }
