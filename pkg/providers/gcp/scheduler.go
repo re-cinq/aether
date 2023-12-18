@@ -57,14 +57,14 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 		ticker := time.NewTicker(account.Interval)
 
 		// Init the GCE client
-		gce := newGCECLient(account)
+		gce := newGCECLient(&account)
 		if gce == nil {
 			klog.Error("failed to Initialize GCP provider")
 			return nil
 		}
 
 		// Init the GCP metrics Client
-		metrics, shutdown, err := New(account, gce.cache)
+		metrics, shutdown, err := New(&account, gce.cache)
 		if err != nil {
 			klog.Errorf("failed to Initialize GCP provider %s", err)
 			return nil

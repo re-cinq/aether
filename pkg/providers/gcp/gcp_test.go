@@ -157,7 +157,7 @@ func TestGetCPUMetrics(t *testing.T) {
 			)
 			assert.NoError(err)
 
-			g, teardown, err := New(config.Account{}, newGCPCache(), withTestClient(client))
+			g, teardown, err := New(&config.Account{}, newGCPCache(), withTestClient(client))
 			assert.NoError(err)
 			defer teardown()
 

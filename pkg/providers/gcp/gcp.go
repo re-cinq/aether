@@ -53,7 +53,7 @@ type options func(*GCP)
 
 // New returns a new instance of the GCP provider as well as a function to
 // cleanup connections once done
-func New(account config.Account, cache *gcpCache, opts ...options) (g *GCP, teardown func(), err error) {
+func New(account *config.Account, cache *gcpCache, opts ...options) (g *GCP, teardown func(), err error) {
 	// set any defaults here
 	g = &GCP{
 		projectID: account.Project,

@@ -43,8 +43,7 @@ func (awsClient *AWSClient) GetMetrics(c context.Context, api CWGetMetricDataAPI
 //     location of the credentials file (~/.aws/config) is used
 //   - profile: the name of the profile to use to load the credentials
 //     if empty the default credentials will be used
-func NewAWSClient(currentConfig config.Account, customTransportConfig *config.TransportConfig) (*AWSClient, error) {
-
+func NewAWSClient(currentConfig *config.Account, customTransportConfig *config.TransportConfig) (*AWSClient, error) {
 	cfg, err := buildAWSConfig(currentConfig, customTransportConfig)
 
 	if err != nil {
@@ -57,13 +56,12 @@ func NewAWSClient(currentConfig config.Account, customTransportConfig *config.Tr
 	}, nil
 }
 
-func (awsClient *AWSClient) Config() aws.Config {
-	return awsClient.cfg
+func (awsClient *AWSClient) Config() *aws.Config {
+	return &awsClient.cfg
 }
 
 // Helper function to builde the AWS config
-func buildAWSConfig(currentConfig config.Account, customTransportConfig *config.TransportConfig) (aws.Config, error) {
-
+func buildAWSConfig(currentConfig *config.Account, customTransportConfig *config.TransportConfig) (aws.Config, error) {
 	// Define the variables to be populated based on the provider configuration
 	// AWS config file
 	var cfg aws.Config

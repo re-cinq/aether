@@ -19,7 +19,7 @@ type gceClient struct {
 	client *compute.InstancesClient
 }
 
-func newGCECLient(account config.Account) *gceClient {
+func newGCECLient(account *config.Account) *gceClient {
 	ctx := context.Background()
 
 	var clientOptions []option.ClientOption

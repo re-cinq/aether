@@ -17,11 +17,11 @@ type ec2Client struct {
 }
 
 // New instance
-func NewEc2Client(cfg aws.Config) *ec2Client {
+func NewEc2Client(cfg *aws.Config) *ec2Client {
 	emptyOptions := func(o *ec2.Options) {}
 
 	// Init the EC2 client
-	client := ec2.NewFromConfig(cfg, emptyOptions)
+	client := ec2.NewFromConfig(*cfg, emptyOptions)
 
 	// Make sure the initialisation was successful
 	if client == nil {

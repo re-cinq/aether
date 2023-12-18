@@ -17,11 +17,11 @@ type cloudWatchClient struct {
 }
 
 // New cloudwatch client instance
-func NewCloudWatchClient(cfg aws.Config) *cloudWatchClient {
+func NewCloudWatchClient(cfg *aws.Config) *cloudWatchClient {
 	emptyOptions := func(o *cloudwatch.Options) {}
 
 	// Init the Cloudwatch client
-	client := cloudwatch.NewFromConfig(cfg, emptyOptions)
+	client := cloudwatch.NewFromConfig(*cfg, emptyOptions)
 
 	// Make sure the initialisation was successful
 	if client == nil {
