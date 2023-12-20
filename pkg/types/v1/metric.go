@@ -47,6 +47,7 @@ func NewMetric(name string) *Metric {
 	return &Metric{
 		name:      name,
 		updatedAt: time.Now().UTC(),
+		labels:    Labels{},
 	}
 }
 
@@ -104,11 +105,11 @@ func (r *Metric) Labels() Labels {
 // Useful for logging or debugging
 func (r *Metric) String() string {
 	// Basic string
-	out := fmt.Sprintf("%s %s: %f %s | %f%%", r.resourceType, r.name, r.total, r.unit, r.usage)
+	out := fmt.Sprintf("type:%s name:%s | total:%f %s | usage:%f%%", r.resourceType, r.name, r.total, r.unit, r.usage)
 
 	// if we have emissions show them
 	if r.emissions.value > 0 {
-		out = fmt.Sprintf("%s  => %f %s", out, r.emissions.value, r.emissions.unit)
+		out = fmt.Sprintf("%s => %f %s", out, r.emissions.value, r.emissions.unit)
 	}
 
 	return out

@@ -7,8 +7,11 @@ import (
 
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
+	"github.com/re-cinq/cloud-carbon/pkg/config"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
+	"k8s.io/klog/v2"
 )
 
 var (
@@ -26,10 +29,12 @@ var (
     ; metric 'compute.googleapis.com/instance/cpu/reserved_cores' }
   | outer_join 0
 	| filter project_id = '%s' 
-  | group_by [
-        metric.instance_name, 
-        metadata.system.region,
-				metadata.system.machine_type,
+  | group_by [		
+        resource.instance_id,
+  		metric.instance_name,
+		metadata.system.region,
+		resource.zone,
+		metadata.system.machine_type,
         reserved_cores: format(t_1.value.reserved_cores, '%%f')
   ], [max(t_0.value.utilization)]
   | window %s
@@ -41,25 +46,26 @@ var (
 type GCP struct {
 	client    *monitoring.QueryClient
 	projectID string
+	cache     *gcpCache
 }
 
 type options func(*GCP)
 
-// WithProjectID is an option used to pass a projectID to the provider
-func WithProjectID(projectID string) options {
-	return func(g *GCP) {
-		g.projectID = projectID
-	}
-}
-
 // New returns a new instance of the GCP provider as well as a function to
 // cleanup connections once done
-func New(
-	ctx context.Context,
-	opts ...options,
-) (g *GCP, teardown func(), err error) {
+func New(account *config.Account, cache *gcpCache, opts ...options) (g *GCP, teardown func(), err error) {
 	// set any defaults here
-	g = &GCP{}
+	g = &GCP{
+		projectID: account.Project,
+		cache:     cache,
+	}
+
+	var clientOptions []option.ClientOption
+
+	if account.Credentials.IsPresent() {
+		credentialFile := account.Credentials.FilePaths[0]
+		clientOptions = append(clientOptions, option.WithCredentialsFile(credentialFile))
+	}
 
 	// overwrite any options
 	for _, opt := range opts {
@@ -72,7 +78,7 @@ func New(
 	// it would try authenticate against google regardless of overwriting the
 	// client
 	if g.client == nil {
-		c, err := monitoring.NewQueryClient(ctx)
+		c, err := monitoring.NewQueryClient(context.TODO(), clientOptions...)
 		if err != nil {
 			return nil, func() {}, err
 		}
@@ -86,6 +92,51 @@ func New(
 	}
 
 	return g, teardown, nil
+}
+
+func (g *GCP) GetMetricsForInstances(
+	ctx context.Context,
+	window string,
+) ([]v1.Service, error) {
+	var services []v1.Service
+
+	metrics, err := g.instanceMetrics(
+		ctx, fmt.Sprintf(CPUQuery, g.projectID, window, window),
+	)
+
+	if err != nil {
+		return services, err
+	}
+
+	for _, m := range metrics {
+		metric := *m
+
+		// Get the zone
+		if zone, ok := metric.Labels().Get("zone"); ok {
+			// Get the instance name
+			if instanceName, ok := metric.Labels().Get("name"); ok {
+				if instanceID, ok := metric.Labels().Get("id"); ok {
+					// Load the cacge
+					cachedInstance := g.cache.Get(zone, gceService, instanceName)
+
+					if cachedInstance != nil {
+						instance := v1.NewService(instanceID, gcpProvider).SetService(gceService)
+
+						if machineType, ok := metric.Labels().Get("machine_type"); ok {
+							instance.SetKind(machineType)
+						}
+
+						instance.SetRegion(zone)
+						instance.Metrics().Upsert(&metric)
+
+						services = append(services, *instance)
+					}
+				}
+			}
+		}
+	}
+
+	return services, nil
 }
 
 // GetCPUUtilization returns the utilization for instances and is a wrapper
@@ -118,20 +169,40 @@ func (g *GCP) instanceMetrics(
 		if err != nil {
 			return nil, err
 		}
-		m := v1.NewMetric(resp.GetLabelValues()[0].GetStringValue())
 
+		instanceID := resp.GetLabelValues()[0].GetStringValue()
+		instanceName := resp.GetLabelValues()[1].GetStringValue()
+		region := resp.GetLabelValues()[2].GetStringValue()
+		zone := resp.GetLabelValues()[3].GetStringValue()
+
+		var instanceType string
+		if len(resp.GetLabelValues()) > 4 {
+			instanceType = resp.GetLabelValues()[4].GetStringValue()
+		}
+
+		var totalCores string
+		if len(resp.GetLabelValues()) > 5 {
+			totalCores = resp.GetLabelValues()[5].GetStringValue()
+		}
+
+		m := v1.NewMetric("cpu")
+		m.SetResourceUnit(v1.Core)
 		m.SetType(v1.CPU).SetUsagePercentage(resp.GetPointData()[0].GetValues()[0].GetDoubleValue() * 100)
 
-		f, err := strconv.ParseFloat(resp.GetLabelValues()[3].GetStringValue(), 64)
-		//TODO: we should not fail here but collect errors
+		f, err := strconv.ParseFloat(totalCores, 64)
+		// TODO: we should not fail here but collect errors
 		if err != nil {
-			return nil, err
+			klog.Errorf("failed to parse GCP metric %s", err)
+			continue
 		}
 
 		m.SetTotal(f)
 		m.SetLabels(v1.Labels{
-			"machine_type": resp.GetLabelValues()[2].GetStringValue(),
-			"region":       resp.GetLabelValues()[1].GetStringValue(),
+			"id":           instanceID,
+			"name":         instanceName,
+			"region":       region,
+			"zone":         zone,
+			"machine_type": instanceType,
 		})
 		metrics = append(metrics, m)
 	}

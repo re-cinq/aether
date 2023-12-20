@@ -9,6 +9,7 @@ import (
 
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	"cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
+	"github.com/re-cinq/cloud-carbon/pkg/config"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/option"
@@ -59,10 +60,16 @@ func (f *fakeMonitoringServer) QueryTimeSeries(
 
 var defaultLabelValues = []*monitoringpb.LabelValue{
 	{
+		Value: &monitoringpb.LabelValue_StringValue{StringValue: "my-instance-id"},
+	},
+	{
 		Value: &monitoringpb.LabelValue_StringValue{StringValue: "foobar"},
 	},
 	{
 		Value: &monitoringpb.LabelValue_StringValue{StringValue: "europe-west-1"},
+	},
+	{
+		Value: &monitoringpb.LabelValue_StringValue{StringValue: "europe-west"},
 	},
 	{
 		Value: &monitoringpb.LabelValue_StringValue{StringValue: "e2-medium"},
@@ -76,7 +83,7 @@ func TestGetCPUMetrics(t *testing.T) {
 	assert := require.New(t)
 	ctx := context.TODO()
 
-	//TODO see if we can use v1.Metric instead of this
+	// TODO see if we can use v1.Metric instead of this
 	type testMetric struct {
 		Name   string
 		Total  float64
@@ -109,9 +116,13 @@ func TestGetCPUMetrics(t *testing.T) {
 			expectedResponse: []*testMetric{
 				{
 					Type: v1.CPU,
+					// v1.Labels{"id":"my-instance-id", "machine_type":"e2-medium", "name":"foobar", "region":"europe-west-1", "zone":"europe-west"}
 					Labels: v1.Labels{
+						"id":           "my-instance-id",
 						"machine_type": "e2-medium",
+						"name":         "foobar",
 						"region":       "europe-west-1",
+						"zone":         "europe-west",
 					},
 					Usage: 1,
 					Total: 2.0000,
@@ -156,7 +167,7 @@ func TestGetCPUMetrics(t *testing.T) {
 			)
 			assert.NoError(err)
 
-			g, teardown, err := New(ctx, withTestClient(client))
+			g, teardown, err := New(&config.Account{}, newGCPCache(), withTestClient(client))
 			assert.NoError(err)
 			defer teardown()
 
