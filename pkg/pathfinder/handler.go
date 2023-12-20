@@ -6,17 +6,17 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type PahfinderEventHandler struct {
+type PathfinderEventHandler struct {
 	eventBus bus.Bus
 }
 
-func NewPahfinderEventHandler(eventBus bus.Bus) *PahfinderEventHandler {
-	return &PahfinderEventHandler{
+func NewPathfinderEventHandler(eventBus bus.Bus) *PathfinderEventHandler {
+	return &PathfinderEventHandler{
 		eventBus: eventBus,
 	}
 }
 
-func (c *PahfinderEventHandler) Apply(event bus.Event) {
+func (c *PathfinderEventHandler) Apply(event bus.Event) {
 	// Make sure we got the right event
 	if _, ok := event.(*v1.EmissionsCalculated); ok {
 		// TODO: update the prometheus registry
@@ -24,5 +24,5 @@ func (c *PahfinderEventHandler) Apply(event bus.Event) {
 		return
 	}
 
-	klog.Errorf("PahfinderEventHandler got an unknown event: %+v", event)
+	klog.Errorf("PathfinderEventHandler got an unknown event: %+v", event)
 }
