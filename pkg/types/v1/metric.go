@@ -19,8 +19,8 @@ type Metric struct {
 	// The resource usage in percentage
 	usage Percentage
 
-	// The total amount
-	total float64
+	// The total amount of unit types
+	unitAmount float64
 
 	// The unit representing this resource
 	unit ResourceUnit
@@ -73,10 +73,10 @@ func (r *Metric) Usage() Percentage {
 	return r.usage
 }
 
-// The resource total
+// The resource amount
 // In case of a virtual machine for example is the total amount of cores
-func (r *Metric) Total() float64 {
-	return r.total
+func (r *Metric) UnitAmount() float64 {
+	return r.unitAmount
 }
 
 // The resource unit
@@ -105,7 +105,7 @@ func (r *Metric) Labels() Labels {
 // Useful for logging or debugging
 func (r *Metric) String() string {
 	// Basic string
-	out := fmt.Sprintf("type:%s name:%s | total:%f %s | usage:%f%%", r.resourceType, r.name, r.total, r.unit, r.usage)
+	out := fmt.Sprintf("type:%s name:%s | amount:%f %s | usage:%f%%", r.resourceType, r.name, r.unitAmount, r.unit, r.usage)
 
 	// if we have emissions show them
 	if r.emissions.value > 0 {
@@ -155,14 +155,14 @@ func (r *Metric) SetUsagePercentage(usage float64) *Metric {
 // Examples:
 // - total amount of core of a VM
 // - disk size
-func (r *Metric) SetTotal(total float64) *Metric {
-	// No reason to have a negative total
-	if total < 0 {
-		total = 0
+func (r *Metric) SetUnitAmount(amount float64) *Metric {
+	// No reason to have a negative amount
+	if amount < 0 {
+		amount = 0
 	}
 
-	// Assign the total
-	r.total = total
+	// Assign the amount
+	r.unitAmount = amount
 
 	// Allows to use it as a builder
 	return r
@@ -192,7 +192,7 @@ func (r *Metric) SetUpdatedAt() *Metric {
 
 // Set the emissions for the resource
 func (r *Metric) SetEmissions(emissions ResourceEmissions) *Metric {
-	// Assign the total
+	// Assign the amount
 	r.emissions = emissions
 
 	// Allows to use it as a builder
@@ -201,7 +201,7 @@ func (r *Metric) SetEmissions(emissions ResourceEmissions) *Metric {
 
 // Set the labels for the resource
 func (r *Metric) SetLabels(labels Labels) *Metric {
-	// Assign the total
+	// Assign the amount
 	r.labels = labels
 
 	// Allows to use it as a builder

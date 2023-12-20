@@ -71,7 +71,7 @@ func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) map[
 			}
 
 			// Build the resource
-			cpu := v1.NewMetric(v1.CPU.String()).SetResourceUnit(cpuMetric.unit).SetTotal(float64(instanceMetadata.coreCount))
+			cpu := v1.NewMetric(v1.CPU.String()).SetResourceUnit(cpuMetric.unit).SetUnitAmount(float64(instanceMetadata.coreCount))
 			cpu.SetUsagePercentage(cpuMetric.value).SetType(cpuMetric.kind)
 
 			// Update the CPU information now
