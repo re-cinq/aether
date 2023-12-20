@@ -64,7 +64,7 @@ func main() {
 	eventBus.Subscribe(v1.EmissionsCalculatedTopic, exporter.NewPrometheusEventHandler(eventBus))
 
 	// Subscribe to update the pathfinder handler
-	eventBus.Subscribe(v1.EmissionsCalculatedTopic, pathfinder.NewPahfinderEventHandler(eventBus))
+	eventBus.Subscribe(v1.EmissionsCalculatedTopic, pathfinder.NewPathfinderEventHandler(eventBus))
 
 	// Start the bus
 	eventBus.Start()

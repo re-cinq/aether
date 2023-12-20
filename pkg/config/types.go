@@ -8,9 +8,9 @@ import (
 
 // ApplicationConfig is the full app config
 type ApplicationConfig struct {
-	APIConfig APIConfig                `mapstructure:"api"`
-	Proxy     ProxyConfig              `mapstructure:"proxy"`
-	Providers map[v1.Provider]Provider `mapstructure:"providers"`
+	APIConfig       APIConfig   `mapstructure:"api"`
+	Proxy           ProxyConfig `mapstructure:"proxy"`
+	ProvidersConfig Providers   `mapstructure:"providers"`
 }
 
 // Defines the configuration for the API
@@ -25,6 +25,14 @@ type APIConfig struct {
 	MetricsPath string `mapstructure:"metricsPath"`
 }
 
+type Providers struct {
+	// How often we should scrape the data
+	Interval time.Duration `mapstructure:"scrapingInterval"`
+
+	// Providers config
+	Providers map[v1.Provider]Provider `mapstructure:"accounts"`
+}
+
 // Defines the general configuration for a provider
 type Provider struct {
 
@@ -36,8 +44,6 @@ type Provider struct {
 }
 
 type Account struct {
-	// How often we should scrape the data
-	Interval time.Duration `mapstructure:"scrapingInterval"`
 
 	// AWS: The regions we should scrape the data for
 	Regions []string `mapstructure:"regions"`

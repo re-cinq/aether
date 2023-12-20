@@ -103,7 +103,7 @@ func (api *API) Stop() {
 	klog.Infof("Shutting down the API server...")
 
 	// Create a timeout for shutting down
-	ctxTimeout, cancel := context.WithTimeout(context.TODO(), time.Second*15)
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*15)
 
 	// Release the context
 	defer cancel()

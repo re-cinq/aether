@@ -36,7 +36,7 @@ type awsScheduler struct {
 // Return the scheduler interface
 func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 	// Load the config
-	awsConfig, exists := config.AppConfig().Providers[awsProvider]
+	awsConfig, exists := config.AppConfig().ProvidersConfig.Providers[awsProvider]
 
 	// If the provider is not configured - skip its initialization
 	if !exists {
@@ -69,7 +69,7 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 		}
 
 		// Init the ticket
-		ticker := time.NewTicker(account.Interval)
+		ticker := time.NewTicker(config.AppConfig().ProvidersConfig.Interval)
 
 		// Get the list of regions
 		regions := account.Regions

@@ -19,7 +19,7 @@ func NewPathfinderEventHandler(eventBus bus.Bus) *PathfinderEventHandler {
 func (c *PathfinderEventHandler) Apply(event bus.Event) {
 	// Make sure we got the right event
 	if _, ok := event.(*v1.EmissionsCalculated); ok {
-		// TODO: update the prometheus registry
+		// TODO: send data to the pathfinder api
 
 		return
 	}

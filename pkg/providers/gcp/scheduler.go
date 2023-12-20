@@ -40,7 +40,7 @@ type gcpScheduler struct {
 // Return the scheduler interface
 func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 	// Load the config
-	gcpConfig, exists := config.AppConfig().Providers[gcpProvider]
+	gcpConfig, exists := config.AppConfig().ProvidersConfig.Providers[gcpProvider]
 
 	// If the provider is not configured - skip its initialization
 	if !exists {
@@ -54,7 +54,7 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 		account := gcpConfig.Accounts[index]
 
 		// Init the ticket
-		ticker := time.NewTicker(account.Interval)
+		ticker := time.NewTicker(config.AppConfig().ProvidersConfig.Interval)
 
 		// Init the GCE client
 		gce := newGCECLient(&account)
