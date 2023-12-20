@@ -85,11 +85,11 @@ func TestGetCPUMetrics(t *testing.T) {
 
 	// TODO see if we can use v1.Metric instead of this
 	type testMetric struct {
-		Name   string
-		Total  float64
-		Type   v1.ResourceType
-		Labels v1.Labels
-		Usage  v1.Percentage
+		Name       string
+		UnitAmount float64
+		Type       v1.ResourceType
+		Labels     v1.Labels
+		Usage      v1.Percentage
 	}
 	testdata := []struct {
 		description         string
@@ -124,8 +124,8 @@ func TestGetCPUMetrics(t *testing.T) {
 						"region":       "europe-west-1",
 						"zone":         "europe-west",
 					},
-					Usage: 1,
-					Total: 2.0000,
+					Usage:      1,
+					UnitAmount: 2.0000,
 				},
 			},
 		},
@@ -178,7 +178,7 @@ func TestGetCPUMetrics(t *testing.T) {
 					assert.Equal(test.expectedResponse[i].Labels, r.Labels())
 					assert.Equal(test.expectedResponse[i].Type, r.Type())
 					assert.Equal(test.expectedResponse[i].Usage, r.Usage())
-					assert.Equal(test.expectedResponse[i].Total, r.Total())
+					assert.Equal(test.expectedResponse[i].UnitAmount, r.UnitAmount())
 				}
 			} else {
 				assert.Equal(

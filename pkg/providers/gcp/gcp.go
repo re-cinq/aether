@@ -196,7 +196,7 @@ func (g *GCP) instanceMetrics(
 			continue
 		}
 
-		m.SetTotal(f)
+		m.SetUnitAmount(f)
 		m.SetLabels(v1.Labels{
 			"id":           instanceID,
 			"name":         instanceName,
