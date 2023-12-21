@@ -31,6 +31,12 @@ type Providers struct {
 
 	// Providers config
 	Providers map[v1.Provider]Provider `mapstructure:"accounts"`
+
+	// Path to emissions factor data
+	// TODO: This is a temporary config option, and it shouldn't
+	// be modifiable by the user. The data should be read from
+	// upstream and cached locally in the next iteration.
+	FactorsDataPath string `mapstructure:"factorsDataPath"`
 }
 
 // Defines the general configuration for a provider

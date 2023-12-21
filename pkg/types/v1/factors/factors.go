@@ -15,9 +15,6 @@ import (
 
 // GetEmissionFactors reads in emission data from files and stores them
 // into the emissionFactors struct for calulating
-
-// TODO put this is in config
-// dataPath := "../../../emissions-data/data/"
 func GetEmissionFactors(provider v1.Provider, dataPath string) (*EmissionFactors, error) {
 	var err error
 	ef := &EmissionFactors{
