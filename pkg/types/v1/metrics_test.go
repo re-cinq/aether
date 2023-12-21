@@ -13,7 +13,7 @@ func TestMetricsParser(t *testing.T) {
 
 	cpuResource.SetUsagePercentage(20.54).SetUnitAmount(4.0)
 	cpuResource.SetType(CPU).SetResourceUnit(Core)
-	cpuResource.SetEmissions(NewResourceEmissions(1056.76, GCO2eqkWh))
+	cpuResource.SetEmissions(NewResourceEmission(1056.76, GCO2eqkWh))
 
 	assert.Equal(t, cpuResource.Usage(), Percentage(20.54))
 	assert.Equal(t, cpuResource.UnitAmount(), float64(4.0))

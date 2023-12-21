@@ -10,7 +10,7 @@ type ResourceEmissions struct {
 }
 
 // New instance of the resource emission
-func NewResourceEmissions(value float64, unit EmissionUnit) ResourceEmissions {
+func NewResourceEmission(value float64, unit EmissionUnit) ResourceEmissions {
 	return ResourceEmissions{
 		value: value,
 		unit:  unit,

@@ -17,7 +17,7 @@ func TestServiceOperations(t *testing.T) {
 	// Mocking the metric
 	r := NewMetric("cpu")
 	r.SetUsagePercentage(170.4).SetUnitAmount(4.0).SetResourceUnit(Core)
-	r.SetEmissions(NewResourceEmissions(1024.57, GCO2eqkWh))
+	r.SetEmissions(NewResourceEmission(1024.57, GCO2eqkWh))
 	r.SetUpdatedAt()
 
 	// Make sure the usage validation succeeded

@@ -13,7 +13,7 @@ func TestResourceFunctionalities(t *testing.T) {
 
 	// Assign the various values to the resource
 	r.SetUsagePercentage(20.54).SetUnitAmount(4.0).SetResourceUnit(Core).SetType(CPU)
-	r.SetEmissions(NewResourceEmissions(1056.76, GCO2eqkWh))
+	r.SetEmissions(NewResourceEmission(1056.76, GCO2eqkWh))
 	r.SetUpdatedAt()
 
 	// Validate the data
