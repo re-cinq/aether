@@ -1,6 +1,8 @@
 package calculator
 
 import (
+	"time"
+
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 )
 
@@ -23,7 +25,7 @@ type calculate struct {
 
 // OperationalEmissions are the emissions released from the machines the service is
 // running on based on architecture and utilization.
-func (c *calculate) operationalEmissions(interval int) float64 {
+func (c *calculate) operationalEmissions(interval time.Duration) float64 {
 	// vCPUHours is the amount of cores on the machine multiplied by the interval of time
 	// for 1 hour. For example, if the machine has 4 cores and the interval of time is
 	// 5 minutes: The hourly time is 5/60 (0.083333333) * 4 cores = 0.333333333.
@@ -44,7 +46,7 @@ func (c *calculate) operationalEmissions(interval int) float64 {
 
 // EmbodiedEmissions are the released emissions of production and destruction of the
 // hardware
-func (c *calculate) embodiedEmissions(interval int) float64 {
+func (c *calculate) embodiedEmissions(interval time.Duration) float64 {
 	// Total Embodied is the total emissions for a server to be produced, including
 	// additional emmissions for added DRAM, CPUs, GPUS, and storage. This is divided
 	// by the expected lifespan of the server to get the annual emissions.
