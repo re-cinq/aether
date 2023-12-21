@@ -32,6 +32,9 @@ type Service struct {
 	// The metrics collection for the specific service
 	metrics Metrics
 
+	// The emissions of the service during operation
+	operationalEmissions ResourceEmissions
+
 	// The embodied emissions for the service
 	embodiedEmissions ResourceEmissions
 
@@ -59,6 +62,11 @@ func (s *Service) Name() string {
 // Returns the embodied emissions for the service
 func (s *Service) EmbodiedEmissions() ResourceEmissions {
 	return s.embodiedEmissions
+}
+
+// Returns the operatioal emissions for the service
+func (s *Service) OperationalEmissions() ResourceEmissions {
+	return s.operationalEmissions
 }
 
 // Returns the service collected metrics
@@ -137,6 +145,12 @@ func (s *Service) UpsertMetric(resource *Metric) *Service {
 // Set the embodied emissions for the service
 func (s *Service) SetEmbodiedEmissions(embodied ResourceEmissions) *Service {
 	s.embodiedEmissions = embodied
+	return s
+}
+
+// Set the operational emissions for the service
+func (s *Service) SetOperationalEmissions(emissions ResourceEmissions) *Service {
+	s.operationalEmissions = emissions
 	return s
 }
 
