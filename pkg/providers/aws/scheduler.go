@@ -36,7 +36,7 @@ type awsScheduler struct {
 // Return the scheduler interface
 func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 	// Load the config
-	awsConfig, exists := config.AppConfig().ProvidersConfig.Providers[awsProvider]
+	awsConfig, exists := config.AppConfig().Providers[awsProvider]
 
 	// If the provider is not configured - skip its initialization
 	if !exists {

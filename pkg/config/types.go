@@ -8,9 +8,10 @@ import (
 
 // ApplicationConfig is the full app config
 type ApplicationConfig struct {
-	APIConfig       APIConfig   `mapstructure:"api"`
-	Proxy           ProxyConfig `mapstructure:"proxy"`
-	ProvidersConfig Providers   `mapstructure:"providers"`
+	APIConfig       APIConfig                `mapstructure:"api"`
+	Proxy           ProxyConfig              `mapstructure:"proxy"`
+	ProvidersConfig ProvidersConfig          `mapstructure:"providersConfig"`
+	Providers       map[v1.Provider]Provider `mapstructure:"providers"`
 }
 
 // Defines the configuration for the API
@@ -25,12 +26,9 @@ type APIConfig struct {
 	MetricsPath string `mapstructure:"metricsPath"`
 }
 
-type Providers struct {
+type ProvidersConfig struct {
 	// How often we should scrape the data
 	Interval time.Duration `mapstructure:"scrapingInterval"`
-
-	// Providers config
-	Providers map[v1.Provider]Provider `mapstructure:"accounts"`
 
 	// Path to emissions factor data
 	// TODO: This is a temporary config option, and it shouldn't
