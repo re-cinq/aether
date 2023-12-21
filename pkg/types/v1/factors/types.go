@@ -1,11 +1,13 @@
 package v1
 
+import v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+
 type CoefficientData map[string]float64       // map[region] = co2e
 type EmbodiedData map[string]Embodied         // key = Machine type (n2-standard-
 type MachineSpecsData map[string]MachineSpecs // key = architecture name (Haswell, Skylake, ..)
 
 type EmissionFactors struct {
-	Provider    string
+	Provider    v1.Provider
 	Coefficient CoefficientData // key is region
 	Embodied    EmbodiedData    // key is machineType
 	*ProviderDefaults

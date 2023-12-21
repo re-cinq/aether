@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,7 +13,7 @@ const testDataPath = "../../../testdata"
 func TestGetProviderDefaults(t *testing.T) {
 	tests := []struct {
 		name     string
-		provider string
+		provider v1.Provider
 		hasError bool
 		expRes   *ProviderDefaults
 		expErr   string
@@ -59,7 +60,7 @@ func TestGetProviderDefaults(t *testing.T) {
 func TestGetCoefficientData(t *testing.T) {
 	tests := []struct {
 		name     string
-		provider string
+		provider v1.Provider
 		hasError bool
 		expRes   CoefficientData
 		expErr   string
@@ -104,7 +105,7 @@ func TestGetCoefficientData(t *testing.T) {
 func TestGetMachineSpec(t *testing.T) {
 	tests := []struct {
 		name     string
-		provider string
+		provider v1.Provider
 		hasError bool
 		expRes   MachineSpecsData
 		expErr   string
@@ -286,7 +287,7 @@ func TestGetEmbodiedData(t *testing.T) {
 func TestGetEmissionFactors(t *testing.T) {
 	tests := []struct {
 		name     string
-		provider string
+		provider v1.Provider
 		hasError bool
 		expRes   *EmissionFactors
 		expErr   string

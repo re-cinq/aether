@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/go-yaml/yaml"
+	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 )
 
 // Emission data is currently stored as files in our emissions-data repo.
@@ -17,7 +18,7 @@ import (
 
 // TODO put this is in config
 // dataPath := "../../../emissions-data/data/"
-func GetEmissionFactors(provider, dataPath string) (*EmissionFactors, error) {
+func GetEmissionFactors(provider v1.Provider, dataPath string) (*EmissionFactors, error) {
 	var err error
 	ef := &EmissionFactors{
 		Provider: provider,
@@ -75,7 +76,7 @@ func (ef *EmissionFactors) getCoefficientData(dataPath string) error {
 
 // getMachineSpecs creates a map of machine specs based on
 // machine architecture
-func getMachineSpecs(provider, dataPath string) (MachineSpecsData, error) {
+func getMachineSpecs(provider v1.Provider, dataPath string) (MachineSpecsData, error) {
 	data := []MachineSpecs{}
 	machineSpecsData := make(MachineSpecsData)
 
