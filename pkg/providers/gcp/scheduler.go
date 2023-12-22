@@ -25,7 +25,7 @@ type gcpScheduler struct {
 	project string
 
 	// GCP Metrics client
-	metrics *GCP
+	gcpClient *GCP
 
 	// GCE client
 	gce *gceClient
@@ -64,7 +64,8 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 		}
 
 		// Init the GCP metrics Client
-		metrics, shutdown, err := New(&account, gce.cache)
+		// This doesn't return metrics, it returns a new GCP client
+		gcpClient, shutdown, err := New(&account, gce.cache)
 		if err != nil {
 			klog.Errorf("failed to Initialize GCP provider %s", err)
 			return nil
@@ -74,14 +75,14 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 		gce.Refresh(account.Project)
 
 		accountScheduler := gcpScheduler{
-			ticker:   ticker,
-			done:     make(chan bool),
-			project:  account.Project,
-			account:  account,
-			eventBus: eventBus,
-			metrics:  metrics,
-			gce:      gce,
-			shutdown: shutdown,
+			ticker:    ticker,
+			done:      make(chan bool),
+			project:   account.Project,
+			account:   account,
+			eventBus:  eventBus,
+			gcpClient: gcpClient,
+			gce:       gce,
+			shutdown:  shutdown,
 		}
 
 		schedulers = append(schedulers, &accountScheduler)
@@ -96,7 +97,7 @@ func (s *gcpScheduler) process() {
 		return
 	}
 
-	instances, err := s.metrics.GetMetricsForInstances(context.TODO(), "5m")
+	instances, err := s.gcpClient.GetMetricsForInstances(context.TODO(), "5m")
 
 	if err != nil {
 		klog.Errorf("failed to scrape instance metrics %s", err)
