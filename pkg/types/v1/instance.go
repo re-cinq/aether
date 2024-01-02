@@ -25,6 +25,9 @@ type Instance struct {
 	// The region of the instance
 	region string
 
+	// The instance zone
+	zone string
+
 	// This is the kind of service
 	// In case of a GCP virtual machine this could be n2-standard-8
 	kind string
@@ -79,6 +82,11 @@ func (i *Instance) Region() string {
 	return i.region
 }
 
+// Returns the instance zone
+func (i *Instance) Zone() string {
+	return i.zone
+}
+
 // Returns the instance kind
 func (i *Instance) Kind() string {
 	return i.kind
@@ -108,6 +116,7 @@ func (i *Instance) Build() Instance {
 		provider: i.provider,
 		name:     i.name,
 		region:   i.region,
+		zone:     i.zone,
 		kind:     i.kind,
 		metrics:  i.metrics,
 		labels:   i.labels,
@@ -162,7 +171,7 @@ func (i *Instance) SetService(service string) *Instance {
 
 // Sets the region where the resource is located
 // Examples:
-// - europe-west4-a (GCP)
+// - europe-west4 (GCP)
 // - us-east-2 (AWS)
 // - eu-east-rack-1 (Baremetal)
 func (i *Instance) SetRegion(region string) *Instance {
@@ -173,7 +182,16 @@ func (i *Instance) SetRegion(region string) *Instance {
 	return i
 }
 
-// Sets the region where the resource is located
+// SetZone sets the instance zone name
+// Examples
+// - europe-west4-a (GCP)
+func (i *Instance) SetZone(zone string) *Instance {
+	i.zone = zone
+
+	return i
+}
+
+// Sets the instance kind
 // Examples:
 // - n2-standard-8 (GCP)
 // - m6.2xlarge (AWS)

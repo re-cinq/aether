@@ -113,23 +113,27 @@ func (g *GCP) GetMetricsForInstances(
 
 		// Get the zone
 		if zone, ok := metric.Labels().Get("zone"); ok {
-			// Get the instance name
-			if instanceName, ok := metric.Labels().Get("name"); ok {
-				if instanceID, ok := metric.Labels().Get("id"); ok {
-					// Load the cacge
-					cachedInstance := g.cache.Get(zone, gceService, instanceName)
+			// Get the region
+			if region, ok := metric.Labels().Get("region"); ok {
+				// Get the instance name
+				if instanceName, ok := metric.Labels().Get("name"); ok {
+					if instanceID, ok := metric.Labels().Get("id"); ok {
+						// Load the cacge
+						cachedInstance := g.cache.Get(zone, gceService, instanceName)
 
-					if cachedInstance != nil {
-						instance := v1.NewInstance(instanceID, gcpProvider).SetService(gceService)
+						if cachedInstance != nil {
+							instance := v1.NewInstance(instanceID, gcpProvider).SetService(gceService)
 
-						if machineType, ok := metric.Labels().Get("machine_type"); ok {
-							instance.SetKind(machineType)
+							if machineType, ok := metric.Labels().Get("machine_type"); ok {
+								instance.SetKind(machineType)
+							}
+
+							instance.SetRegion(region)
+							instance.SetZone(zone)
+							instance.Metrics().Upsert(&metric)
+
+							services = append(services, *instance)
 						}
-
-						instance.SetRegion(zone)
-						instance.Metrics().Upsert(&metric)
-
-						services = append(services, *instance)
 					}
 				}
 			}
