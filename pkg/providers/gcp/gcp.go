@@ -97,8 +97,8 @@ func New(account *config.Account, cache *gcpCache, opts ...options) (g *GCP, tea
 func (g *GCP) GetMetricsForInstances(
 	ctx context.Context,
 	window string,
-) ([]v1.Service, error) {
-	var services []v1.Service
+) ([]v1.Instance, error) {
+	var services []v1.Instance
 
 	metrics, err := g.instanceMetrics(
 		ctx, fmt.Sprintf(CPUQuery, g.projectID, window, window),
@@ -120,7 +120,7 @@ func (g *GCP) GetMetricsForInstances(
 					cachedInstance := g.cache.Get(zone, gceService, instanceName)
 
 					if cachedInstance != nil {
-						instance := v1.NewService(instanceID, gcpProvider).SetService(gceService)
+						instance := v1.NewInstance(instanceID, gcpProvider).SetService(gceService)
 
 						if machineType, ok := metric.Labels().Get("machine_type"); ok {
 							instance.SetKind(machineType)

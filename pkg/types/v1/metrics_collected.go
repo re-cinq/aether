@@ -4,7 +4,7 @@ import bus "github.com/re-cinq/go-bus"
 
 type MetricsCollected struct {
 	bus.Event
-	Instance Service
+	Instance Instance
 }
 
 // The topic this event is about
