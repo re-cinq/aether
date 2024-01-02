@@ -3,7 +3,7 @@ package v1
 import bus "github.com/re-cinq/go-bus"
 
 type EmissionsCalculated struct {
-	Instance Service
+	Instance Instance
 }
 
 // The topic this event is about
