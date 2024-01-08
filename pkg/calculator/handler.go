@@ -36,7 +36,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 			return
 		}
 
-		mCPU, ok := instance.Metrics()["cpu"]
+		mCPU, ok := instance.Metrics()[v1.CPU.String()]
 		if !ok {
 			klog.Errorf("error instance metrics for CPU don't exist")
 			return
