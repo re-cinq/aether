@@ -19,6 +19,7 @@ var (
 	* An MQL query that will return data from Google Cloud with the
 	* - Instance Name
 	* - Region
+	* - Zone
 	* - Machine Type
 	* - Reserved CPUs
 	* - Utilization
@@ -30,12 +31,12 @@ var (
   | outer_join 0
 	| filter project_id = '%s' 
   | group_by [		
-        resource.instance_id,
-  		metric.instance_name,
+    resource.instance_id,
+  	metric.instance_name,
 		metadata.system.region,
 		resource.zone,
 		metadata.system.machine_type,
-        reserved_cores: format(t_1.value.reserved_cores, '%%f')
+    reserved_cores: format(t_1.value.reserved_cores, '%%f')
   ], [max(t_0.value.utilization)]
   | window %s
   | within %s
@@ -94,53 +95,71 @@ func New(account *config.Account, cache *gcpCache, opts ...options) (g *GCP, tea
 	return g, teardown, nil
 }
 
+// GetMetricsForInstances retrieves all the metrics for a given instance
 func (g *GCP) GetMetricsForInstances(
 	ctx context.Context,
 	window string,
 ) ([]v1.Instance, error) {
-	var services []v1.Instance
+	var instances []v1.Instance
 
 	metrics, err := g.instanceMetrics(
 		ctx, fmt.Sprintf(CPUQuery, g.projectID, window, window),
 	)
 
 	if err != nil {
-		return services, err
+		return instances, err
 	}
 
+	// TODO there seems to be duplicated logic here
+	// Why not create instance whuile collecting metric instead of handeling
+	// it in two steps
 	for _, m := range metrics {
 		metric := *m
 
-		// Get the zone
-		if zone, ok := metric.Labels().Get("zone"); ok {
-			// Get the region
-			if region, ok := metric.Labels().Get("region"); ok {
-				// Get the instance name
-				if instanceName, ok := metric.Labels().Get("name"); ok {
-					if instanceID, ok := metric.Labels().Get("id"); ok {
-						// Load the cacge
-						cachedInstance := g.cache.Get(zone, gceService, instanceName)
-
-						if cachedInstance != nil {
-							instance := v1.NewInstance(instanceID, gcpProvider).SetService(gceService)
-
-							if machineType, ok := metric.Labels().Get("machine_type"); ok {
-								instance.SetKind(machineType)
-							}
-
-							instance.SetRegion(region)
-							instance.SetZone(zone)
-							instance.Metrics().Upsert(&metric)
-
-							services = append(services, *instance)
-						}
-					}
-				}
-			}
+		zone, ok := metric.Labels().Get("zone")
+		if !ok {
+			continue
 		}
+
+		region, ok := metric.Labels().Get("region")
+		if !ok {
+			continue
+		}
+
+		instanceName, ok := metric.Labels().Get("name")
+		if !ok {
+			continue
+		}
+
+		instanceID, ok := metric.Labels().Get("id")
+		if !ok {
+			continue
+		}
+
+		machineType, ok := metric.Labels().Get("machine_type")
+		if !ok {
+			continue
+		}
+
+		// Load the cache
+		// TODO make this more explicit, im not sure why this
+		// is needed as we dont use the cache anywhere
+		cachedInstance := g.cache.Get(zone, gceService, instanceName)
+		if cachedInstance == nil {
+			continue
+		}
+
+		instance := v1.NewInstance(instanceID, gcpProvider).SetService(gceService)
+
+		instance.SetKind(machineType)
+		instance.SetRegion(region)
+		instance.SetZone(zone)
+		instance.Metrics().Upsert(&metric)
+
+		instances = append(instances, *instance)
 	}
 
-	return services, nil
+	return instances, nil
 }
 
 // GetCPUUtilization returns the utilization for instances and is a wrapper
@@ -160,6 +179,7 @@ func (g *GCP) instanceMetrics(
 	query string,
 ) ([]*v1.Metric, error) {
 	var metrics []*v1.Metric
+
 	it := g.client.QueryTimeSeries(ctx, &monitoringpb.QueryTimeSeriesRequest{
 		Name:  fmt.Sprintf("projects/%s", g.projectID),
 		Query: query,
@@ -174,24 +194,21 @@ func (g *GCP) instanceMetrics(
 			return nil, err
 		}
 
+		// This is dependant on the MQL query
+		// label ordering
 		instanceID := resp.GetLabelValues()[0].GetStringValue()
 		instanceName := resp.GetLabelValues()[1].GetStringValue()
 		region := resp.GetLabelValues()[2].GetStringValue()
 		zone := resp.GetLabelValues()[3].GetStringValue()
-
-		var instanceType string
-		if len(resp.GetLabelValues()) > 4 {
-			instanceType = resp.GetLabelValues()[4].GetStringValue()
-		}
-
-		var totalCores string
-		if len(resp.GetLabelValues()) > 5 {
-			totalCores = resp.GetLabelValues()[5].GetStringValue()
-		}
+		instanceType := resp.GetLabelValues()[4].GetStringValue()
+		totalCores := resp.GetLabelValues()[5].GetStringValue()
 
 		m := v1.NewMetric("cpu")
 		m.SetResourceUnit(v1.Core)
-		m.SetType(v1.CPU).SetUsagePercentage(resp.GetPointData()[0].GetValues()[0].GetDoubleValue() * 100)
+		m.SetType(v1.CPU).SetUsagePercentage(
+			// translate fraction to a percentage
+			resp.GetPointData()[0].GetValues()[0].GetDoubleValue() * 100,
+		)
 
 		f, err := strconv.ParseFloat(totalCores, 64)
 		// TODO: we should not fail here but collect errors
