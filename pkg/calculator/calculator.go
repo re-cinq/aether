@@ -29,7 +29,8 @@ func (c *calculate) operationalEmissions(interval time.Duration) float64 {
 	// vCPUHours is the amount of cores on the machine multiplied by the interval of time
 	// for 1 hour. For example, if the machine has 4 cores and the interval of time is
 	// 5 minutes: The hourly time is 5/60 (0.083333333) * 4 cores = 0.333333333.
-	vCPUHours := c.cores * (float64(interval) / float64(60))
+	//nolint:unconvert //conversion to minutes does affect calculation
+	vCPUHours := c.cores * (float64(interval.Minutes()) / float64(60))
 
 	// Average Watts is the average energy consumption of the service. It is based on
 	// CPU utilization and Minimum and Maximum wattage of the server. If the machine
@@ -54,5 +55,6 @@ func (c *calculate) embodiedEmissions(interval time.Duration) float64 {
 
 	// The embodied emissions need to be calculated for the measurement interval, so the
 	// annual emissions further divided to the interval minutes.
-	return annualEmbodied / float64(365) / float64(24) / float64(60) * float64(interval)
+	//nolint:unconvert //conversion to minutes does affect calculation
+	return annualEmbodied / float64(365) / float64(24) / float64(60) * float64(interval.Minutes())
 }

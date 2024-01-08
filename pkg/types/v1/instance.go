@@ -63,8 +63,8 @@ func (i *Instance) Name() string {
 }
 
 // Returns the embodied emissions for the instance
-func (i *Instance) EmbodiedEmissions() ResourceEmissions {
-	return i.embodiedEmissions
+func (i *Instance) EmbodiedEmissions() *ResourceEmissions {
+	return &i.embodiedEmissions
 }
 
 // Returns the operational emissions for the instance

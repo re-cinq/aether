@@ -25,10 +25,15 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		klog.Errorf("EmissionCalculator got an unknown event: %+v", event)
 		return
 	}
+
 	instance := metricsCollected.Instance
+
 	cfg := config.AppConfig().ProvidersConfig
 
-	emFactors, err := factors.GetEmissionFactors(instance.Provider(), cfg.FactorsDataPath)
+	emFactors, err := factors.GetEmissionFactors(
+		instance.Provider(),
+		cfg.FactorsDataPath,
+	)
 	if err != nil {
 		klog.Errorf("error getting emission factors: %+v", err)
 		return
@@ -40,6 +45,8 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		return
 	}
 
+	// TODO having this as a map is making it complicated and dupliacting work
+	// we should use a slice and then use a switch case for different types
 	mCPU, ok := instance.Metrics()[v1.CPU.String()]
 	if !ok {
 		klog.Errorf("error instance metrics for CPU don't exist")
@@ -62,7 +69,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		gridCO2e:      gridCO2e,
 	}
 
-	instance.SetOperationalEmissions(
+	mCPU.SetEmissions(
 		v1.NewResourceEmission(
 			c.operationalEmissions(cfg.Interval),
 			v1.GCO2eqkWh,
@@ -80,7 +87,17 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		Instance: instance,
 	})
 
+	instance.Metrics()[v1.CPU.String()] = mCPU
+
 	for _, metric := range instance.Metrics() {
-		klog.Infof("Collected metric: %s %s %s %s | %s", instance.Service(), instance.Region(), instance.Name(), instance.Kind(), metric.String())
+		klog.Infof(
+			"Collected metric: %s %s %s %s | %s",
+			instance.Service(),
+			instance.Region(),
+			instance.Name(),
+			instance.Kind(),
+			metric.String(),
+		)
+
 	}
 }
