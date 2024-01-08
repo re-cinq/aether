@@ -18,11 +18,10 @@ func NewPathfinderEventHandler(eventBus bus.Bus) *PathfinderEventHandler {
 
 func (c *PathfinderEventHandler) Apply(event bus.Event) {
 	// Make sure we got the right event
-	if _, ok := event.(*v1.EmissionsCalculated); ok {
-		// TODO: send data to the pathfinder api
-
+	_, ok := event.(v1.EmissionsCalculated)
+	if !ok {
+		klog.Errorf("PathfinderEventHandler got an unknown event: %+v", event)
 		return
 	}
-
-	klog.Errorf("PathfinderEventHandler got an unknown event: %+v", event)
+	// TODO: send data to the pathfinder api
 }
