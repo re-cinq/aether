@@ -5,17 +5,26 @@ import (
 	"os"
 	"path/filepath"
 
+	git "github.com/go-git/go-git/v5"
+
 	"github.com/go-yaml/yaml"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 )
+
+const (
+	emissionDataRepoURL = "https://github.com/re-cinq/emissions-data/"
+	repoPath            = "/tmp/emissions-data/"
+)
+
+var DataPath string = fmt.Sprintf("%s/data", repoPath)
 
 // Emission data is currently stored as files in our emissions-data repo.
 // Each file is named "{provider}-{emissionFactor}" where emissionFactor
 // may be default, embodied, grid, and use.
 
-// GetEmissionFactors reads in emission data from files and stores them
-// into the emissionFactors struct for calulating
-func GetEmissionFactors(provider v1.Provider, dataPath string) (*EmissionFactors, error) {
+// GetProviderEmissionFactors reads in emission data for a specified
+// provider and stores them into the emissionFactors struct for calulating
+func GetProviderEmissionFactors(provider v1.Provider, dataPath string) (*EmissionFactors, error) {
 	var err error
 	ef := &EmissionFactors{
 		Provider: provider,
@@ -143,4 +152,43 @@ func readYamlData(filePath string, data interface{}) error {
 	}
 
 	return nil
+}
+
+// CloneAndUpdateFactorsData wraps the CloneAndUpdateRepo
+// function with private variables passed.
+func CloneAndUpdateFactorsData() error {
+	return CloneAndUpdateRepo(repoPath, emissionDataRepoURL)
+}
+
+// CloneAndUpdateRepo checks if a local repo exists and is
+// up to date with origin. Otherwise, it deletes and clones
+// it to the repoPath.
+func CloneAndUpdateRepo(repoPath, repoURL string) error {
+	// Get repo info if it exists locally
+	repo, err := git.PlainOpen(repoPath)
+	if err == nil {
+		// repo exists, check if its up to date with upstream
+		errFetch := repo.Fetch(&git.FetchOptions{Depth: 1})
+		if errFetch == git.NoErrAlreadyUpToDate {
+			// repo cloned and up to date
+			return nil
+		}
+		// local repo outdated, so remove the directory
+		// to be re-cloned later
+		if errFetch == nil {
+			os.RemoveAll(repoPath)
+		} else {
+			return err
+		}
+	}
+
+	// Repo doesn't exist, so clone it
+	if err == git.ErrRepositoryNotExists {
+		_, errClone := git.PlainClone(repoPath, false, &git.CloneOptions{
+			URL:   repoURL,
+			Depth: 1,
+		})
+		return errClone
+	}
+	return err
 }
