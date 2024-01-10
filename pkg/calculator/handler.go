@@ -13,6 +13,12 @@ type EmissionCalculator struct {
 }
 
 func NewEmissionCalculator(eventBus bus.Bus) *EmissionCalculator {
+	err := factors.CloneAndUpdateFactorsData()
+	if err != nil {
+		klog.Errorf("error with emissions repo: %+v", err)
+		return nil
+	}
+
 	return &EmissionCalculator{
 		eventBus: eventBus,
 	}
@@ -30,9 +36,9 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 
 	cfg := config.AppConfig().ProvidersConfig
 
-	emFactors, err := factors.GetEmissionFactors(
+	emFactors, err := factors.GetProviderEmissionFactors(
 		instance.Provider(),
-		cfg.FactorsDataPath,
+		factors.DataPath,
 	)
 	if err != nil {
 		klog.Errorf("error getting emission factors: %+v", err)

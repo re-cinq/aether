@@ -355,7 +355,7 @@ func TestGetEmissionFactors(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			res, err := GetEmissionFactors(test.provider, testDataPath)
+			res, err := GetProviderEmissionFactors(test.provider, testDataPath)
 			assert.Equalf(t, res, test.expRes, "Result should be: %v, got: %v", test.expRes, res)
 			if test.hasError {
 				assert.EqualErrorf(t, err, test.expErr, "Error should be: %v, got: %v", test.expErr, err)
