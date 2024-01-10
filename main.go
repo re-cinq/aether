@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 	"runtime"
@@ -25,15 +26,11 @@ const startUpLog = `
                                                                                               
 `
 
-// var (
-// 	metricsPath = flag.String("metrics-path", "/metrics", "metrics path")
-// 	port        = flag.String("port", "8000", "")
-// 	host        = flag.String("host", "127.0.0.1", "")
-// )
-
 func main() {
 	// Record when the program is started
 	start := time.Now()
+
+	ctx := context.Background()
 
 	// print the logo
 	klog.Infof("%v", startUpLog)
@@ -58,13 +55,22 @@ func main() {
 	eventBus := bus.NewEventBus(8192, runtime.NumCPU())
 
 	// Subscribe to the metrics collections
-	eventBus.Subscribe(v1.MetricsCollectedTopic, calculator.NewEmissionCalculator(eventBus))
+	eventBus.Subscribe(
+		v1.MetricsCollectedTopic,
+		calculator.NewEmissionCalculator(eventBus),
+	)
 
 	// Subscribe to update the prometheus exporter
-	eventBus.Subscribe(v1.EmissionsCalculatedTopic, exporter.NewPrometheusEventHandler(eventBus))
+	eventBus.Subscribe(
+		v1.EmissionsCalculatedTopic,
+		exporter.NewPrometheusEventHandler(eventBus),
+	)
 
 	// Subscribe to update the pathfinder handler
-	eventBus.Subscribe(v1.EmissionsCalculatedTopic, pathfinder.NewPathfinderEventHandler(eventBus))
+	eventBus.Subscribe(
+		v1.EmissionsCalculatedTopic,
+		pathfinder.NewPathfinderEventHandler(eventBus),
+	)
 
 	// Start the bus
 	eventBus.Start()
@@ -73,7 +79,7 @@ func main() {
 	apiServer := api.NewAPIServer()
 
 	// Scheduler manager
-	scrapingScheduler := scheduler.NewScrapingManager(eventBus)
+	scraper := scheduler.NewScrapingManager(ctx, eventBus)
 
 	// Start the API
 	go apiServer.Start()
@@ -82,7 +88,7 @@ func main() {
 	klog.Infof("started in %v", time.Since(start))
 
 	// Start the scheduler manager
-	scrapingScheduler.Start()
+	scraper.Start(ctx)
 
 	// Graceful shutdown
 	// Await for the signals to teminate the program
@@ -91,7 +97,7 @@ func main() {
 		apiServer.Stop()
 
 		// Stop all the scraping
-		scrapingScheduler.Stop()
+		scraper.Stop()
 
 		// Shutdown the bus
 		eventBus.Stop()

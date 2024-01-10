@@ -12,6 +12,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.17.0
 	github.com/prometheus/common v0.45.0
 	github.com/re-cinq/go-bus v0.0.1
