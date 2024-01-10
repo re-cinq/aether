@@ -1,6 +1,7 @@
 package amazon
 
 import (
+	"context"
 	"time"
 
 	"github.com/re-cinq/cloud-carbon/pkg/config"
@@ -114,7 +115,7 @@ func (s *awsScheduler) process() {
 	}
 }
 
-func (s *awsScheduler) Schedule() {
+func (s *awsScheduler) Schedule(ctx context.Context) {
 	go func() {
 		for {
 			select {

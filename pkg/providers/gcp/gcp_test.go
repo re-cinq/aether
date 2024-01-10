@@ -7,6 +7,8 @@ import (
 	"net"
 	"testing"
 
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	"cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
@@ -17,9 +19,15 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func withTestClient(c *monitoring.QueryClient) options {
+func withMonitoringTestClient(c *monitoring.QueryClient) options {
 	return func(g *GCP) {
-		g.client = c
+		g.monitoring = c
+	}
+}
+
+func withInstancesTestClient(c *compute.InstancesClient) options {
+	return func(g *GCP) {
+		g.instances = c
 	}
 }
 
@@ -31,14 +39,22 @@ type fakeMonitoringServer struct {
 	Error error
 }
 
+type fakeInstancesServer struct {
+	computepb.UnimplementedInstancesServer
+}
+
 // setupFakeServer is used to setup a fake GRPC server to hanlde test requests
-func setupFakeServer(f *fakeMonitoringServer) (*string, error) {
+func setupFakeServer(
+	m *fakeMonitoringServer,
+	i *fakeInstancesServer,
+) (*string, error) {
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		return nil, err
 	}
 	gsrv := grpc.NewServer()
-	monitoringpb.RegisterQueryServiceServer(gsrv, f)
+	monitoringpb.RegisterQueryServiceServer(gsrv, m)
+	computepb.RegisterInstancesServer(gsrv, i)
 	fakeServerAddr := l.Addr().String()
 	go func() {
 		if err := gsrv.Serve(l); err != nil {
@@ -116,7 +132,6 @@ func TestGetCPUMetrics(t *testing.T) {
 			expectedResponse: []*testMetric{
 				{
 					Type: v1.CPU,
-					// v1.Labels{"id":"my-instance-id", "machine_type":"e2-medium", "name":"foobar", "region":"europe-west-1", "zone":"europe-west"}
 					Labels: v1.Labels{
 						"id":           "my-instance-id",
 						"machine_type": "e2-medium",
@@ -155,10 +170,12 @@ func TestGetCPUMetrics(t *testing.T) {
 				Error:    test.err,
 			}
 
-			addr, err := setupFakeServer(fakeMonitoringServer)
+			fakeInstancesServer := &fakeInstancesServer{}
+
+			addr, err := setupFakeServer(fakeMonitoringServer, fakeInstancesServer)
 			assert.NoError(err)
 
-			client, err := monitoring.NewQueryClient(ctx,
+			m, err := monitoring.NewQueryClient(ctx,
 				option.WithEndpoint(*addr),
 				option.WithoutAuthentication(),
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(
@@ -167,11 +184,25 @@ func TestGetCPUMetrics(t *testing.T) {
 			)
 			assert.NoError(err)
 
-			g, teardown, err := New(&config.Account{}, newGCPCache(), withTestClient(client))
+			i, err := compute.NewInstancesRESTClient(ctx,
+				option.WithEndpoint(*addr),
+				option.WithoutAuthentication(),
+				option.WithGRPCDialOption(grpc.WithTransportCredentials(
+					insecure.NewCredentials(),
+				)),
+			)
+			assert.NoError(err)
+
+			g, teardown, err := New(ctx,
+				&config.Account{},
+				withMonitoringTestClient(m),
+				// TODO create helper to setup fake server
+				withInstancesTestClient(i),
+			)
 			assert.NoError(err)
 			defer teardown()
 
-			resp, err := g.instanceMetrics(ctx, test.query)
+			resp, err := g.instanceMetrics(ctx, "", test.query)
 			if test.err == nil {
 				assert.NoError(err)
 				for i, r := range resp {

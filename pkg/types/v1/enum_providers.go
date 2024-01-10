@@ -21,7 +21,7 @@ const (
 	Azure Provider = azureString
 
 	// Google cloud platform API
-	Gcp Provider = gcpString
+	GCP Provider = gcpString
 
 	// Prometheus API for baremetal and kubernetes support
 	Prometheus Provider = prometheusString
@@ -38,7 +38,7 @@ const (
 var Providers = map[string]Provider{
 	awsString:        Aws,
 	azureString:      Azure,
-	gcpString:        Gcp,
+	gcpString:        GCP,
 	prometheusString: Prometheus,
 }
 

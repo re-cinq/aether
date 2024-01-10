@@ -10,8 +10,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type gcpScheduler struct {
-
+type scheduler struct {
 	// Ticker
 	ticker *time.Ticker
 
@@ -24,102 +23,90 @@ type gcpScheduler struct {
 	// Project ID
 	project string
 
-	// GCP Metrics client
-	gcpClient *GCP
-
-	// GCE client
-	gce *gceClient
-
-	// Account config
-	account config.Account
+	// GCP handler
+	gcp *GCP
 
 	// Shutdown function
 	shutdown func()
 }
 
-// Return the scheduler interface
-func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
-	// Load the config
-	gcpConfig, exists := config.AppConfig().Providers[gcpProvider]
+// NewScheduler returns the a list of schedulers that
+// conform to the scheduler interface
+func NewScheduler(ctx context.Context, eventBus bus.Bus) []v1.Scheduler {
+	// Load the GCP config
+	cfg, exists := config.AppConfig().Providers[provider]
 
 	// If the provider is not configured - skip its initialization
 	if !exists {
 		return nil
 	}
 
-	// Schedulers for each account
 	var schedulers []v1.Scheduler
 
-	for index := range gcpConfig.Accounts {
-		account := gcpConfig.Accounts[index]
+	// Create a scheduler for each GCP project
+	for index := range cfg.Accounts {
+		account := cfg.Accounts[index]
 
-		// Init the ticket
 		ticker := time.NewTicker(config.AppConfig().ProvidersConfig.Interval)
 
-		// Init the GCE client
-		gce := newGCECLient(&account)
-		if gce == nil {
-			klog.Error("failed to Initialize GCP provider")
-			return nil
-		}
-
-		// Init the GCP metrics Client
-		// This doesn't return metrics, it returns a new GCP client
-		gcpClient, shutdown, err := New(&account, gce.cache)
+		// Init the GCP Client
+		gcp, shutdown, err := New(ctx, &account)
 		if err != nil {
 			klog.Errorf("failed to Initialize GCP provider %s", err)
 			return nil
 		}
 
-		// List all the instances
-		gce.Refresh(account.Project)
+		// loads all instances into cache
+		gcp.Refresh(ctx, account.Project)
 
-		accountScheduler := gcpScheduler{
-			ticker:    ticker,
-			done:      make(chan bool),
-			project:   account.Project,
-			account:   account,
-			eventBus:  eventBus,
-			gcpClient: gcpClient,
-			gce:       gce,
-			shutdown:  shutdown,
-		}
-
-		schedulers = append(schedulers, &accountScheduler)
+		schedulers = append(schedulers, &scheduler{
+			ticker:   ticker,
+			done:     make(chan bool),
+			project:  account.Project,
+			eventBus: eventBus,
+			gcp:      gcp,
+			shutdown: shutdown,
+		})
 	}
 
 	return schedulers
 }
 
-func (s *gcpScheduler) process() {
+// process is the logic for the scheduler
+// to run at certain intervals
+func (s *scheduler) process(ctx context.Context) {
 	if s.project == "" {
 		klog.Error("no GCP project defined in the config")
 		return
 	}
 
-	instances, err := s.gcpClient.GetMetricsForInstances(context.TODO(), "5m")
+	s.gcp.Refresh(ctx, s.project)
+
+	instances, err := s.gcp.GetMetricsForInstances(ctx, s.project, "5m")
 
 	if err != nil {
 		klog.Errorf("failed to scrape instance metrics %s", err)
 		return
 	}
 
-	for _, instance := range instances {
-		// // Publish the metrics
+	for i := range instances {
+		instance := instances[i]
 		s.eventBus.Publish(v1.MetricsCollected{
 			Instance: instance,
 		})
 	}
 }
 
-func (s *gcpScheduler) Schedule() {
+// Schedule setups a schedule and runs it according to a time intervals
+// only stops when receives a done signal
+func (s *scheduler) Schedule(ctx context.Context) {
 	go func() {
 		for {
 			select {
 			case <-s.done:
 				return
 			case <-s.ticker.C:
-				s.process()
+				s.process(ctx)
 			}
 		}
 	}()
@@ -127,19 +114,17 @@ func (s *gcpScheduler) Schedule() {
 	klog.Info("started GCP scheduling")
 
 	// Do the first call
-	s.process()
+	s.process(ctx)
 }
 
-func (s *gcpScheduler) Cancel() {
+// Cancel stops the scheduler
+func (s *scheduler) Cancel() {
 	// We are done
 	s.done <- true
 
 	// Stop the ticker
 	s.ticker.Stop()
 
-	// Shutdown the GCP client
+	// Shutdown the GCP handler
 	s.shutdown()
-
-	// Close the GCE client
-	s.gce.Close()
 }
