@@ -98,6 +98,5 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 			instance.Kind(),
 			metric.String(),
 		)
-
 	}
 }
