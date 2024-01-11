@@ -64,14 +64,14 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		maxWatts:      specs.MaxWatts,
 		totalEmbodied: specs.TotalEmbodiedKiloWattCO2e,
 		cores:         mCPU.UnitAmount(),
-		usage:         mCPU.Usage(),
+		usageCPU:      mCPU.Usage(),
 		pue:           emFactors.AveragePUE,
 		gridCO2e:      gridCO2e,
 	}
 
 	mCPU.SetEmissions(
 		v1.NewResourceEmission(
-			c.operationalEmissions(cfg.Interval),
+			c.operationalCPUEmissions(cfg.Interval),
 			v1.GCO2eqkWh,
 		),
 	)
