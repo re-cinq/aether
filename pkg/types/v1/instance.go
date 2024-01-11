@@ -35,8 +35,8 @@ type Instance struct {
 	// The metrics collection for the specific service
 	metrics Metrics
 
-	// The emissions of the service during operation
-	operationalEmissions ResourceEmissions
+	// The CPU emissions of the service during operation
+	operationalCPUEmissions ResourceEmissions
 
 	// The embodied emissions for the service
 	embodiedEmissions ResourceEmissions
@@ -67,9 +67,9 @@ func (i *Instance) EmbodiedEmissions() *ResourceEmissions {
 	return &i.embodiedEmissions
 }
 
-// Returns the operational emissions for the instance
-func (i *Instance) OperationalEmissions() ResourceEmissions {
-	return i.operationalEmissions
+// Returns the operational CPU emissions for the instance
+func (i *Instance) OperationalCPUEmissions() ResourceEmissions {
+	return i.operationalCPUEmissions
 }
 
 // Returns the instance collected metrics
@@ -157,9 +157,9 @@ func (i *Instance) SetEmbodiedEmissions(embodied ResourceEmissions) *Instance {
 	return i
 }
 
-// Set the operational emissions for the instance
-func (i *Instance) SetOperationalEmissions(emissions ResourceEmissions) *Instance {
-	i.operationalEmissions = emissions
+// Set the operational CPU emissions for the instance
+func (i *Instance) SetOperationalCPUEmissions(emissions ResourceEmissions) *Instance {
+	i.operationalCPUEmissions = emissions
 	return i
 }
 

@@ -14,7 +14,7 @@ const lifespan = 4
 
 type calculate struct {
 	cores         float64
-	usage         v1.Percentage
+	usageCPU      v1.Percentage
 	minWatts      float64
 	maxWatts      float64
 	chip          float64
@@ -23,9 +23,9 @@ type calculate struct {
 	totalEmbodied float64
 }
 
-// OperationalEmissions are the emissions released from the machines the service is
+// OperationalCPUEmissions are the emissions released from the machines the service is
 // running on based on architecture and utilization.
-func (c *calculate) operationalEmissions(interval time.Duration) float64 {
+func (c *calculate) operationalCPUEmissions(interval time.Duration) float64 {
 	// vCPUHours is the amount of cores on the machine multiplied by the interval of time
 	// for 1 hour. For example, if the machine has 4 cores and the interval of time is
 	// 5 minutes: The hourly time is 5/60 (0.083333333) * 4 cores = 0.333333333.
@@ -37,7 +37,7 @@ func (c *calculate) operationalEmissions(interval time.Duration) float64 {
 	// architecture is unknown the Min and Max wattage is the average of all machines
 	// for that provider, and is supplied in the provider defaults. This is being
 	// handled in the types/factors package (the point of reading in coefficient data).
-	avgWatts := c.minWatts + float64(c.usage)*(c.maxWatts-c.minWatts)
+	avgWatts := c.minWatts + float64(c.usageCPU)*(c.maxWatts-c.minWatts)
 
 	// Operational Emissions are calculated by multiplying the avgWatts, vCPUHours, PUE,
 	// and region grid CO2e. The PUE is collected from the providers. The CO2e grid data
