@@ -2,6 +2,7 @@ package amazon
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -29,7 +30,8 @@ func NewCloudWatchClient(cfg *aws.Config) *cloudWatchClient {
 		return nil
 	}
 
-	// Return the ec2 service
+	fmt.Printf("Cloudwatch Config: %+v\n", client)
+	// Return the cloudwatch service client
 	return &cloudWatchClient{
 		client: client,
 	}
@@ -41,7 +43,17 @@ func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) map[
 
 	// Define the period
 	end := time.Now().UTC()
-	start := end.Add(-5 * time.Minute)
+	// TODO: Should this be interval time?!?!?!
+	start := end.Add(-60 * time.Minute)
+
+	//res, err := e.client.ListMetrics(context.Background(), nil)
+	//	fmt.Printf("RESULT: %+v\nErr: %+v\n", res.Metrics, err)
+	//
+	//	for _, dem := range res.Metrics {
+	//		for _, d := range dem.Dimensions {
+	//			fmt.Printf("Name: %+v, Value: %+v\n", *d.Name, *d.Value)
+	//		}
+	//	}
 
 	// Get the cpu consumption for all the instances in the region
 	if cpuMetrics := e.getEc2Cpu(region, start, end); len(cpuMetrics) > 0 {
@@ -59,7 +71,7 @@ func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) map[
 			instanceService, exists := serviceMetrics[cpuMetric.instanceID]
 			if !exists {
 				// Then create a new one
-				s := v1.NewInstance(cpuMetric.instanceID, awsProvider)
+				s := v1.NewInstance(cpuMetric.instanceID, provider)
 				s.SetService("EC2")
 				s.SetKind(instanceMetadata.kind).SetRegion(region)
 				s.AddLabel("Name", instanceMetadata.name)
@@ -90,8 +102,10 @@ func (e *cloudWatchClient) getEc2Cpu(region awsRegion, start, end time.Time) []a
 		o.Region = region
 	}
 
+	fmt.Printf("\nStart: %+v\nEnd: %+v\n", start.Local(), end.Local())
+
 	// Make the call to get the CPU metrics
-	output, err := e.client.GetMetricData(context.TODO(), &cloudwatch.GetMetricDataInput{
+	output, err := e.client.GetMetricData(context.Background(), &cloudwatch.GetMetricDataInput{
 		StartTime: &start,
 		EndTime:   &end,
 		MetricDataQueries: []types.MetricDataQuery{
@@ -99,6 +113,7 @@ func (e *cloudWatchClient) getEc2Cpu(region awsRegion, start, end time.Time) []a
 				Id:         aws.String(v1.CPU.String()),
 				Expression: aws.String(`SELECT AVG(CPUUtilization) FROM "AWS/EC2" GROUP BY instanceID`),
 				Period:     aws.Int32(300), // 5 minutes
+				ReturnData: aws.Bool(true),
 			},
 		},
 	}, withRegion)
@@ -114,6 +129,7 @@ func (e *cloudWatchClient) getEc2Cpu(region awsRegion, start, end time.Time) []a
 
 	// Loop through the result and build the intermediate awsMetric model
 	for _, metric := range output.MetricDataResults {
+		fmt.Printf("XXX: %+v\n", *metric.Label)
 		if len(metric.Values) > 0 {
 			cpuMetric := awsMetric{
 				value:      metric.Values[0],

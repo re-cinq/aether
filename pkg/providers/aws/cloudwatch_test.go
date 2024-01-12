@@ -1,6 +1,7 @@
 package amazon
 
 import (
+	"context"
 	"testing"
 
 	"github.com/re-cinq/cloud-carbon/pkg/config"
@@ -11,7 +12,7 @@ func TestCloudWatchMetrics(t *testing.T) {
 	region := "eu-north-1"
 
 	// Pass an empty provider config so that it loads the default credentials
-	cfg, err := buildAWSConfig(&config.Account{}, nil)
+	cfg, err := buildAWSConfig(context.Background(), &config.Account{}, nil)
 	assert.NotNil(t, cfg)
 	assert.Nil(t, err)
 
