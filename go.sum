@@ -46,6 +46,8 @@ cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3f
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
+github.com/aws/aws-sdk-go v1.49.21 h1:Rl8KW6HqkwzhATwvXhyr7vD4JFUMi7oXGAw9SrxxIFY=
+github.com/aws/aws-sdk-go v1.49.21/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.22.2 h1:lV0U8fnhAnPz8YcdmZVV60+tr6CakHzqA6P8T46ExJI=
 github.com/aws/aws-sdk-go-v2 v1.22.2/go.mod h1:Kd0OJtkW3Q0M0lUWGszapWjEvrXDzRW+D21JNsroB+c=
 github.com/aws/aws-sdk-go-v2/config v1.24.0 h1:4LEk29JO3w+y9dEo/5Tq5QTP7uIEw+KQrKiHOs4xlu4=
@@ -74,6 +76,8 @@ github.com/aws/aws-sdk-go-v2/service/sts v1.25.1 h1:txgVXIXWPXyqdiVn92BV6a/rgtpX
 github.com/aws/aws-sdk-go-v2/service/sts v1.25.1/go.mod h1:VAiJiNaoP1L89STFlEMgmHX1bKixY+FaP+TpRFrmyZ4=
 github.com/aws/smithy-go v1.16.0 h1:gJZEH/Fqh+RsvlJ1Zt4tVAtV6bKkp3cC+R6FCZMNzik=
 github.com/aws/smithy-go v1.16.0/go.mod h1:NukqUGpCZIILqqiV0NIjeFh24kd/FAa4beRb6nbIUPE=
+github.com/awsdocs/aws-doc-sdk-examples/gov2/testtools v0.0.0-20240112231730-e6bb7238743b h1:R6f6l8lxHne1fni/f7oEXPAa95GlLeH+gNCi0ZqytOU=
+github.com/awsdocs/aws-doc-sdk-examples/gov2/testtools v0.0.0-20240112231730-e6bb7238743b/go.mod h1:qcs782jWmSQW2exwfKW39rOvOJBZ4xzO8dVLoFF62Sc=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=

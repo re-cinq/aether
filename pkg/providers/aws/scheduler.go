@@ -104,7 +104,11 @@ func (s *awsScheduler) process() {
 	}
 
 	for _, region := range s.regions {
-		instances := s.cloudwatchClient.GetEc2Metrics(region, s.ec2Client.Cache())
+		instances, err := s.cloudwatchClient.GetEc2Metrics(region, s.ec2Client.Cache())
+		if err != nil {
+			klog.Errorf("error getting EC2 Metrics with cloudwatch: %s", err)
+			return
+		}
 
 		for _, instance := range instances {
 			// Publish the metrics
