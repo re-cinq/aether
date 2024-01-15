@@ -3,6 +3,7 @@ package amazon
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -45,10 +46,8 @@ func (awsClient *AWSClient) GetMetrics(c context.Context, api CWGetMetricDataAPI
 //     if empty the default credentials will be used
 func NewAWSClient(currentConfig *config.Account, customTransportConfig *config.TransportConfig) (*AWSClient, error) {
 	cfg, err := buildAWSConfig(currentConfig, customTransportConfig)
-
 	if err != nil {
-		klog.Errorf("failed to initialize AWS Client: %s", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to initialize AWS client: %s", err)
 	}
 
 	return &AWSClient{
