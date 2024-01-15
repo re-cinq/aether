@@ -10,7 +10,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type awsScheduler struct {
+type scheduler struct {
 
 	// Ticker
 	ticker *time.Ticker
@@ -37,9 +37,7 @@ type awsScheduler struct {
 // Return the scheduler interface
 func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 	// Load the config
-	awsConfig, exists := config.AppConfig().Providers[awsProvider]
-
-	// If the provider is not configured - skip its initialization
+	cfg, exists := config.AppConfig().Providers[provider]
 	if !exists {
 		return nil
 	}
@@ -47,8 +45,8 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 	// Schedulers for each account
 	var schedulers []v1.Scheduler
 
-	for index := range awsConfig.Accounts {
-		account := awsConfig.Accounts[index]
+	for index := range cfg.Accounts {
+		account := cfg.Accounts[index]
 
 		// Init the AWS client
 		awsClient, err := NewAWSClient(&account, nil)
@@ -81,7 +79,7 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 		}
 
 		// Build the scheduler
-		scheduler := awsScheduler{
+		scheduler := scheduler{
 			ticker:           ticker,
 			done:             make(chan bool),
 			regions:          regions,
@@ -97,14 +95,14 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 	return schedulers
 }
 
-func (s *awsScheduler) process() {
+func (s *scheduler) process() {
 	if len(s.regions) == 0 {
 		klog.Error("no AWS regions defined in the config")
 		return
 	}
 
 	for _, region := range s.regions {
-		instances, err := s.cloudwatchClient.GetEc2Metrics(region, s.ec2Client.Cache())
+		instances, err := s.cloudwatchClient.GetEC2Metrics(region, s.ec2Client.Cache())
 		if err != nil {
 			klog.Errorf("error getting EC2 Metrics with cloudwatch: %s", err)
 			return
@@ -119,7 +117,7 @@ func (s *awsScheduler) process() {
 	}
 }
 
-func (s *awsScheduler) Schedule(ctx context.Context) {
+func (s *scheduler) Schedule(ctx context.Context) {
 	go func() {
 		for {
 			select {
@@ -137,7 +135,7 @@ func (s *awsScheduler) Schedule(ctx context.Context) {
 	s.process()
 }
 
-func (s *awsScheduler) Cancel() {
+func (s *scheduler) Cancel() {
 	// We are done
 	s.done <- true
 

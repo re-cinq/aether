@@ -37,7 +37,7 @@ func NewCloudWatchClient(cfg *aws.Config) *cloudWatchClient {
 }
 
 // Get the resource consumption of an ec2 instance
-func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) (map[string]v1.Instance, error) {
+func (e *cloudWatchClient) GetEC2Metrics(region awsRegion, cache *awsCache) (map[string]v1.Instance, error) {
 	serviceMetrics := make(map[string]v1.Instance)
 
 	// Define the period
@@ -45,7 +45,7 @@ func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) (map
 	start := end.Add(-5 * time.Minute)
 
 	// Get the cpu consumption for all the instances in the region
-	if cpuMetrics, err := e.getEc2Cpu(region, start, end); len(cpuMetrics) > 0 {
+	if cpuMetrics, err := e.getEC2CPU(region, start, end); len(cpuMetrics) > 0 {
 		if err != nil {
 			return serviceMetrics, err
 		}
@@ -63,7 +63,7 @@ func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) (map
 			instanceService, exists := serviceMetrics[cpuMetric.instanceID]
 			if !exists {
 				// Then create a new one
-				s := v1.NewInstance(cpuMetric.instanceID, awsProvider)
+				s := v1.NewInstance(cpuMetric.instanceID, provider)
 				s.SetService("EC2")
 				s.SetKind(instanceMetadata.kind).SetRegion(region)
 				s.AddLabel("Name", instanceMetadata.name)
@@ -88,7 +88,7 @@ func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) (map
 }
 
 // Get the CPU resource consumption of an ec2 instance
-func (e *cloudWatchClient) getEc2Cpu(region awsRegion, start, end time.Time) ([]awsMetric, error) {
+func (e *cloudWatchClient) getEC2CPU(region awsRegion, start, end time.Time) ([]awsMetric, error) {
 	// Override the region
 	withRegion := func(o *cloudwatch.Options) {
 		o.Region = region
