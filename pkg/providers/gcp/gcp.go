@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"path"
@@ -11,42 +12,12 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
-	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	cache "github.com/patrickmn/go-cache"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"k8s.io/klog/v2"
-)
-
-var (
-	/*
-	* An MQL query that will return data from Google Cloud with the
-	* - Instance Name
-	* - Region
-	* - Zone
-	* - Machine Type
-	* - Reserved CPUs
-	* - Utilization
-	 */
-	CPUQuery = `
-  fetch gce_instance
-  | { metric 'compute.googleapis.com/instance/cpu/utilization'
-    ; metric 'compute.googleapis.com/instance/cpu/reserved_cores' }
-  | outer_join 0
-	| filter project_id = '%s' 
-  | group_by [		
-    resource.instance_id,
-  	metric.instance_name,
-		metadata.system.region,
-		resource.zone,
-		metadata.system.machine_type,
-    reserved_cores: format(t_1.value.reserved_cores, '%%f')
-  ], [max(t_0.value.utilization)]
-  | window %s
-  | within %s
-	`
 )
 
 // GCP is the structure used as the provider for Google Cloud Platform
@@ -155,123 +126,101 @@ func (g *GCP) GetMetricsForInstances(
 ) ([]v1.Instance, error) {
 	var instances []v1.Instance
 
-	metrics, err := g.instanceMetrics(
+	cpumetrics, err := g.instanceCPUMetrics(
 		// TODO these parameters can be cleaned up
 		ctx, project, fmt.Sprintf(CPUQuery, project, window, window),
 	)
-
 	if err != nil {
 		return instances, err
 	}
 
+	memmetrics, err := g.instanceMemoryMetrics(
+		ctx, project, fmt.Sprintf(MEMQuery, project, window, window),
+	)
+	if err != nil {
+		return instances, err
+	}
+
+	// we use a lookup to add different metrics to the same instance
+	lookup := make(map[string]*v1.Instance)
+
 	// TODO there seems to be duplicated logic here
 	// Why not create instance whuile collecting metric instead of handeling
 	// it in two steps
-	for _, m := range metrics {
+	for _, m := range append(cpumetrics, memmetrics...) {
 		metric := *m
 
-		zone, ok := metric.Labels().Get("zone")
-		if !ok {
-			continue
-		}
-
-		region, ok := metric.Labels().Get("region")
-		if !ok {
-			continue
-		}
-
-		instanceName, ok := metric.Labels().Get("name")
-		if !ok {
-			continue
-		}
-
-		instanceID, ok := metric.Labels().Get("id")
-		if !ok {
-			continue
-		}
-
-		machineType, ok := metric.Labels().Get("machine_type")
-		if !ok {
+		meta, err := getMetadata(&metric)
+		if err != nil {
 			continue
 		}
 
 		// Load the cache
 		// TODO make this more explicit, im not sure why this
 		// is needed as we dont use the cache anywhere
-		cachedInstance, ok := g.cache.Get(cacheKey(zone, service, instanceName))
+		cachedInstance, ok := g.cache.Get(cacheKey(meta.zone, service, meta.name))
 		if cachedInstance == nil && !ok {
 			continue
 		}
 
-		instance := v1.NewInstance(instanceID, provider).SetService(service)
+		i, ok := lookup[meta.id]
+		if !ok {
+			i = v1.NewInstance(meta.id, provider).SetService(service)
+		}
 
-		instance.SetKind(machineType)
-		instance.SetRegion(region)
-		instance.SetZone(zone)
-		instance.Metrics().Upsert(&metric)
+		i.SetKind(meta.machineType)
+		i.SetRegion(meta.region)
+		i.SetZone(meta.zone)
+		i.Metrics().Upsert(&metric)
 
-		instances = append(instances, *instance)
+		lookup[meta.id] = i
+	}
+
+	// create list of instances
+	// TODO: this seems repetitive
+	for _, v := range lookup {
+		instances = append(instances, *v)
 	}
 
 	return instances, nil
 }
 
-// instanceMetrics runs a query on googe cloud monitoring using MQL
-// and responds with a list of metrics
-func (g *GCP) instanceMetrics(
-	ctx context.Context,
-	project, query string,
-) ([]*v1.Metric, error) {
-	var metrics []*v1.Metric
+type metadata struct {
+	zone, region, name, id, machineType string
+}
 
-	it := g.monitoring.QueryTimeSeries(ctx, &monitoringpb.QueryTimeSeriesRequest{
-		Name:  fmt.Sprintf("projects/%s", project),
-		Query: query,
-	})
-
-	for {
-		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		// This is dependant on the MQL query
-		// label ordering
-		instanceID := resp.GetLabelValues()[0].GetStringValue()
-		instanceName := resp.GetLabelValues()[1].GetStringValue()
-		region := resp.GetLabelValues()[2].GetStringValue()
-		zone := resp.GetLabelValues()[3].GetStringValue()
-		instanceType := resp.GetLabelValues()[4].GetStringValue()
-		totalCores := resp.GetLabelValues()[5].GetStringValue()
-
-		m := v1.NewMetric("cpu")
-		m.SetResourceUnit(v1.Core)
-		m.SetType(v1.CPU).SetUsagePercentage(
-			// translate fraction to a percentage
-			resp.GetPointData()[0].GetValues()[0].GetDoubleValue() * 100,
-		)
-
-		f, err := strconv.ParseFloat(totalCores, 64)
-		// TODO: we should not fail here but collect errors
-		if err != nil {
-			klog.Errorf("failed to parse GCP metric %s", err)
-			continue
-		}
-
-		m.SetUnitAmount(f)
-		m.SetLabels(v1.Labels{
-			"id":           instanceID,
-			"name":         instanceName,
-			"region":       region,
-			"zone":         zone,
-			"machine_type": instanceType,
-		})
-		metrics = append(metrics, m)
+func getMetadata(m *v1.Metric) (*metadata, error) {
+	zone, ok := m.Labels().Get("zone")
+	if !ok {
+		return &metadata{}, errors.New("zone not found")
 	}
-	return metrics, nil
+
+	region, ok := m.Labels().Get("region")
+	if !ok {
+		return &metadata{}, errors.New("region not found")
+	}
+
+	name, ok := m.Labels().Get("name")
+	if !ok {
+		return &metadata{}, errors.New("instance name not found")
+	}
+
+	id, ok := m.Labels().Get("id")
+	if !ok {
+		return &metadata{}, errors.New("instance id not found")
+	}
+
+	machineType, ok := m.Labels().Get("machine_type")
+	if !ok {
+		return &metadata{}, errors.New("machine type not found")
+	}
+	return &metadata{
+		zone:        zone,
+		region:      region,
+		name:        name,
+		id:          id,
+		machineType: machineType,
+	}, nil
 }
 
 // Refresh fetches all the Instances

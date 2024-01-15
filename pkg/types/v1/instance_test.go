@@ -16,12 +16,9 @@ func TestInstanceOperations(t *testing.T) {
 
 	// Mocking the metric
 	r := NewMetric("cpu")
-	r.SetUsagePercentage(170.4).SetUnitAmount(4.0).SetResourceUnit(Core)
+	r.SetUsage(170.4).SetUnitAmount(4.0).SetResourceUnit(Core)
 	r.SetEmissions(NewResourceEmission(1024.57, GCO2eqkWh))
 	r.SetUpdatedAt()
-
-	// Make sure the usage validation succeeded
-	assert.Equal(t, Percentage(100), r.Usage())
 
 	// Create a new instance
 	instance := NewInstance(instanceID, Prometheus).SetRegion("europe-west4").SetKind("n2-standard-8")

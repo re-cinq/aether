@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +19,7 @@ type testcase struct {
 func defaultCalc() *calculate {
 	return &calculate{
 		cores:    4,
-		usageCPU: v1.Percentage(25),
+		usageCPU: 25.0,
 		minWatts: 1.3423402398570,
 		maxWatts: 4.00498247528,
 		chip:     35.23458732,
@@ -47,7 +46,7 @@ func TestCalculateEmissions(t *testing.T) {
 				interval: 30 * time.Second,
 				calc: &calculate{
 					cores:    0,
-					usageCPU: v1.Percentage(0),
+					usageCPU: 0,
 					minWatts: 0,
 					maxWatts: 0,
 					chip:     0,
@@ -95,7 +94,7 @@ func TestCalculateEmissions(t *testing.T) {
 
 		func() *testcase {
 			c := defaultCalc()
-			c.usageCPU = v1.Percentage(50)
+			c.usageCPU = 50
 			// test with vCPU utilization at 50%
 			return &testcase{
 				name:     "50% utilization",
@@ -107,7 +106,7 @@ func TestCalculateEmissions(t *testing.T) {
 
 		func() *testcase {
 			c := defaultCalc()
-			c.usageCPU = v1.Percentage(100)
+			c.usageCPU = 100
 			// test with vCPU utilization at 100%
 			return &testcase{
 				name:     "100% utilization",
@@ -152,7 +151,7 @@ func TestCalculateEmissions(t *testing.T) {
 				interval: 30 * time.Second,
 				calc: &calculate{
 					cores:    32,
-					usageCPU: v1.Percentage(90),
+					usageCPU: 90,
 					minWatts: 3.0369270833333335,
 					maxWatts: 8.575357663690477,
 					chip:     129.77777777777777,
