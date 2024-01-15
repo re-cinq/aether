@@ -17,7 +17,7 @@ func NewScrapingManager(ctx context.Context, eventBus bus.Bus) *ScrapingManager 
 	var schedulers []v1.Scheduler
 
 	// Add AWS
-	schedulers = append(schedulers, amazon.NewScheduler(eventBus)...)
+	schedulers = append(schedulers, amazon.NewScheduler(ctx, eventBus)...)
 
 	// Add GCP
 	schedulers = append(schedulers, gcp.NewScheduler(ctx, eventBus)...)

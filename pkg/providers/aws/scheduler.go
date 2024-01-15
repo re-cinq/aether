@@ -25,17 +25,11 @@ type scheduler struct {
 	eventBus bus.Bus
 
 	// AWS Client
-	// awsClient *AWSClient
-
-	// Ec2 client
-	ec2Client *ec2Client
-
-	// Cloud watch client
-	cloudwatchClient *cloudWatchClient
+	client *Client
 }
 
 // Return the scheduler interface
-func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
+func NewScheduler(ctx context.Context, eventBus bus.Bus) []v1.Scheduler {
 	// Load the config
 	cfg, exists := config.AppConfig().Providers[provider]
 	if !exists {
@@ -49,22 +43,10 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 		account := cfg.Accounts[index]
 
 		// Init the AWS client
-		awsClient, err := NewAWSClient(&account, nil)
+		client, err := NewClient(ctx, &account, nil)
 		if err != nil {
 			klog.Errorf("failed to Initialize AWS provider %s", err)
 			return nil
-		}
-
-		// Init the ec2 client
-		ec2Client := NewEc2Client(awsClient.Config())
-		if ec2Client == nil {
-			klog.Fatal("Could not initialize EC2 client")
-		}
-
-		// Init the cloudwatch client
-		cloudwatchClient := NewCloudWatchClient(awsClient.Config())
-		if cloudwatchClient == nil {
-			klog.Fatal("Could not initialize CloudWatch client")
 		}
 
 		// Init the ticket
@@ -75,43 +57,52 @@ func NewScheduler(eventBus bus.Bus) []v1.Scheduler {
 
 		// Build the initial cache of instances
 		for _, region := range regions {
-			ec2Client.Refresh(region)
+			err := client.ec2Client.Refresh(ctx, region)
+			if err != nil {
+				klog.Errorf("error refreshing EC2 cache at region: %s: %s", region, err)
+				continue
+			}
 		}
 
 		// Build the scheduler
-		scheduler := scheduler{
-			ticker:           ticker,
-			done:             make(chan bool),
-			regions:          regions,
-			eventBus:         eventBus,
-			cloudwatchClient: cloudwatchClient,
-			ec2Client:        ec2Client,
+		s := scheduler{
+			ticker:   ticker,
+			done:     make(chan bool),
+			regions:  regions,
+			eventBus: eventBus,
+			client:   client,
 		}
 
 		// Append the scheduler
-		schedulers = append(schedulers, &scheduler)
+		schedulers = append(schedulers, &s)
 	}
 
 	return schedulers
 }
 
-func (s *scheduler) process() {
+func (s *scheduler) process(ctx context.Context) {
 	if len(s.regions) == 0 {
 		klog.Error("no AWS regions defined in the config")
 		return
 	}
 
 	for _, region := range s.regions {
-		instances, err := s.cloudwatchClient.GetEC2Metrics(region, s.ec2Client.Cache())
+		// refresh instance cache
+		if err := s.client.ec2Client.Refresh(ctx, region); err != nil {
+			klog.Errorf("error refreshing EC2 instances: %s", err)
+			return
+		}
+
+		instances, err := s.client.cloudWatchClient.GetEC2Metrics(region, s.client.ec2Client.Cache())
 		if err != nil {
 			klog.Errorf("error getting EC2 Metrics with cloudwatch: %s", err)
 			return
 		}
 
-		for _, instance := range instances {
+		for i := range instances {
 			// Publish the metrics
 			s.eventBus.Publish(v1.MetricsCollected{
-				Instance: instance,
+				Instance: instances[i],
 			})
 		}
 	}
@@ -124,7 +115,7 @@ func (s *scheduler) Schedule(ctx context.Context) {
 			case <-s.done:
 				return
 			case <-s.ticker.C:
-				s.process()
+				s.process(ctx)
 			}
 		}
 	}()
@@ -132,7 +123,7 @@ func (s *scheduler) Schedule(ctx context.Context) {
 	klog.Info("started AWS scheduling")
 
 	// Do the first call
-	s.process()
+	s.process(ctx)
 }
 
 func (s *scheduler) Cancel() {

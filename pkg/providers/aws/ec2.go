@@ -3,6 +3,7 @@ package amazon
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -17,7 +18,7 @@ type ec2Client struct {
 }
 
 // New instance
-func NewEc2Client(cfg *aws.Config) *ec2Client {
+func NewEC2Client(cfg *aws.Config) *ec2Client {
 	emptyOptions := func(o *ec2.Options) {}
 
 	// Init the EC2 client
@@ -41,37 +42,28 @@ func (e *ec2Client) Cache() *awsCache {
 }
 
 // refresh stores all the instances for a specific region in cache
-func (e *ec2Client) Refresh(region awsRegion) {
+func (e *ec2Client) Refresh(ctx context.Context, region awsRegion) error {
 	// Override the region
 	withRegion := func(o *ec2.Options) {
 		o.Region = region
 	}
 
 	// First request
-	output, err := e.client.DescribeInstances(context.TODO(), buildListPaginationRequest(nil), withRegion)
-	if err != nil {
-		klog.Errorf("failed to retrieve ec2 instances %s", err)
+	output, err := e.client.DescribeInstances(ctx, buildListPaginationRequest(nil), withRegion)
+	if err != nil || output == nil {
+		return fmt.Errorf("failed to retrieve ec2 instances from region: %s: %s", region, err)
 	}
-
-	if output == nil {
-		klog.Errorf("failed to retrieve the list of EC2 instances from %s", region)
-		return
-	}
-
-	// Make sure the first request is successful
 
 	// Collect all the responses for all the pages
 	instances := []ec2.DescribeInstancesOutput{*output}
 
 	for output.NextToken != nil {
-		output, err = e.client.DescribeInstances(context.TODO(), buildListPaginationRequest(output.NextToken), withRegion)
-		if err != nil {
-			klog.Errorf("failed to retrieve ec2 instances %s", err)
+		output, err = e.client.DescribeInstances(ctx, buildListPaginationRequest(output.NextToken), withRegion)
+		if err != nil || output == nil {
+			return fmt.Errorf("failed to retrieve ec2 instances %s", err)
 		}
-		// Collect the response
-		if output != nil {
-			instances = append(instances, *output)
-		}
+
+		instances = append(instances, *output)
 	}
 
 	for _, reservation := range output.Reservations {
@@ -89,6 +81,7 @@ func (e *ec2Client) Refresh(region awsRegion) {
 			))
 		}
 	}
+	return nil
 }
 
 func getInstanceTag(tags []types.Tag, key string) string {

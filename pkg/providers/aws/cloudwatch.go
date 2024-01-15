@@ -41,6 +41,7 @@ func (e *cloudWatchClient) GetEC2Metrics(region awsRegion, cache *awsCache) (map
 	serviceMetrics := make(map[string]v1.Instance)
 
 	// Define the period
+	// TODO: This should use the window
 	end := time.Now().UTC()
 	start := end.Add(-5 * time.Minute)
 

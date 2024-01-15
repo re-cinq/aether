@@ -1,21 +1,17 @@
 package amazon
 
-import (
-	"testing"
-
-	"github.com/re-cinq/cloud-carbon/pkg/config"
-	"github.com/stretchr/testify/assert"
-)
-
-func TestEc2InstanceListing(t *testing.T) {
-	// Pass an empty provider config so that it loads the default credentials
-	cfg, err := buildAWSConfig(&config.Account{}, nil)
-	assert.NotNil(t, cfg)
-	assert.Nil(t, err)
-
-	// Init the ec2 client
-	ec2Client := NewEc2Client(&cfg)
-	assert.NotNil(t, ec2Client)
-
-	ec2Client.Refresh("eu-north-1")
-}
+// TODO write unit tests that don't make API calls
+//  func TestEc2InstanceListing(t *testing.T) {
+//	  ctx := context.Background()
+//	  // Pass an empty provider config so that it loads the default credentials
+//	  cfg, err := buildAWSConfig(ctx, &config.Account{}, nil)
+//	  assert.NotNil(t, cfg)
+//	  assert.Nil(t, err)
+//
+//	  // Init the ec2 client
+//	  ec2Client := NewEC2Client(&cfg)
+//	  assert.NotNil(t, ec2Client)
+//
+//	  err = ec2Client.Refresh(ctx, "eu-north-1")
+//	  assert.Nil(t, err)
+//  }

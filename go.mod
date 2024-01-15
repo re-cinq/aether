@@ -5,7 +5,6 @@ go 1.21.5
 require (
 	cloud.google.com/go/compute v1.23.1
 	cloud.google.com/go/monitoring v1.16.3
-	github.com/aws/aws-sdk-go v1.49.21
 	github.com/aws/aws-sdk-go-v2 v1.22.2
 	github.com/aws/aws-sdk-go-v2/config v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.30.1
