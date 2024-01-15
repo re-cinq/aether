@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"k8s.io/klog/v2"
 )
 
@@ -22,49 +21,49 @@ var (
 	ErrLoadingAwsConfigFile = errors.New("failed to load AWS credentials config file")
 )
 
-// AWSClient is responsible for calling the AWS API
-type AWSClient struct {
-	// The config in case we have to re-establish a connection
-	cfg aws.Config
+// Client contains the AWS config and service clients
+// and is used to call the API
+type Client struct {
+	cfg              *aws.Config
+	ec2Client        *ec2Client
+	cloudWatchClient *cloudWatchClient
 }
 
-// CWGetMetricDataAPI defines the interface for the GetMetricData function
-type CWGetMetricDataAPI interface {
-	GetMetricData(ctx context.Context, params *cloudwatch.GetMetricDataInput, optFns ...func(*cloudwatch.Options)) (*cloudwatch.GetMetricDataOutput, error)
-}
-
-// GetMetrics Fetches the cloudwatch metrics for your provided input in the given time-frame
-func (awsClient *AWSClient) GetMetrics(c context.Context, api CWGetMetricDataAPI, input *cloudwatch.GetMetricDataInput) (*cloudwatch.GetMetricDataOutput, error) {
-	return api.GetMetricData(c, input)
-}
-
-// NewAWSClient creates a new instance of the AWSClient
+// NewClient creates a struct with the AWS config, EC2 Client, and CloudWatch Client
 // It allows to pass:
 //   - configFile: the location of the config file to load. If empty the default
 //     location of the credentials file (~/.aws/config) is used
 //   - profile: the name of the profile to use to load the credentials
 //     if empty the default credentials will be used
-func NewAWSClient(currentConfig *config.Account, customTransportConfig *config.TransportConfig) (*AWSClient, error) {
-	cfg, err := buildAWSConfig(currentConfig, customTransportConfig)
+//
+// TODO: use options pattern
+func NewClient(ctx context.Context, currentConfig *config.Account, customTransportConfig *config.TransportConfig) (*Client, error) {
+	cfg, err := buildAWSConfig(ctx, currentConfig, customTransportConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize AWS client: %s", err)
 	}
 
-	return &AWSClient{
-		cfg: cfg,
+	// Init the ec2 client
+	ec2Client := NewEC2Client(&cfg)
+	if ec2Client == nil {
+		klog.Fatal("Could not initialize EC2 client")
+	}
+
+	// Init the cloudwatch client
+	cloudWatchClient := NewCloudWatchClient(&cfg)
+	if cloudWatchClient == nil {
+		klog.Fatal("Could not initialize CloudWatch client")
+	}
+
+	return &Client{
+		cfg:              &cfg,
+		ec2Client:        ec2Client,
+		cloudWatchClient: cloudWatchClient,
 	}, nil
 }
 
-func (awsClient *AWSClient) Config() *aws.Config {
-	return &awsClient.cfg
-}
-
 // Helper function to builde the AWS config
-func buildAWSConfig(currentConfig *config.Account, customTransportConfig *config.TransportConfig) (aws.Config, error) {
-	// Define the variables to be populated based on the provider configuration
-	// AWS config file
-	var cfg aws.Config
-
+func buildAWSConfig(ctx context.Context, currentConfig *config.Account, customTransportConfig *config.TransportConfig) (aws.Config, error) {
 	// Error when loading the config file
 	var err error
 
@@ -141,7 +140,5 @@ func buildAWSConfig(currentConfig *config.Account, customTransportConfig *config
 
 	// -------------------------------------------------------------------
 	// Finally generate the config
-	cfg, err = awsConfig.LoadDefaultConfig(context.TODO(), loadExternalConfigs...)
-
-	return cfg, err
+	return awsConfig.LoadDefaultConfig(ctx, loadExternalConfigs...)
 }
