@@ -2,8 +2,6 @@ package calculator
 
 import (
 	"time"
-
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 )
 
 // TODO add links / sources for where numbers and calculations are gathered
@@ -14,7 +12,7 @@ const lifespan = 4
 
 type calculate struct {
 	cores         float64
-	usageCPU      v1.Percentage
+	usageCPU      float64
 	minWatts      float64
 	maxWatts      float64
 	chip          float64
@@ -37,7 +35,7 @@ func (c *calculate) operationalCPUEmissions(interval time.Duration) float64 {
 	// architecture is unknown the Min and Max wattage is the average of all machines
 	// for that provider, and is supplied in the provider defaults. This is being
 	// handled in the types/factors package (the point of reading in coefficient data).
-	avgWatts := c.minWatts + float64(c.usageCPU)*(c.maxWatts-c.minWatts)
+	avgWatts := c.minWatts + c.usageCPU*(c.maxWatts-c.minWatts)
 
 	// Operational Emissions are calculated by multiplying the avgWatts, vCPUHours, PUE,
 	// and region grid CO2e. The PUE is collected from the providers. The CO2e grid data

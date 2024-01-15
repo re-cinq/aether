@@ -16,8 +16,8 @@ type Metric struct {
 	// The resource type
 	resourceType ResourceType
 
-	// The resource usage in percentage
-	usage Percentage
+	// The resource usage
+	usage float64
 
 	// The total amount of unit types
 	unitAmount float64
@@ -69,7 +69,7 @@ func (r *Metric) Type() ResourceType {
 
 // The resource usage in percentage
 // It is a value between 0 and 100
-func (r *Metric) Usage() Percentage {
+func (r *Metric) Usage() float64 {
 	return r.usage
 }
 
@@ -129,23 +129,14 @@ func (r *Metric) SetType(resourceType ResourceType) *Metric {
 	return r
 }
 
-// Adds the usage
-// Examples:
-// - 50.0 (indicates a 50% usage)
-func (r *Metric) SetUsagePercentage(usage float64) *Metric {
+// SetUsage is used to set the usage on the struct which can not be below 0
+func (r *Metric) SetUsage(u float64) *Metric {
 	// Make sure we are not setting the usage to a negative value
-	if usage < 0 {
-		usage = 0
+	if u < 0 {
+		u = 0
 	}
 
-	// It does not make much sense to have a value higher than 100%
-	// So set it to 100 to make the CO2eq calculations easier
-	if usage > 100 {
-		usage = 100
-	}
-
-	// Assign the usage
-	r.usage = Percentage(usage)
+	r.usage = u
 
 	// Allows to use it as a builder
 	return r

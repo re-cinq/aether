@@ -12,13 +12,13 @@ func TestResourceFunctionalities(t *testing.T) {
 	assert.NotNil(t, r)
 
 	// Assign the various values to the resource
-	r.SetUsagePercentage(20.54).SetUnitAmount(4.0).SetResourceUnit(Core).SetType(CPU)
+	r.SetUsage(20.54).SetUnitAmount(4.0).SetResourceUnit(Core).SetType(CPU)
 	r.SetEmissions(NewResourceEmission(1056.76, GCO2eqkWh))
 	r.SetUpdatedAt()
 
 	// Validate the data
 	assert.Equal(t, r.Name(), "cpu")
-	assert.Equal(t, r.Usage(), Percentage(20.54))
+	assert.Equal(t, r.Usage(), 20.54)
 	assert.Equal(t, r.UnitAmount(), float64(4.0))
 	assert.Equal(t, r.Type(), CPU)
 	assert.Equal(t, r.Unit(), Core)
