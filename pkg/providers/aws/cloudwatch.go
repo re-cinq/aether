@@ -2,6 +2,7 @@ package amazon
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -29,14 +30,14 @@ func NewCloudWatchClient(cfg *aws.Config) *cloudWatchClient {
 		return nil
 	}
 
-	// Return the ec2 service
+	// Return the cloudwatch service client
 	return &cloudWatchClient{
 		client: client,
 	}
 }
 
 // Get the resource consumption of an ec2 instance
-func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) map[string]v1.Instance {
+func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) (map[string]v1.Instance, error) {
 	serviceMetrics := make(map[string]v1.Instance)
 
 	// Define the period
@@ -44,7 +45,10 @@ func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) map[
 	start := end.Add(-5 * time.Minute)
 
 	// Get the cpu consumption for all the instances in the region
-	if cpuMetrics := e.getEc2Cpu(region, start, end); len(cpuMetrics) > 0 {
+	if cpuMetrics, err := e.getEc2Cpu(region, start, end); len(cpuMetrics) > 0 {
+		if err != nil {
+			return serviceMetrics, err
+		}
 		for _, cpuMetric := range cpuMetrics {
 			// load the instance metadata from the cache, because the query does not give us
 
@@ -80,11 +84,11 @@ func (e *cloudWatchClient) GetEc2Metrics(region awsRegion, cache *awsCache) map[
 	}
 
 	// Return the collected metrics
-	return serviceMetrics
+	return serviceMetrics, nil
 }
 
 // Get the CPU resource consumption of an ec2 instance
-func (e *cloudWatchClient) getEc2Cpu(region awsRegion, start, end time.Time) []awsMetric {
+func (e *cloudWatchClient) getEc2Cpu(region awsRegion, start, end time.Time) ([]awsMetric, error) {
 	// Override the region
 	withRegion := func(o *cloudwatch.Options) {
 		o.Region = region
@@ -97,20 +101,17 @@ func (e *cloudWatchClient) getEc2Cpu(region awsRegion, start, end time.Time) []a
 		MetricDataQueries: []types.MetricDataQuery{
 			{
 				Id:         aws.String(v1.CPU.String()),
-				Expression: aws.String(`SELECT AVG(CPUUtilization) FROM "AWS/EC2" GROUP BY instanceID`),
+				Expression: aws.String(`SELECT AVG(CPUUtilization) FROM "AWS/EC2" GROUP BY InstanceId`),
 				Period:     aws.Int32(300), // 5 minutes
 			},
 		},
 	}, withRegion)
+	if err != nil {
+		return nil, err
+	}
 
 	// Collector
 	var cpuMetrics []awsMetric
-
-	// Handle the error
-	if err != nil {
-		klog.Errorf("failed to retrieve AWS metrics %s", err)
-		return cpuMetrics
-	}
 
 	// Loop through the result and build the intermediate awsMetric model
 	for _, metric := range output.MetricDataResults {
@@ -123,9 +124,13 @@ func (e *cloudWatchClient) getEc2Cpu(region awsRegion, start, end time.Time) []a
 				name:       v1.CPU.String(),
 			}
 
+			if cpuMetric.instanceID == "Other" {
+				return nil, errors.New("error bad query passed to GetMetricData - instanceID not found in label")
+			}
+
 			cpuMetrics = append(cpuMetrics, cpuMetric)
 		}
 	}
 
-	return cpuMetrics
+	return cpuMetrics, nil
 }

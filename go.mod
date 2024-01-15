@@ -5,10 +5,12 @@ go 1.21.5
 require (
 	cloud.google.com/go/compute v1.23.1
 	cloud.google.com/go/monitoring v1.16.3
+	github.com/aws/aws-sdk-go v1.49.21
 	github.com/aws/aws-sdk-go-v2 v1.22.2
 	github.com/aws/aws-sdk-go-v2/config v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.133.0
+	github.com/awsdocs/aws-doc-sdk-examples/gov2/testtools v0.0.0-20240112231730-e6bb7238743b
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
