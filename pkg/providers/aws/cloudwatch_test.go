@@ -17,9 +17,10 @@ func TestGetMetricsData(t *testing.T) {
 	stubber := testtools.NewStubber()
 	client := NewCloudWatchClient(stubber.SdkConfig)
 
-	start := time.Date(2024, 01, 15, 20, 34, 58, 651387237, time.UTC)
-	end := start.Add(5 * time.Minute)
 	region := "test region"
+	interval := 5 * time.Minute
+	start := time.Date(2024, 01, 15, 20, 34, 58, 651387237, time.UTC)
+	end := start.Add(interval)
 
 	t.Run("get passing metrics data", func(t *testing.T) {
 		stubber.Add(testtools.Stub{
@@ -46,7 +47,7 @@ func TestGetMetricsData(t *testing.T) {
 			},
 		})
 
-		res, err := client.getEC2CPU(region, start, end)
+		res, err := client.getEC2CPU(region, start, end, interval)
 		testtools.ExitTest(stubber, t)
 
 		expRes := []awsMetric{
@@ -69,7 +70,7 @@ func TestGetMetricsData(t *testing.T) {
 			Error:         &testtools.StubError{Err: errors.New("Testing the error is handled")},
 		})
 
-		res, err := client.getEC2CPU(region, start, end)
+		res, err := client.getEC2CPU(region, start, end, interval)
 		testtools.ExitTest(stubber, t)
 
 		assert.Nil(t, res)

@@ -41,7 +41,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 
 	specs, ok := emFactors.Embodied[instance.Kind()]
 	if !ok {
-		klog.Errorf("error finding instance: %s in factor data", instance.Name())
+		klog.Errorf("error finding instance: %s kind: %s in factor data", instance.Name(), instance.Kind())
 		return
 	}
 
