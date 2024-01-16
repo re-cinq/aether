@@ -14,6 +14,7 @@ import (
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	cache "github.com/patrickmn/go-cache"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
+	"github.com/re-cinq/cloud-carbon/pkg/providers/util"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -158,7 +159,7 @@ func (g *GCP) GetMetricsForInstances(
 		// Load the cache
 		// TODO make this more explicit, im not sure why this
 		// is needed as we dont use the cache anywhere
-		cachedInstance, ok := g.cache.Get(cacheKey(meta.zone, service, meta.name))
+		cachedInstance, ok := g.cache.Get(util.CacheKey(meta.zone, service, meta.name))
 		if cachedInstance == nil && !ok {
 			continue
 		}
@@ -255,14 +256,14 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 
 			if instance.GetStatus() == "TERMINATED" {
 				// delete the entry from the cache
-				g.cache.Delete(cacheKey(zone, service, name))
+				g.cache.Delete(util.CacheKey(zone, service, name))
 				continue
 			}
 
 			if instance.GetStatus() == "RUNNING" {
 				// TODO potentially we do not need a custom resource to cache, maybe
 				// just cache the instance
-				g.cache.Set(cacheKey(zone, service, name), resource{
+				g.cache.Set(util.CacheKey(zone, service, name), resource{
 					region:      zone,
 					service:     service,
 					id:          instanceID,
@@ -275,10 +276,6 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 			}
 		}
 	}
-}
-
-func cacheKey(z, s, n string) string {
-	return fmt.Sprintf("%s-%s-%s", z, s, n)
 }
 
 // getValueFromURL returns the last element in the url Path

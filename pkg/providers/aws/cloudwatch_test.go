@@ -41,7 +41,7 @@ func TestGetMetricsData(t *testing.T) {
 					{
 						Id:     aws.String("testID"),
 						Label:  aws.String("i-00123456789"),
-						Values: []float64{1.00},
+						Values: []float64{.0000123},
 					},
 				},
 			},
@@ -50,17 +50,25 @@ func TestGetMetricsData(t *testing.T) {
 		res, err := client.getEC2CPU(region, start, end, interval)
 		testtools.ExitTest(stubber, t)
 
-		expRes := []awsMetric{
-			{
-				name:       "cpu",
-				kind:       "cpu",
-				unit:       "core",
-				value:      1,
-				instanceID: "i-00123456789",
-			},
-		}
+		expRes := v1.NewMetric("cpu").SetUsage(float64(.0000123)).SetResourceUnit("core").SetType(v1.CPU)
+		expRes.SetLabels(map[string]string{
+			"instanceID": "i-00123456789",
+		})
 
-		assert.Equalf(t, expRes, res, "Result should be: %v, got: %v", expRes, res)
+		// Comparing the metric structs fails because the time.Time timeStamp field will
+		// not be equal, and since the fields are not exported it cannot be modified or
+		// excluded in the compare.
+		// So instead compare each field value individually
+
+		// v1.Metric.String() creates a string of type, name, amount, and usage
+		assert.Equalf(t, expRes.String(), res[0].String(), "Result should be: %v, got: %v", expRes, res)
+		// compare labels
+		assert.Equalf(t, expRes.Labels(), res[0].Labels(), "Result should be: %v, got: %v", expRes, res)
+		// compare Resource Unit
+		assert.Equalf(t, expRes.Unit(), res[0].Unit(), "Result should be: %v, got: %v", expRes, res)
+		// emissions should not yet be calculated at this point
+		assert.Equal(t, res[0].Emissions(), &v1.ResourceEmissions{})
+		// check no error
 		assert.Nil(t, err)
 	})
 
