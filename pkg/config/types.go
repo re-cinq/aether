@@ -8,9 +8,9 @@ import (
 
 // ApplicationConfig is the full app config
 type ApplicationConfig struct {
-	APIConfig       APIConfig                `mapstructure:"api"`
-	Proxy           ProxyConfig              `mapstructure:"proxy"`
-	ProvidersConfig ProvidersConfig          `mapstructure:"providersConfig"`
+	APIConfig       APIConfig   `mapstructure:"api"`
+	Proxy           ProxyConfig `mapstructure:"proxy"`
+	ProvidersConfig `mapstructure:"providersConfig"`
 	Providers       map[v1.Provider]Provider `mapstructure:"providers"`
 }
 

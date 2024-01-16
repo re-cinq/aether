@@ -86,6 +86,8 @@ func (s *scheduler) process(ctx context.Context) {
 		return
 	}
 
+	interval := config.AppConfig().Interval
+
 	for _, region := range s.regions {
 		// refresh instance cache
 		if err := s.client.ec2Client.Refresh(ctx, region); err != nil {
@@ -93,7 +95,11 @@ func (s *scheduler) process(ctx context.Context) {
 			return
 		}
 
-		instances, err := s.client.cloudWatchClient.GetEC2Metrics(region, s.client.ec2Client.Cache())
+		instances, err := s.client.cloudWatchClient.GetEC2Metrics(
+			region,
+			interval,
+			s.client.ec2Client.Cache(),
+		)
 		if err != nil {
 			klog.Errorf("error getting EC2 Metrics with cloudwatch: %s", err)
 			return
