@@ -73,11 +73,11 @@ func (e *ec2Client) Refresh(ctx context.Context, region awsRegion) error {
 			e.cache.Add(newAWSResource(
 				region,
 				ec2Service,
-				*instance.InstanceId,
+				aws.ToString(instance.InstanceId),
 				string(instance.InstanceType),
 				string(instance.InstanceLifecycle),
 				getInstanceTag(instance.Tags, "Name"),
-				int(*instance.CpuOptions.CoreCount),
+				int(aws.ToInt32(instance.CpuOptions.CoreCount)),
 			))
 		}
 	}
@@ -86,8 +86,8 @@ func (e *ec2Client) Refresh(ctx context.Context, region awsRegion) error {
 
 func getInstanceTag(tags []types.Tag, key string) string {
 	for _, tag := range tags {
-		if *tag.Key == key {
-			return *tag.Value
+		if aws.ToString(tag.Key) == key {
+			return aws.ToString(tag.Value)
 		}
 	}
 	return ""
