@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/patrickmn/go-cache"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,11 +23,16 @@ var (
 )
 
 // Client contains the AWS config and service clients
-// and is used to call the API
+// and is used to access the API
 type Client struct {
-	cfg              *aws.Config
+	// AWS specific config for auth and client creation
+	cfg *aws.Config
+
+	// service APIs
 	ec2Client        *ec2Client
 	cloudWatchClient *cloudWatchClient
+
+	cache *cache.Cache
 }
 
 // NewClient creates a struct with the AWS config, EC2 Client, and CloudWatch Client
@@ -59,6 +65,8 @@ func NewClient(ctx context.Context, currentConfig *config.Account, customTranspo
 		cfg:              &cfg,
 		ec2Client:        ec2Client,
 		cloudWatchClient: cloudWatchClient,
+		// TODO: configure expiry and deletion
+		cache: cache.New(12*time.Hour, 36*time.Minute),
 	}, nil
 }
 

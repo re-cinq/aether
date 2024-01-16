@@ -4,17 +4,19 @@ package amazon
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/patrickmn/go-cache"
+	"github.com/re-cinq/cloud-carbon/pkg/providers/util"
 	"k8s.io/klog/v2"
 )
 
 // Helper service to get EC2 data
 type ec2Client struct {
 	client *ec2.Client
-	cache  *awsCache
 }
 
 // New instance
@@ -33,16 +35,11 @@ func NewEC2Client(cfg *aws.Config) *ec2Client {
 	// Return the ec2 service
 	return &ec2Client{
 		client: client,
-		cache:  newAWSCache(),
 	}
 }
 
-func (e *ec2Client) Cache() *awsCache {
-	return e.cache
-}
-
 // refresh stores all the instances for a specific region in cache
-func (e *ec2Client) Refresh(ctx context.Context, region awsRegion) error {
+func (e *ec2Client) Refresh(ctx context.Context, ca *cache.Cache, region string) error {
 	// Override the region
 	withRegion := func(o *ec2.Options) {
 		o.Region = region
@@ -70,15 +67,20 @@ func (e *ec2Client) Refresh(ctx context.Context, region awsRegion) error {
 		for index := range reservation.Instances {
 			instance := reservation.Instances[index]
 
-			e.cache.Add(newAWSResource(
-				region,
-				ec2Service,
-				aws.ToString(instance.InstanceId),
-				string(instance.InstanceType),
-				string(instance.InstanceLifecycle),
-				getInstanceTag(instance.Tags, "Name"),
-				int(aws.ToInt32(instance.CpuOptions.CoreCount)),
-			))
+			id := aws.ToString(instance.InstanceId)
+			ca.Set(util.CacheKey(region, ec2Service, id),
+				&resource{
+					id:          id,
+					service:     ec2Service,
+					region:      region,
+					kind:        string(instance.InstanceType),
+					lifecycle:   string(instance.InstanceLifecycle),
+					coreCount:   int(aws.ToInt32(instance.CpuOptions.CoreCount)),
+					name:        getInstanceTag(instance.Tags, "Name"),
+					lastUpdated: time.Now().UTC(),
+				},
+				cache.DefaultExpiration,
+			)
 		}
 	}
 	return nil

@@ -1,20 +1,32 @@
 package amazon
 
-import v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+import (
+	"time"
+)
 
-type awsMetric struct {
-	// metric name
+// The AWS Resource representation
+type resource struct {
+	// The AWS resource id
+	id string
+
+	// The region where the resource is located
+	region string
+
+	// The service the resource belongs to
+	service string
+
+	// For example spot, reserved
+	lifecycle string
+
+	// Amount of cores
+	coreCount int
+
+	// The instance kind for example
+	kind string
+
+	// The name
 	name string
 
-	// metric kind
-	kind v1.ResourceType
-
-	// metric unit
-	unit v1.ResourceUnit
-
-	// value
-	value float64
-
-	// instance id
-	instanceID string
+	// When was the last time it was updated
+	lastUpdated time.Time
 }

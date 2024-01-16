@@ -57,7 +57,7 @@ func NewScheduler(ctx context.Context, eventBus bus.Bus) []v1.Scheduler {
 
 		// Build the initial cache of instances
 		for _, region := range regions {
-			err := client.ec2Client.Refresh(ctx, region)
+			err := client.ec2Client.Refresh(ctx, client.cache, region)
 			if err != nil {
 				klog.Errorf("error refreshing EC2 cache at region: %s: %s", region, err)
 				continue
@@ -90,15 +90,15 @@ func (s *scheduler) process(ctx context.Context) {
 
 	for _, region := range s.regions {
 		// refresh instance cache
-		if err := s.client.ec2Client.Refresh(ctx, region); err != nil {
+		if err := s.client.ec2Client.Refresh(ctx, s.client.cache, region); err != nil {
 			klog.Errorf("error refreshing EC2 instances: %s", err)
 			return
 		}
 
 		instances, err := s.client.cloudWatchClient.GetEC2Metrics(
+			s.client.cache,
 			region,
 			interval,
-			s.client.ec2Client.Cache(),
 		)
 		if err != nil {
 			klog.Errorf("error getting EC2 Metrics with cloudwatch: %s", err)
