@@ -75,7 +75,7 @@ func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interva
 			continue
 		}
 
-		meta := cachedInstance.(*resource)
+		meta := cachedInstance.(*v1.Resource)
 
 		// update local instance metadata map
 		s, exists := local[instanceID]
@@ -83,12 +83,12 @@ func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interva
 			// Then create a new local instance from cached
 			s = v1.NewInstance(instanceID, provider)
 			s.SetService("EC2")
-			s.SetKind(meta.kind)
+			s.SetKind(meta.Kind)
 			s.SetRegion(region)
 		}
 
-		s.AddLabel("Name", meta.name)
-		metric.SetUnitAmount(float64(meta.coreCount))
+		s.AddLabel("Name", meta.Name)
+		metric.SetUnitAmount(float64(meta.CoreCount))
 		s.Metrics().Upsert(&metric)
 
 		local[instanceID] = s

@@ -31,33 +31,6 @@ type GCP struct {
 	cache *cache.Cache
 }
 
-// The GCP Resource representation
-type resource struct {
-	// The GCP resource id
-	id string
-
-	// The region where the resource is located
-	region string
-
-	// The service the resource belongs to
-	service string
-
-	// For example spot, reserved
-	lifecycle string
-
-	// Amount of cores
-	coreCount int
-
-	// The instance kind for example n2-standard-8
-	kind string
-
-	// The name
-	name string
-
-	// When was the last time it was updated
-	lastUpdated time.Time
-}
-
 type options func(*GCP)
 
 // New returns a new instance of the GCP provider as well as a function to
@@ -159,6 +132,8 @@ func (g *GCP) GetMetricsForInstances(
 		// Load the cache
 		// TODO make this more explicit, im not sure why this
 		// is needed as we dont use the cache anywhere
+		// I think this is removed, and is used when the metric data doesn't have
+		// the complete resource/instance information.
 		cachedInstance, ok := g.cache.Get(util.CacheKey(meta.zone, service, meta.name))
 		if cachedInstance == nil && !ok {
 			continue
@@ -262,16 +237,17 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 
 			if instance.GetStatus() == "RUNNING" {
 				// TODO potentially we do not need a custom resource to cache, maybe
-				// just cache the instance
-				g.cache.Set(util.CacheKey(zone, service, name), resource{
-					region:      zone,
-					service:     service,
-					id:          instanceID,
-					kind:        getValueFromURL(instance.GetMachineType()),
-					lifecycle:   instance.GetScheduling().GetProvisioningModel(),
-					name:        name,
-					coreCount:   0,
-					lastUpdated: time.Now().UTC(),
+				// just cache the instance (Kind fields are different in resource and
+				// instance) - will need to consolidate
+				g.cache.Set(util.CacheKey(zone, service, name), v1.Resource{
+					ID:          instanceID,
+					Name:        name,
+					Region:      zone, // TODO: Why is region set to zone
+					Service:     service,
+					Kind:        getValueFromURL(instance.GetMachineType()),
+					Lifecycle:   instance.GetScheduling().GetProvisioningModel(),
+					CoreCount:   0,
+					LastUpdated: time.Now().UTC(),
 				}, cache.DefaultExpiration)
 			}
 		}
