@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/patrickmn/go-cache"
 	"github.com/re-cinq/cloud-carbon/pkg/providers/util"
+	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -69,15 +70,15 @@ func (e *ec2Client) Refresh(ctx context.Context, ca *cache.Cache, region string)
 
 			id := aws.ToString(instance.InstanceId)
 			ca.Set(util.CacheKey(region, ec2Service, id),
-				&resource{
-					id:          id,
-					service:     ec2Service,
-					region:      region,
-					kind:        string(instance.InstanceType),
-					lifecycle:   string(instance.InstanceLifecycle),
-					coreCount:   int(aws.ToInt32(instance.CpuOptions.CoreCount)),
-					name:        getInstanceTag(instance.Tags, "Name"),
-					lastUpdated: time.Now().UTC(),
+				&v1.Resource{
+					ID:          id,
+					Name:        getInstanceTag(instance.Tags, "Name"),
+					Service:     ec2Service,
+					Region:      region,
+					Kind:        string(instance.InstanceType),
+					Lifecycle:   string(instance.InstanceLifecycle),
+					CoreCount:   int(aws.ToInt32(instance.CpuOptions.CoreCount)),
+					LastUpdated: time.Now().UTC(),
 				},
 				cache.DefaultExpiration,
 			)
