@@ -33,8 +33,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 	}
 
 	instance := metricsCollected.Instance
-
-	cfg := config.AppConfig().ProvidersConfig
+	interval := config.AppConfig().ProvidersConfig.Interval
 
 	emFactors, err := factors.GetProviderEmissionFactors(
 		instance.Provider(),
@@ -51,14 +50,6 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		return
 	}
 
-	// TODO having this as a map is making it complicated and dupliacting work
-	// we should use a slice and then use a switch case for different types
-	mCPU, ok := instance.Metrics()[v1.CPU.String()]
-	if !ok {
-		klog.Errorf("error instance metrics for CPU don't exist")
-		return
-	}
-
 	gridCO2e, ok := emFactors.Coefficient[instance.Region()]
 	if !ok {
 		klog.Errorf("error region: %s does not exist in factors for %s", instance.Region(), "gcp")
@@ -69,22 +60,27 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		minWatts:      specs.MinWatts,
 		maxWatts:      specs.MaxWatts,
 		totalEmbodied: specs.TotalEmbodiedKiloWattCO2e,
-		cores:         mCPU.UnitAmount(),
-		usageCPU:      mCPU.Usage(),
 		pue:           emFactors.AveragePUE,
 		gridCO2e:      gridCO2e,
 	}
 
-	mCPU.SetEmissions(
-		v1.NewResourceEmission(
-			c.operationalCPUEmissions(cfg.Interval),
-			v1.GCO2eqkWh,
-		),
-	)
+	// calculate and set the operational emissions for each
+	// metric type (CPU, Memory, Storage, and networking)
+	metrics := instance.Metrics()
+	for _, v := range metrics {
+		em, err := c.operationalEmissions(&v, interval)
+		if err != nil {
+			klog.Errorf("error calculating operational emissions: %+v", err)
+			return
+		}
+		v.SetEmissions(v1.NewResourceEmission(em, v1.GCO2eqkWh))
+		// update the instance metrics
+		metrics.Upsert(&v)
+	}
 
 	instance.SetEmbodiedEmissions(
 		v1.NewResourceEmission(
-			c.embodiedEmissions(cfg.Interval),
+			c.embodiedEmissions(interval),
 			v1.GCO2eqkWh,
 		),
 	)
@@ -93,16 +89,5 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		Instance: instance,
 	})
 
-	instance.Metrics()[v1.CPU.String()] = mCPU
-
-	for _, metric := range instance.Metrics() {
-		klog.Infof(
-			"Collected metric: %s %s %s %s | %s",
-			instance.Service(),
-			instance.Region(),
-			instance.Name(),
-			instance.Kind(),
-			metric.String(),
-		)
-	}
+	instance.PrintPretty()
 }
