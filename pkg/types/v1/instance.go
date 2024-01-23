@@ -210,3 +210,16 @@ func (i *Instance) AddLabel(key, value string) *Instance {
 
 	return i
 }
+
+func (i *Instance) PrintPretty() {
+	for _, m := range i.Metrics() {
+		klog.Infof(
+			"Collected metric: %s %s %s %s | %s",
+			i.Service(),
+			i.Region(),
+			i.Name(),
+			i.Kind(),
+			m.String(),
+		)
+	}
+}
