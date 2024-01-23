@@ -4,22 +4,24 @@ import (
 	"testing"
 	"time"
 
+	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"github.com/stretchr/testify/assert"
 )
 
 type testcase struct {
-	name     string
-	interval time.Duration // this is nanoseconds
-	calc     *calculate
-	expRes   float64
+	name      string
+	interval  time.Duration // this is nanoseconds
+	calculate *calculate
+	metric    *v1.Metric
+	expRes    float64
+	hasErr    bool
+	expErr    string
 }
 
 // defaultCalc is contains basic/typical emissions
 // data numbers that are used as the default for tests
 func defaultCalc() *calculate {
 	return &calculate{
-		cores:    4,
-		usageCPU: 25.0,
 		minWatts: 1.3423402398570,
 		maxWatts: 4.00498247528,
 		chip:     35.23458732,
@@ -28,32 +30,50 @@ func defaultCalc() *calculate {
 	}
 }
 
-func TestCalculateEmissions(t *testing.T) {
+func defaultMetric() *v1.Metric {
+	m := v1.NewMetric("basic")
+	m.SetType(v1.CPU).SetUsage(25)
+	m.SetUnitAmount(4).SetResourceUnit(v1.Core)
+	return m
+}
+
+func TestCalculateCPUEmissions(t *testing.T) {
 	for _, test := range []*testcase{
 		func() *testcase {
 			// Default test case
 			return &testcase{
-				name:     "basic default numbers",
-				interval: 30 * time.Second,
-				calc:     defaultCalc(),
-				expRes:   0.0005270347987162735,
+				name:      "basic default numbers",
+				interval:  30 * time.Second,
+				calculate: defaultCalc(),
+				metric:    defaultMetric(),
+				expRes:    0.0005270347987162735,
 			}
 		}(),
 		func() *testcase {
 			// All data set to zero values
 			return &testcase{
-				name:     "no values 30 sec",
+				name:     "no values in calculator",
 				interval: 30 * time.Second,
-				calc: &calculate{
-					cores:    0,
-					usageCPU: 0,
+				calculate: &calculate{
 					minWatts: 0,
 					maxWatts: 0,
 					chip:     0,
 					pue:      0,
 					gridCO2e: 0,
 				},
+				metric: defaultMetric(),
 				expRes: 0,
+			}
+		}(),
+		func() *testcase {
+			// cores not set
+			return &testcase{
+				name:      "no cores set",
+				interval:  30 * time.Second,
+				calculate: defaultCalc(),
+				metric:    defaultMetric().SetUnitAmount(0),
+				hasErr:    true,
+				expErr:    "error Cores set to 0, this should never be the case",
 			}
 		}(),
 
@@ -62,10 +82,11 @@ func TestCalculateEmissions(t *testing.T) {
 			// a 5 minute interval, instead of
 			// 30 seconds
 			return &testcase{
-				name:     "5 minutes interval",
-				interval: 5 * time.Minute,
-				calc:     defaultCalc(),
-				expRes:   0.005270347987162734,
+				name:      "5 minutes interval",
+				interval:  5 * time.Minute,
+				calculate: defaultCalc(),
+				metric:    defaultMetric(),
+				expRes:    0.005270347987162734,
 			}
 		}(),
 
@@ -73,46 +94,44 @@ func TestCalculateEmissions(t *testing.T) {
 			// Calculate the default values over
 			// one hour
 			return &testcase{
-				name:     "1 hour interval",
-				interval: 1 * time.Hour,
-				calc:     defaultCalc(),
-				expRes:   0.06324417584595282,
+				name:      "1 hour interval",
+				interval:  1 * time.Hour,
+				calculate: defaultCalc(),
+				metric:    defaultMetric(),
+				expRes:    0.06324417584595282,
 			}
 		}(),
 
 		func() *testcase {
-			c := defaultCalc()
-			c.cores = 1
 			// calculate with only a single core
 			return &testcase{
-				name:     "single core",
-				interval: 30 * time.Second,
-				calc:     c,
-				expRes:   0.00013175869967906837,
+				name:      "single core",
+				interval:  30 * time.Second,
+				calculate: defaultCalc(),
+				metric:    defaultMetric().SetUnitAmount(1),
+				expRes:    0.00013175869967906837,
 			}
 		}(),
 
 		func() *testcase {
-			c := defaultCalc()
-			c.usageCPU = 50
 			// test with vCPU utilization at 50%
 			return &testcase{
-				name:     "50% utilization",
-				interval: 30 * time.Second,
-				calc:     c,
-				expRes:   0.0010436517395756915,
+				name:      "50% utilization",
+				interval:  30 * time.Second,
+				calculate: defaultCalc(),
+				metric:    defaultMetric().SetUsage(50),
+				expRes:    0.0010436517395756915,
 			}
 		}(),
 
 		func() *testcase {
-			c := defaultCalc()
-			c.usageCPU = 100
 			// test with vCPU utilization at 100%
 			return &testcase{
-				name:     "100% utilization",
-				interval: 30 * time.Second,
-				calc:     c,
-				expRes:   0.002076885621294527,
+				name:      "100% utilization",
+				interval:  30 * time.Second,
+				calculate: defaultCalc(),
+				metric:    defaultMetric().SetUsage(100),
+				expRes:    0.002076885621294527,
 			}
 		}(),
 
@@ -121,10 +140,11 @@ func TestCalculateEmissions(t *testing.T) {
 			c.pue = 1.0
 			// test if PUE is exactly 1
 			return &testcase{
-				name:     "PUE is exactly 1.0",
-				interval: 30 * time.Second,
-				calc:     c,
-				expRes:   0.0005206310369616452,
+				name:      "PUE is exactly 1.0",
+				interval:  30 * time.Second,
+				calculate: c,
+				metric:    defaultMetric(),
+				expRes:    0.0005206310369616452,
 			}
 		}(),
 
@@ -135,10 +155,11 @@ func TestCalculateEmissions(t *testing.T) {
 			// This value was collected from azures
 			// Germany West Central region
 			return &testcase{
-				name:     "High grid CO2e",
-				interval: 30 * time.Second,
-				calc:     c,
-				expRes:   921.1651699301823,
+				name:      "High grid CO2e",
+				interval:  30 * time.Second,
+				calculate: c,
+				metric:    defaultMetric(),
+				expRes:    921.1651699301823,
 			}
 		}(),
 
@@ -149,22 +170,26 @@ func TestCalculateEmissions(t *testing.T) {
 			return &testcase{
 				name:     "large server and large workload",
 				interval: 30 * time.Second,
-				calc: &calculate{
-					cores:    32,
-					usageCPU: 90,
+				calculate: &calculate{
 					minWatts: 3.0369270833333335,
 					maxWatts: 8.575357663690477,
 					chip:     129.77777777777777,
 					pue:      1.1,
 					gridCO2e: 0.00079,
 				},
+				metric: defaultMetric().SetUnitAmount(32).SetUsage(90),
 				expRes: 0.11621326542003971,
 			}
 		}(),
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			res := test.calc.operationalCPUEmissions(test.interval)
+			res, err := test.calculate.cpu(test.metric, test.interval)
 			assert.Equalf(t, test.expRes, res, "Result should be: %v, got: %v", test.expRes, res)
+			if test.hasErr {
+				assert.EqualErrorf(t, err, test.expErr, "Error should be: %v, got: %v", test.expErr, err)
+			} else {
+				assert.Nil(t, err)
+			}
 		})
 	}
 }

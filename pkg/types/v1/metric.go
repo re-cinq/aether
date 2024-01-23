@@ -130,6 +130,8 @@ func (r *Metric) SetType(resourceType ResourceType) *Metric {
 }
 
 // SetUsage is used to set the usage on the struct which can not be below 0
+// For CPU the amount is the usage percentage, so if the value is 1.00495
+// it can be translated to 1.004945%
 func (r *Metric) SetUsage(u float64) *Metric {
 	// Make sure we are not setting the usage to a negative value
 	if u < 0 {
