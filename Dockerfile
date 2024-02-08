@@ -6,7 +6,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o /go/bin/cloud-carbon .
+RUN CGO_ENABLED=0 go build -o /go/bin/cloud-carbon cmd/exporter/main.go
 
 FROM gcr.io/distroless/static-debian11
 
