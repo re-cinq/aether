@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/re-cinq/cloud-carbon/pkg/api"
@@ -25,6 +28,30 @@ const startUpLog = `
  \___)(____)(_____)(______)(____/    \___)(__)(__)(_)\_)(____/(_____)(_)\_)
                                                                                               
 `
+
+var (
+	description    = "Cloud Carbon collection exporter"
+	gitSHA         = "n/a"
+	name           = "Cloud Carbon"
+	source         = "https://github.com/re-cinq/cloud-carbon"
+	version        = "0.0.1-dev"
+	refType        = "branch" // branch or tag
+	refName        = ""       // the name of the branch or tag
+	buildTimestamp = ""
+)
+
+func PrintVersion() {
+	fmt.Printf("Name:           %s\n", name)
+	fmt.Printf("Version:        %s\n", version)
+	fmt.Printf("RefType:        %s\n", refType)
+	fmt.Printf("RefName:        %s\n", refName)
+	fmt.Printf("Git Commit:     %s\n", gitSHA)
+	fmt.Printf("Description:    %s\n", description)
+	fmt.Printf("Go Version:     %s\n", runtime.Version())
+	fmt.Printf("OS / Arch:      %s / %s\n", runtime.GOOS, runtime.GOARCH)
+	fmt.Printf("Source:         %s\n", source)
+	fmt.Printf("Built:          %s\n", buildTimestamp)
+}
 
 func main() {
 	// Record when the program is started
@@ -102,4 +129,30 @@ func main() {
 		// Shutdown the bus
 		eventBus.Stop()
 	})
+}
+
+// await for the signals and run the shutdown function
+func await(shutdownHook func()) {
+	terminating := make(chan bool, 1)
+
+	// Signals channel
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+
+	go func() {
+		terminationSignal := <-signalChan
+
+		// Warn that we are terminating
+		klog.Infof("terminating: %s", terminationSignal)
+
+		// Run the shutdown hook
+		shutdownHook()
+
+		klog.Info("--- terminated Successfully")
+
+		terminating <- true
+	}()
+
+	// Here we wait
+	<-terminating
 }

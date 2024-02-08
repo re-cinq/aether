@@ -175,4 +175,15 @@ providers:
 
 ```
 
+### Local Setup
 
+We use docker compose to run the application locally
+please make sure that you edit the volumes in the
+[docker-compose.yaml](./docker-compose.yaml) depending on where youre
+credentials are
+
+to run locally:
+
+```bash
+docker compose up
+```

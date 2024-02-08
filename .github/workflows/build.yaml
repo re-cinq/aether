@@ -56,7 +56,7 @@ jobs:
         - run: go test ./... -v
 
   build:
-      name: test
+      name: build
       runs-on: ubuntu-latest
       timeout-minutes: 5
       steps:
@@ -89,7 +89,7 @@ jobs:
 
         # Build the executable now
         - name: Run build
-          run: go build -ldflags "$(cat .ldflags)" -o cloud-carbon
+          run: go build -ldflags "$(cat .ldflags)" -o cloud-carbon ./cmd/exporter/main.go
 
         # Run the version command to make sure the build was successful
         - name: Run Version
