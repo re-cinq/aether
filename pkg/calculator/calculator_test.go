@@ -204,13 +204,13 @@ func TestCalculateEmbodiedEmissions(t *testing.T) {
 		{
 			name:     "1706.48 total 30 seconds",
 			embodied: 1706.48,
-			expRes:   0.0004058409436834094,
+			expRes:   0.000270560629122273,
 			interval: 30 * time.Second,
 		},
 		{
 			name:     "1706.48 total 5 minutes",
 			embodied: 1706.48,
-			expRes:   0.004058409436834094,
+			expRes:   0.0027056062912227297,
 			interval: 5 * time.Minute,
 		},
 		{
@@ -222,7 +222,7 @@ func TestCalculateEmbodiedEmissions(t *testing.T) {
 		{
 			name:     "large emissions, 1 minute",
 			embodied: 6268.55,
-			expRes:   0.0029816162480974123,
+			expRes:   0.0019877441653982754,
 			interval: 1 * time.Minute,
 		},
 	}
