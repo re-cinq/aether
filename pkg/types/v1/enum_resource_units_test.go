@@ -13,12 +13,12 @@ type testResourceUnitStruct struct {
 
 func TestResourceUnitParser(t *testing.T) {
 	testData := `{
-		"unit": "core"
+		"unit": "vCPU"
 	}`
 
 	var testResourceUnit testResourceUnitStruct
 	err := json.Unmarshal([]byte(testData), &testResourceUnit)
 	assert.Nil(t, err)
 
-	assert.Equal(t, testResourceUnit.TestResourceUnit, Core)
+	assert.Equal(t, testResourceUnit.TestResourceUnit, VCPU)
 }

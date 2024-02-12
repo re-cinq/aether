@@ -33,7 +33,7 @@ func defaultCalc() *calculate {
 func defaultMetric() *v1.Metric {
 	m := v1.NewMetric("basic")
 	m.SetType(v1.CPU).SetUsage(25)
-	m.SetUnitAmount(4).SetResourceUnit(v1.Core)
+	m.SetUnitAmount(4).SetResourceUnit(v1.VCPU)
 	return m
 }
 
@@ -66,14 +66,14 @@ func TestCalculateCPUEmissions(t *testing.T) {
 			}
 		}(),
 		func() *testcase {
-			// cores not set
+			// vCPUs not set
 			return &testcase{
-				name:      "no cores set",
+				name:      "no vCPUs set",
 				interval:  30 * time.Second,
 				calculate: defaultCalc(),
 				metric:    defaultMetric().SetUnitAmount(0),
 				hasErr:    true,
-				expErr:    "error Cores set to 0, this should never be the case",
+				expErr:    "error vCPUs set to 0, this should never be the case",
 			}
 		}(),
 
@@ -103,9 +103,9 @@ func TestCalculateCPUEmissions(t *testing.T) {
 		}(),
 
 		func() *testcase {
-			// calculate with only a single core
+			// calculate with only a single vCPU
 			return &testcase{
-				name:      "single core",
+				name:      "single vCPU",
 				interval:  30 * time.Second,
 				calculate: defaultCalc(),
 				metric:    defaultMetric().SetUnitAmount(1),
@@ -165,7 +165,7 @@ func TestCalculateCPUEmissions(t *testing.T) {
 
 		func() *testcase {
 			// create a relatively large server with higher
-			// than typical min and max watts, 32 cores, and
+			// than typical min and max watts, 32 vCPUs, and
 			// a utilization of 90%
 			return &testcase{
 				name:     "large server and large workload",

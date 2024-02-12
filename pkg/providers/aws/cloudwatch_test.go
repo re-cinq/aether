@@ -50,7 +50,7 @@ func TestGetMetricsData(t *testing.T) {
 		res, err := client.getEC2CPU(region, start, end, interval)
 		testtools.ExitTest(stubber, t)
 
-		expRes := v1.NewMetric("cpu").SetUsage(float64(.0000123)).SetResourceUnit("core").SetType(v1.CPU)
+		expRes := v1.NewMetric("cpu").SetUsage(float64(.0000123)).SetResourceUnit("vCPU").SetType(v1.CPU)
 		expRes.SetLabels(map[string]string{
 			"instanceID": "i-00123456789",
 		})

@@ -14,7 +14,7 @@ var ErrParsingResourceUnits = errors.New("unsupported ResourceUnits")
 // ResourceUnits Lookup map for listing all the supported resource units
 // as well as deserializing them
 var ResourceUnits = map[string]ResourceUnit{
-	coreString: Core,
+	vCPUString: VCPU,
 	kbString:   Kb,
 	mbString:   Mb,
 	gbString:   Gb,
@@ -27,8 +27,8 @@ var ResourceUnits = map[string]ResourceUnit{
 
 const (
 
-	// CPU Core
-	Core ResourceUnit = coreString
+	// vCPU
+	VCPU ResourceUnit = vCPUString
 
 	// -------------------------------------------
 	// Used for both Ram and Disk
@@ -64,7 +64,7 @@ const (
 	Tbs ResourceUnit = tbsString
 
 	// Static strings
-	coreString = "core"
+	vCPUString = "vCPU"
 	kbString   = "kb"
 	mbString   = "mb"
 	gbString   = "gb"

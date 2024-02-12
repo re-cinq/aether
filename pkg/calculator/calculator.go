@@ -43,14 +43,14 @@ func (c *calculate) operationalEmissions(metric *v1.Metric, interval time.Durati
 // cpu are the emissions released from the machines the service is
 // running on based on architecture and utilization.
 func (c *calculate) cpu(m *v1.Metric, interval time.Duration) (float64, error) {
-	// Check that number of cores is set
+	// Check that number of vCPUs is set
 	if m.UnitAmount() == 0 {
-		return 0, errors.New("error Cores set to 0, this should never be the case")
+		return 0, errors.New("error vCPUs set to 0, this should never be the case")
 	}
 
-	// vCPUHours is the amount of cores on the machine multiplied by the interval of time
+	// vCPUHours is the amount of vCPUs on the machine multiplied by the interval of time
 	// for 1 hour. For example, if the machine has 4 cores and the interval of time is
-	// 5 minutes: The hourly time is 5/60 (0.083333333) * 4 cores = 0.333333333.
+	// 5 minutes: The hourly time is 5/60 (0.083333333) * 4 vCPUs = 0.333333333.
 	//nolint:unconvert //conversion to minutes does affect calculation
 	vCPUHours := m.UnitAmount() * (float64(interval.Minutes()) / float64(60))
 
