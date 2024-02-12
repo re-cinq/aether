@@ -20,6 +20,9 @@ var (
 	* - Machine Type
 	* - Reserved CPUs
 	* - Utilization
+	* NOTE: Using reserved CPUs as vCPUs, because they are equivalent for visible
+	* vCPUs within a guest instance, except for shared-core machines:
+	* https://cloud.google.com/monitoring/api/metrics_gcp
 	 */
 	CPUQuery = `
   fetch gce_instance
@@ -149,16 +152,16 @@ func (g *GCP) instanceCPUMetrics(
 		region := resp.GetLabelValues()[2].GetStringValue()
 		zone := resp.GetLabelValues()[3].GetStringValue()
 		instanceType := resp.GetLabelValues()[4].GetStringValue()
-		totalCores := resp.GetLabelValues()[5].GetStringValue()
+		totalVCPUs := resp.GetLabelValues()[5].GetStringValue()
 
 		m := v1.NewMetric("cpu")
-		m.SetResourceUnit(v1.Core)
+		m.SetResourceUnit(v1.VCPU)
 		m.SetType(v1.CPU).SetUsage(
 			// translate fraction to a percentage
 			resp.GetPointData()[0].GetValues()[0].GetDoubleValue() * 100,
 		)
 
-		f, err := strconv.ParseFloat(totalCores, 64)
+		f, err := strconv.ParseFloat(totalVCPUs, 64)
 		// TODO: we should not fail here but collect errors
 		if err != nil {
 			klog.Errorf("failed to parse GCP metric %s", err)

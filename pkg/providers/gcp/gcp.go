@@ -246,7 +246,7 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 					Service:     service,
 					Kind:        getValueFromURL(instance.GetMachineType()),
 					Lifecycle:   instance.GetScheduling().GetProvisioningModel(),
-					CoreCount:   0,
+					VCPUCount:   0,
 					LastUpdated: time.Now().UTC(),
 				}, cache.DefaultExpiration)
 			}

@@ -88,7 +88,7 @@ func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interva
 		}
 
 		s.AddLabel("Name", meta.Name)
-		metric.SetUnitAmount(float64(meta.CoreCount))
+		metric.SetUnitAmount(float64(meta.VCPUCount))
 		s.Metrics().Upsert(&metric)
 
 		local[instanceID] = s
@@ -139,7 +139,7 @@ func (e *cloudWatchClient) getEC2CPU(region string, start, end time.Time, interv
 
 		if len(metric.Values) > 0 {
 			cpu := v1.NewMetric(v1.CPU.String())
-			cpu.SetResourceUnit(v1.Core).SetUsage(metric.Values[0]).SetType(v1.CPU)
+			cpu.SetResourceUnit(v1.VCPU).SetUsage(metric.Values[0]).SetType(v1.CPU)
 			cpu.SetLabels(map[string]string{
 				"instanceID": instanceID,
 			})

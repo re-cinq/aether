@@ -18,8 +18,8 @@ type Resource struct {
 	// For example spot, reserved
 	Lifecycle string
 
-	// Amount of cores
-	CoreCount int
+	// Amount of vCPUs
+	VCPUCount int
 
 	// The instance kind for example
 	Kind string

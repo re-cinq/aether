@@ -77,7 +77,7 @@ func (e *ec2Client) Refresh(ctx context.Context, ca *cache.Cache, region string)
 					Region:      region,
 					Kind:        string(instance.InstanceType),
 					Lifecycle:   string(instance.InstanceLifecycle),
-					CoreCount:   int(aws.ToInt32(instance.CpuOptions.CoreCount)),
+					VCPUCount:   int(aws.ToInt32(instance.CpuOptions.CoreCount) * aws.ToInt32(instance.CpuOptions.ThreadsPerCore)),
 					LastUpdated: time.Now().UTC(),
 				},
 				cache.DefaultExpiration,

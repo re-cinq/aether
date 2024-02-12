@@ -74,13 +74,13 @@ func (r *Metric) Usage() float64 {
 }
 
 // The resource amount
-// In case of a virtual machine for example is the total amount of cores
+// In case of a virtual machine for example is the total amount of vCPUs
 func (r *Metric) UnitAmount() float64 {
 	return r.unitAmount
 }
 
 // The resource unit
-// - In case of a cpu is the amount of cores
+// - In case of a cpu is the amount of vCPUs
 // - In case of ram is a multiple of bytes
 func (r *Metric) Unit() ResourceUnit {
 	return r.unit
@@ -146,7 +146,7 @@ func (r *Metric) SetUsage(u float64) *Metric {
 
 // Adds the total amount of the resource:
 // Examples:
-// - total amount of core of a VM
+// - total amount of vCPUs of a VM
 // - disk size
 func (r *Metric) SetUnitAmount(amount float64) *Metric {
 	// No reason to have a negative amount
@@ -163,7 +163,7 @@ func (r *Metric) SetUnitAmount(amount float64) *Metric {
 
 // Adds the resource unit
 // Examples:
-// - cores: in case of a CPU
+// - vCPUs: in case of a CPU
 // - Gb: in case of a Disk
 // - Gb: in case of Ram
 func (r *Metric) SetResourceUnit(unit ResourceUnit) *Metric {
