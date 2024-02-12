@@ -8,11 +8,11 @@ import (
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 )
 
-// TODO add links / sources for where numbers and calculations are gathered
-
-// lifespan is the default amount of years a server is in use before being
-// replaced in a datacenter
-const lifespan = 4
+// AWS, GCP and Azure have increased their server lifespan to 6 years (2024)
+// https://sustainability.aboutamazon.com/products-services/the-cloud?energyType=true
+// https://www.theregister.com/2024/01/31/alphabet_q4_2023/#:~:text=Alphabet%20first%20decided%20to%20extend,for%20six%20years%20before%20replacement.
+// https://www.theregister.com/2022/08/02/microsoft_server_life_extension/
+const serverLifespan = 6
 
 type calculate struct {
 	minWatts      float64
@@ -73,7 +73,7 @@ func (c *calculate) embodiedEmissions(interval time.Duration) float64 {
 	// Total Embodied is the total emissions for a server to be produced, including
 	// additional emmissions for added DRAM, CPUs, GPUS, and storage. This is divided
 	// by the expected lifespan of the server to get the annual emissions.
-	annualEmbodied := c.totalEmbodied / lifespan
+	annualEmbodied := c.totalEmbodied / serverLifespan
 
 	// The embodied emissions need to be calculated for the measurement interval, so the
 	// annual emissions further divided to the interval minutes.
