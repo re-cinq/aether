@@ -16,7 +16,7 @@ const (
 	repoPath            = "/tmp/emissions-data/"
 )
 
-var DataPath string = fmt.Sprintf("%s/data", repoPath)
+var DataPath string = fmt.Sprintf("%s/data/v1", repoPath)
 
 // Emission data is currently stored as files in our emissions-data repo.
 // Each file is named "{provider}-{emissionFactor}" where emissionFactor

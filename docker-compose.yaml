@@ -12,7 +12,6 @@ services:
       - ./:/src
       # Volume for Google Cloud Credentials
       - ~/.config/gcloud/application_default_credentials.json:/credentials/application_default_credentials.json
-      # we need to volume in our emissions data factors for now
-      - ../emissions-data:/tmp/emissions-data
-      # TODO volume for AWS credentials
+      # volume for AWS credentials
+      - ~/.aws/credentials:/credentials/credentials
 
