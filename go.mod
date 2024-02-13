@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.133.0
 	github.com/awsdocs/aws-doc-sdk-examples/gov2/testtools v0.0.0-20240112231730-e6bb7238743b
+	github.com/cnkei/gospline v0.0.0-20191204052713-d67fac29a294
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -17,6 +18,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.17.0
 	github.com/prometheus/common v0.45.0
+	github.com/re-cinq/emissions-data v0.0.0-20240205163630-7a12fb60f3bd
 	github.com/re-cinq/go-bus v0.0.1
 	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.4
@@ -27,6 +29,7 @@ require (
 	golang.org/x/net v0.19.0
 	google.golang.org/api v0.149.0
 	google.golang.org/grpc v1.59.0
+	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/klog/v2 v2.110.1
 )
 
