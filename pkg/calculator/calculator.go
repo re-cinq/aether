@@ -8,14 +8,14 @@ import (
 	"github.com/cnkei/gospline"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	data "github.com/re-cinq/emissions-data/pkg/types/v2"
+	"k8s.io/klog"
 )
 
 type parameters struct {
 	gridCO2e float64
 	pue      float64
-	wattage  []data.Wattage
 	metric   v1.Metric
-	vCPU     float64
+	dataset  data.Instance
 }
 
 // AWS, GCP and Azure have increased their server lifespan to 6 years (2024)
@@ -31,7 +31,7 @@ func operationalEmissions(interval time.Duration, p *parameters) (float64, error
 	case v1.CPU.String():
 		return cpu(interval, p)
 	case v1.Memory.String():
-		return 0, errors.New("error memory is not yet being calculated")
+		return memory(interval, p)
 	case v1.Storage.String():
 		return 0, errors.New("error storage is not yet being calculated")
 	case v1.Network.String():
@@ -50,7 +50,7 @@ func operationalEmissions(interval time.Duration, p *parameters) (float64, error
 // If those datasets do not exist, we fall back to calculate based on min and max
 // wattage from SPECpower data as inspired by CCF and Etsy.
 func cpu(interval time.Duration, p *parameters) (float64, error) {
-	vCPU := p.vCPU
+	vCPU := float64(p.dataset.VCPU)
 	// vCPU are virtual CPUs that are mapped to physical cores (a core is a physical
 	// component to the CPU the VM is running on). If vCPU from the dataset (p.vCPU)
 	// is not found, get the number of vCPUs from the metric collected from the query
@@ -69,15 +69,17 @@ func cpu(interval time.Duration, p *parameters) (float64, error) {
 	// if there pkgWatt dataset values, then use interpolation
 	// to calculate the wattage based on the utilization, otherwise, calculate
 	// based on SPECpower min and max data
-	watts := cubicSplineInterpolation(p.wattage, p.metric.Usage())
-	if len(p.wattage) == 0 || watts == 0 {
+	fmt.Println("prespline: ", p.dataset.PkgWatt, p.metric.Usage())
+	watts := cubicSplineInterpolation(p.dataset.PkgWatt, p.metric.Usage())
+	klog.Infof("CPU interpolation result: %+v from wattage: %+v and usage %+v\n", watts, p.dataset.PkgWatt, p.metric.Usage())
+	if len(p.dataset.PkgWatt) == 2 {
 		// Average Watts is the average energy consumption of the service. It is based on
 		// CPU utilization and Minimum and Maximum wattage of the server. If the machine
 		// architecture is unknown the Min and Max wattage is the average of all machines
 		// for that provider, and is supplied in the provider defaults. This is being
 		// handled in the types/factors package (the point of reading in coefficient data).
-		minWatts := p.wattage[0].Wattage
-		maxWatts := p.wattage[1].Wattage
+		minWatts := p.dataset.PkgWatt[0].Wattage
+		maxWatts := p.dataset.PkgWatt[1].Wattage
 		watts = minWatts + p.metric.Usage()*(maxWatts-minWatts)
 	}
 	// Operational Emissions are calculated by multiplying the avgWatts, vCPUHours, PUE,
@@ -86,8 +88,27 @@ func cpu(interval time.Duration, p *parameters) (float64, error) {
 	return watts * vCPUHours * p.pue * p.gridCO2e, nil
 }
 
+func memory(interval time.Duration, p *parameters) (float64, error) {
+	fmt.Printf("memory: %+v\n", p.dataset)
+	if len(p.dataset.RAMWatt) == 0 {
+		return 0, nil
+	}
+
+	coefficient := 0.000392 // kw/GB hrs
+
+	GBHours := p.metric.UnitAmount() * (interval.Minutes() / float64(60)) * coefficient
+
+	watts := cubicSplineInterpolation(p.dataset.RAMWatt, p.metric.Usage())
+	// amount GB * interval?
+	kwHours := watts * GBHours * p.pue * p.gridCO2e
+	fmt.Printf("XX: %+v %+v\n", GBHours, kwHours)
+	fmt.Printf("Memory metric: %+v\n", p.metric)
+	return kwHours, nil
+}
+
 // TODO add comment
 func cubicSplineInterpolation(wattage []data.Wattage, value float64) float64 {
+	fmt.Println("wattage: ", wattage)
 	var x, y = []float64{}, []float64{}
 	for _, w := range wattage {
 		x = append(x, float64(w.Percentage))

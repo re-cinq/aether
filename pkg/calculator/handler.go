@@ -93,10 +93,12 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 	}
 
 	if d, ok := awsInstances[eventInstance.Kind()]; ok {
-		params.wattage = d.PkgWatt
-		params.vCPU = float64(d.VCPU)
+		fmt.Printf("DDDDDDDDDDDDDDDD: %+v\n", d)
+		params.dataset = d
+		//	params.wattage = d.PkgWatt
+		//params.vCPU = float64(d.VCPU)
 	} else {
-		params.wattage = []data.Wattage{
+		params.dataset.PkgWatt = []data.Wattage{
 			{
 				Percentage: 0,
 				Wattage:    specs.MinWatts,
