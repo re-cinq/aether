@@ -16,6 +16,12 @@ import (
 
 var awsInstances map[string]data.Instance
 
+// AWS, GCP and Azure have increased their server lifespan to 6 years (2024)
+// https://sustainability.aboutamazon.com/products-services/the-cloud?energyType=true
+// https://www.theregister.com/2024/01/31/alphabet_q4_2023/
+// https://www.theregister.com/2022/08/02/microsoft_server_life_extension/
+const serverLifespan = 6
+
 type EmissionCalculator struct {
 	eventBus bus.Bus
 }
@@ -95,6 +101,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 	if d, ok := awsInstances[eventInstance.Kind()]; ok {
 		params.wattage = d.PkgWatt
 		params.vCPU = float64(d.VCPU)
+		params.embodiedFactor = d.EmbodiedHourlyGCO2e
 	} else {
 		params.wattage = []data.Wattage{
 			{
@@ -106,6 +113,9 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 				Wattage:    specs.MaxWatts,
 			},
 		}
+		// we fall back on the specs from the previous dataset
+		// and convert it into a hourly factor
+		params.embodiedFactor = specs.TotalEmbodiedKiloWattCO2e / serverLifespan / float64(365) / float64(24)
 	}
 
 	// calculate and set the operational emissions for each
@@ -125,7 +135,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 
 	eventInstance.SetEmbodiedEmissions(
 		v1.NewResourceEmission(
-			embodiedEmissions(interval, specs.TotalEmbodiedKiloWattCO2e),
+			embodiedEmissions(interval, params.embodiedFactor),
 			v1.GCO2eqkWh,
 		),
 	)
