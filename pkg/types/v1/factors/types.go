@@ -37,6 +37,8 @@ type Embodied struct {
 	AdditionalCPUsKiloWattCO2e    float64 `yaml:"additionalcpus"`
 	AdditionalGPUsKiloWattCO2e    float64 `yaml:"additionalgpus"`
 	TotalEmbodiedKiloWattCO2e     float64 `yaml:"total"`
+	VCPU                          float64 `yaml:"vCPU"`      // vCPU count for instance Type
+	TotalVCPU                     float64 `yaml:"totalVCPU"` // Highest amount of vCPUs in machine type family
 	Architecture                  string
 	MachineSpecs
 }

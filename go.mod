@@ -1,6 +1,6 @@
 module github.com/re-cinq/cloud-carbon
 
-go 1.21.5
+go 1.22.0
 
 require (
 	cloud.google.com/go/compute v1.23.1
