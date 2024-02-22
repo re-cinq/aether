@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - 8000:8000
+      - 8080:8080
     volumes:
       - ./:/src
       # Volume for Google Cloud Credentials

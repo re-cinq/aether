@@ -113,9 +113,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 				Wattage:    specs.MaxWatts,
 			},
 		}
-		// we fall back on the specs from the previous dataset
-		// and convert it into a hourly factor
-		params.embodiedFactor = specs.TotalEmbodiedKiloWattCO2e / serverLifespan / float64(365) / float64(24)
+		params.embodiedFactor = hourlyEmbodiedEmissions(&specs)
 	}
 
 	// calculate and set the operational emissions for each
@@ -145,4 +143,23 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 	})
 
 	eventInstance.PrintPretty()
+}
+
+func hourlyEmbodiedEmissions(e *factors.Embodied) float64 {
+	// we fall back on the specs from the previous dataset
+	// and convert it into a hourly factor
+	// this is based on CCF's calculation:
+	//
+	// M = TE * (TR/EL) * (RR/TR)
+	//
+	// TE = Total Embodied Emissions
+	// TR = Time Reserved (in years)
+	// EL = Expected Lifespan
+	// RR = Resources Reserved
+	// TR = Total Resources, the total number of resources available.
+	return e.TotalEmbodiedKiloWattCO2e *
+		// 1 hour normalized to a year
+		((1.0 / 24.0 / 365.0) / serverLifespan) *
+		// amount of vCPUS for instance versus total vCPUS for platform
+		(e.VCPU / e.TotalVCPU)
 }
