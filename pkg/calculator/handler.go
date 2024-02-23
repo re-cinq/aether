@@ -81,11 +81,14 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		return
 	}
 
-	gridCO2e, ok := emFactors.Coefficient[eventInstance.Region()]
+	gridCO2eTons, ok := emFactors.Coefficient[eventInstance.Region()]
 	if !ok {
 		klog.Errorf("error region: %s does not exist in factors for %s", eventInstance.Region(), "gcp")
 		return
 	}
+	// TODO: hotfix until updated in emissions data
+	// convert gridCO2e from metric tonnes to grams
+	gridCO2e := gridCO2eTons * (1000 * 1000)
 
 	params := parameters{
 		gridCO2e: gridCO2e,
@@ -120,7 +123,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 	// metric type (CPU, Memory, Storage, and networking)
 	metrics := eventInstance.Metrics()
 	for _, v := range metrics {
-		params.metric = v
+		params.metric = &v
 		opEm, err := operationalEmissions(interval, &params)
 		if err != nil {
 			klog.Errorf("error calculating %s operational emissions: %+v", v.Name(), err)
@@ -128,7 +131,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		}
 		params.metric.SetEmissions(v1.NewResourceEmission(opEm, v1.GCO2eqkWh))
 		// update the instance metrics
-		metrics.Upsert(&params.metric)
+		metrics.Upsert(params.metric)
 	}
 
 	eventInstance.SetEmbodiedEmissions(
