@@ -1,3 +1,5 @@
+![title](./images/Byte-Calculating.webp)
+
 Like many others, we at re:cinq have been attempting to measure energy consumption of virtualized services running on cloud providers.
 
 Our goal is to **provide real-time analytics on cloud service carbon emissions that adhere to OpenTelemetry specification**. We are working towards building upon existing efforts and are hoping to learn, make a difference, and contribute to the initiative.
