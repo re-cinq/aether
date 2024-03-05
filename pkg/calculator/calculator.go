@@ -24,7 +24,7 @@ type parameters struct {
 // operationalEmissions determines the correct function to run to calculate the
 // operational emissions for the metric type
 func operationalEmissions(ctx context.Context, interval time.Duration, p *parameters) (float64, error) {
-	switch p.metric.Name() {
+	switch p.metric.Name {
 	case v1.CPU.String():
 		return cpu(ctx, interval, p)
 	case v1.Memory.String():
@@ -34,7 +34,7 @@ func operationalEmissions(ctx context.Context, interval time.Duration, p *parame
 	case v1.Network.String():
 		return 0, errors.New("error networking is not yet being calculated")
 	default:
-		return 0, fmt.Errorf("error metric not supported: %+v", p.metric.Name())
+		return 0, fmt.Errorf("error metric not supported: %+v", p.metric.Name)
 	}
 }
 
@@ -50,10 +50,10 @@ func cpu(ctx context.Context, interval time.Duration, p *parameters) (float64, e
 	// component to the CPU the VM is running on). If vCPU from the dataset (p.vCPU)
 	// is not found, get the number of vCPUs from the metric collected from the query
 	if vCPU == 0 {
-		if p.metric.UnitAmount() == 0 {
+		if p.metric.UnitAmount == 0 {
 			return 0, errors.New("error vCPU set to 0")
 		}
-		vCPU = p.metric.UnitAmount()
+		vCPU = p.metric.UnitAmount
 	}
 
 	// vCPUHours represents the count of virtual CPUs within a specific time frame.
@@ -66,7 +66,7 @@ func cpu(ctx context.Context, interval time.Duration, p *parameters) (float64, e
 	// usageCPUkw is the CPU energy consumption in kilowatts.
 	// If pkgWatt values exist from the dataset, then use cubic spline interpolation
 	// to calculate the wattage based on utilization.
-	usageCPUkw, err := cubicSplineInterpolation(p.wattage, p.metric.Usage())
+	usageCPUkw, err := cubicSplineInterpolation(p.wattage, p.metric.Usage)
 	if err != nil {
 		return 0, err
 	}

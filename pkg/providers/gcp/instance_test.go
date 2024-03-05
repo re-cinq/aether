@@ -181,10 +181,10 @@ func RunTestData(t *testing.T, testdata []TestScenario) {
 			if testdata[i].err == nil {
 				assert.NoError(err)
 				for i, r := range resp {
-					assert.Equal(testdata[i].expectedResponse[i].Labels, r.Labels())
-					assert.Equal(testdata[i].expectedResponse[i].Type, r.Type())
-					assert.Equal(testdata[i].expectedResponse[i].Usage, r.Usage())
-					assert.Equal(testdata[i].expectedResponse[i].UnitAmount, r.UnitAmount())
+					assert.Equal(testdata[i].expectedResponse[i].Labels, r.Labels)
+					assert.Equal(testdata[i].expectedResponse[i].Type, r.ResourceType)
+					assert.Equal(testdata[i].expectedResponse[i].Usage, r.Usage)
+					assert.Equal(testdata[i].expectedResponse[i].UnitAmount, r.UnitAmount)
 				}
 			} else {
 				assert.Equal(

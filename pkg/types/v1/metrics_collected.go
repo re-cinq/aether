@@ -18,5 +18,5 @@ func (e MetricsCollected) Topic() bus.Topic {
 //
 //nolint:all
 func (e MetricsCollected) Identifier() string {
-	return e.Instance.name
+	return e.Instance.Name
 }

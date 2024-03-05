@@ -141,13 +141,14 @@ func (g *GCP) GetMetricsForInstances(
 
 		i, ok := lookup[meta.id]
 		if !ok {
-			i = v1.NewInstance(meta.id, provider).SetService(service)
+			i = v1.NewInstance(meta.id, provider)
+			i.Service = service
 		}
 
-		i.SetKind(meta.machineType)
-		i.SetRegion(meta.region)
-		i.SetZone(meta.zone)
-		i.Metrics().Upsert(&metric)
+		i.Kind = meta.machineType
+		i.Region = meta.region
+		i.Zone = meta.zone
+		i.Metrics.Upsert(&metric)
 
 		lookup[meta.id] = i
 	}
@@ -166,27 +167,27 @@ type metadata struct {
 }
 
 func getMetadata(m *v1.Metric) (*metadata, error) {
-	zone, ok := m.Labels().Get("zone")
+	zone, ok := m.Labels["zone"]
 	if !ok {
 		return &metadata{}, errors.New("zone not found")
 	}
 
-	region, ok := m.Labels().Get("region")
+	region, ok := m.Labels["region"]
 	if !ok {
 		return &metadata{}, errors.New("region not found")
 	}
 
-	name, ok := m.Labels().Get("name")
+	name, ok := m.Labels["name"]
 	if !ok {
 		return &metadata{}, errors.New("instance name not found")
 	}
 
-	id, ok := m.Labels().Get("id")
+	id, ok := m.Labels["id"]
 	if !ok {
 		return &metadata{}, errors.New("instance id not found")
 	}
 
-	machineType, ok := m.Labels().Get("machine_type")
+	machineType, ok := m.Labels["machine_type"]
 	if !ok {
 		return &metadata{}, errors.New("machine type not found")
 	}

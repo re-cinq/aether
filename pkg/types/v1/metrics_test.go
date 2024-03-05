@@ -8,23 +8,22 @@ import (
 
 func TestMetricsParser(t *testing.T) {
 	// Create a valid resource
-	cpuResource := NewMetric("cpu")
+	cpuResource := &Metric{
+		Name:         "cpu",
+		Usage:        20.54,
+		UnitAmount:   4.0,
+		ResourceType: CPU,
+		Unit:         VCPU,
+		Emissions: ResourceEmissions{
+			Value: 1056.76,
+			Unit:  GCO2eqkWh,
+		},
+	}
 	assert.NotNil(t, cpuResource)
-
-	cpuResource.SetUsage(20.54).SetUnitAmount(4.0)
-	cpuResource.SetType(CPU).SetResourceUnit(VCPU)
-	cpuResource.SetEmissions(NewResourceEmission(1056.76, GCO2eqkWh))
-
-	assert.Equal(t, cpuResource.Usage(), 20.54)
-	assert.Equal(t, cpuResource.UnitAmount(), float64(4.0))
-	assert.Equal(t, cpuResource.Unit(), VCPU)
-	assert.Equal(t, cpuResource.Type(), CPU)
-	assert.Equal(t, cpuResource.emissions.Value(), float64(1056.76))
-	assert.Equal(t, cpuResource.emissions.Unit(), GCO2eqkWh)
 
 	metrics := Metrics{}
 	metrics.Upsert(cpuResource)
 
-	existing := metrics[cpuResource.Name()]
+	existing := metrics[cpuResource.Name]
 	assert.Equal(t, *cpuResource, existing)
 }

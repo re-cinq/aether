@@ -17,6 +17,6 @@ func (m Metrics) Upsert(metric *Metric) {
 
 	// Assign the resource
 	if metric != nil {
-		m[metric.name] = *metric
+		m[metric.Name] = *metric
 	}
 }

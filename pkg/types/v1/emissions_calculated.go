@@ -17,5 +17,5 @@ func (e EmissionsCalculated) Topic() bus.Topic {
 //
 //nolint:all
 func (e EmissionsCalculated) Identifier() string {
-	return e.Instance.name
+	return e.Instance.Name
 }

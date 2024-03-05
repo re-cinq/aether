@@ -11,8 +11,11 @@ import (
 )
 
 func params() *parameters {
-	m := v1.NewMetric("basic")
-	m.SetType(v1.CPU).SetUsage(27)
+	m := &v1.Metric{
+		Name:         "basic",
+		ResourceType: v1.CPU,
+		Usage:        27,
+	}
 	return &parameters{
 		gridCO2e: 7,
 		pue:      1.2,
@@ -65,7 +68,8 @@ func TestCalculateCPU(t *testing.T) {
 			// vCPUs not set in params, but set in metric
 			p := params()
 			p.vCPU = 0
-			p.metric.SetUnitAmount(2).SetResourceUnit(v1.VCPU)
+			p.metric.UnitAmount = 2
+			p.metric.Unit = v1.VCPU
 			return &testcase{
 				name:     "vCPU set in metric, not params",
 				interval: 5 * time.Minute,
@@ -153,7 +157,8 @@ func TestCalculateCPU(t *testing.T) {
 			// than typical min and max watts, 32 vCPUs, and
 			// a utilization of 90%
 			p := params()
-			p.metric.SetUnitAmount(32).SetUsage(90)
+			p.metric.UnitAmount = 32
+			p.metric.Usage = 90
 			return &testcase{
 				name:     "large server and large workload",
 				interval: 5 * time.Minute,
