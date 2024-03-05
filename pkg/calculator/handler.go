@@ -79,7 +79,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 
 	// Gets PUE, grid data, and machine specs
 	emFactors, err := factors.GetProviderEmissionFactors(
-		eventInstance.Provider(),
+		eventInstance.Provider,
 		factors.DataPath,
 	)
 	if err != nil {
@@ -87,9 +87,9 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		return
 	}
 
-	gridCO2eTons, ok := emFactors.Coefficient[eventInstance.Region()]
+	gridCO2eTons, ok := emFactors.Coefficient[eventInstance.Region]
 	if !ok {
-		ec.logger.Error("region does not exist in factors for provider", "region", eventInstance.Region(), "provider", "gcp")
+		ec.logger.Error("region does not exist in factors for provider", "region", eventInstance.Region, "provider", "gcp")
 		return
 	}
 	// TODO: hotfix until updated in emissions data
@@ -101,13 +101,13 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		pue:      emFactors.AveragePUE,
 	}
 
-	specs, ok := emFactors.Embodied[eventInstance.Kind()]
+	specs, ok := emFactors.Embodied[eventInstance.Kind]
 	if !ok {
-		ec.logger.Error("failed finding instance in factor data", "instance", eventInstance.Name(), "kind", eventInstance.Kind())
+		ec.logger.Error("failed finding instance in factor data", "instance", eventInstance.Name, "kind", eventInstance.Kind)
 		return
 	}
 
-	if d, ok := awsInstances[eventInstance.Kind()]; ok {
+	if d, ok := awsInstances[eventInstance.Kind]; ok {
 		params.wattage = d.PkgWatt
 		params.vCPU = float64(d.VCPU)
 		params.embodiedFactor = d.EmbodiedHourlyGCO2e
@@ -127,24 +127,22 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 
 	// calculate and set the operational emissions for each
 	// metric type (CPU, Memory, Storage, and networking)
-	metrics := eventInstance.Metrics()
+	metrics := eventInstance.Metrics
 	for _, v := range metrics {
 		params.metric = &v
 		opEm, err := operationalEmissions(log.WithContext(context.Background(), ec.logger), interval, &params)
 		if err != nil {
-			ec.logger.Error("failed calculating operational emissions", "type", v.Name(), "error", err)
+			ec.logger.Error("failed calculating operational emissions", "type", v.Name, "error", err)
 			continue
 		}
-		params.metric.SetEmissions(v1.NewResourceEmission(opEm, v1.GCO2eqkWh))
+		params.metric.Emissions = v1.NewResourceEmission(opEm, v1.GCO2eqkWh)
 		// update the instance metrics
 		metrics.Upsert(params.metric)
 	}
 
-	eventInstance.SetEmbodiedEmissions(
-		v1.NewResourceEmission(
-			embodiedEmissions(interval, params.embodiedFactor),
-			v1.GCO2eqkWh,
-		),
+	eventInstance.EmbodiedEmissions = v1.NewResourceEmission(
+		embodiedEmissions(interval, params.embodiedFactor),
+		v1.GCO2eqkWh,
 	)
 
 	ec.eventbus.Publish(v1.EmissionsCalculated{

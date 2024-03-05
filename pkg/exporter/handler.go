@@ -71,7 +71,7 @@ func (p *PrometheusEventHandler) Apply(event bus.Event) {
 		func(ctx context.Context, o api.Observer) error {
 			o.ObserveFloat64(
 				embodied,
-				e.Instance.EmbodiedEmissions().Value(),
+				e.Instance.EmbodiedEmissions.Value,
 				api.WithAttributes(
 					getAttributesFromInstance(&e.Instance)...,
 				))
@@ -79,18 +79,18 @@ func (p *PrometheusEventHandler) Apply(event bus.Event) {
 			return nil
 		}, embodied)
 	if err != nil {
-		p.logger.Error("failed setting embodied metric", "instance", e.Instance.Name())
+		p.logger.Error("failed setting embodied metric", "instance", e.Instance.Name)
 		return
 	}
 
-	for _, m := range e.Instance.Metrics() {
+	for _, m := range e.Instance.Metrics {
 		m := m
 		// setup metric labels
 		attrs := getAtrributesFromLabels(&m)
 		attrs = append(
 			attrs,
-			attribute.Key("type").String(m.Type().String()),
-			attribute.Key("provider").String(e.Instance.Provider().String()),
+			attribute.Key("type").String(m.ResourceType.String()),
+			attribute.Key("provider").String(e.Instance.Provider.String()),
 		)
 
 		// register emission metrics for instance
@@ -98,20 +98,20 @@ func (p *PrometheusEventHandler) Apply(event bus.Event) {
 			func(ctx context.Context, o api.Observer) error {
 				o.ObserveFloat64(
 					emissions,
-					m.Emissions().Value(),
+					m.Emissions.Value,
 					api.WithAttributes(attrs...),
 				)
 				return nil
 			}, emissions)
 		if err != nil {
-			p.logger.Error("failed setting metric", "instance", e.Instance.Name())
+			p.logger.Error("failed setting metric", "instance", e.Instance.Name)
 		}
 	}
 }
 
 func getAtrributesFromLabels(m *v1.Metric) []attribute.KeyValue {
 	attrs := []attribute.KeyValue{}
-	for k, l := range m.Labels() {
+	for k, l := range m.Labels {
 		attrs = append(attrs, attribute.Key(k).String(l))
 	}
 	return attrs
@@ -119,11 +119,11 @@ func getAtrributesFromLabels(m *v1.Metric) []attribute.KeyValue {
 
 func getAttributesFromInstance(i *v1.Instance) []attribute.KeyValue {
 	return []attribute.KeyValue{
-		attribute.Key("kind").String(i.Kind()),
-		attribute.Key("name").String(i.Name()),
-		attribute.Key("zone").String(i.Zone()),
-		attribute.Key("region").String(i.Region()),
-		attribute.Key("service").String(i.Service()),
-		attribute.Key("provider").String(i.Provider().String()),
+		attribute.Key("kind").String(i.Kind),
+		attribute.Key("name").String(i.Name),
+		attribute.Key("zone").String(i.Zone),
+		attribute.Key("region").String(i.Region),
+		attribute.Key("service").String(i.Service),
+		attribute.Key("provider").String(i.Provider.String()),
 	}
 }

@@ -63,7 +63,7 @@ func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interva
 		// to avoid Implicit memory aliasing in for loop
 		metric := cpuMetrics[i]
 
-		instanceID, ok := metric.Labels().Get("instanceID")
+		instanceID, ok := metric.Labels["instanceID"]
 		if !ok {
 			slog.Error("metric does not have an instanceID", "metric", metric)
 			continue
@@ -82,15 +82,18 @@ func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interva
 		s, exists := local[instanceID]
 		if !exists {
 			// Then create a new local instance from cached
-			s = v1.NewInstance(instanceID, provider)
-			s.SetService("EC2")
-			s.SetKind(meta.Kind)
-			s.SetRegion(region)
+			s = &v1.Instance{
+				Name:     instanceID,
+				Provider: provider,
+				Service:  ec2Service, // EC2
+				Kind:     meta.Kind,
+				Region:   region,
+			}
 		}
 
-		s.AddLabel("Name", meta.Name)
-		metric.SetUnitAmount(float64(meta.VCPUCount))
-		s.Metrics().Upsert(&metric)
+		s.Labels["Name"] = meta.Name
+		metric.UnitAmount = float64(meta.VCPUCount)
+		s.Metrics.Upsert(&metric)
 
 		local[instanceID] = s
 		instances = append(instances, *s)
@@ -140,10 +143,12 @@ func (e *cloudWatchClient) getEC2CPU(region string, start, end time.Time, interv
 
 		if len(metric.Values) > 0 {
 			cpu := v1.NewMetric(v1.CPU.String())
-			cpu.SetResourceUnit(v1.VCPU).SetUsage(metric.Values[0]).SetType(v1.CPU)
-			cpu.SetLabels(map[string]string{
+			cpu.Unit = v1.VCPU
+			cpu.Usage = metric.Values[0]
+			cpu.ResourceType = v1.CPU
+			cpu.Labels = v1.Labels{
 				"instanceID": instanceID,
-			})
+			}
 			cpuMetrics = append(cpuMetrics, *cpu)
 		}
 	}

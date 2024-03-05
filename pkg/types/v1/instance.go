@@ -9,127 +9,47 @@ import (
 )
 
 // The instance for which we are collecting the metrics
-// The fields are not exported for several reasons:
-//   - We will expose the information of this struct via prometheus endpoint
-//     so we have no reasons so serialize this.
-//   - Some of the fields in the struct need to be carefully validated, so we cannot allow
-//     the structs fields to be passed manually
-//   - If there is the need for serializing this then we can have a model dedicated for the View
-//     functionality
 type Instance struct {
 
 	// The provider used as source for this metric
-	provider Provider
+	Provider Provider
 
 	// The service type (Instance, Database etc..)
-	service string
+	Service string
 
 	// Unique name of the instance
 	// Can be the VM name
-	name string
+	Name string
 
 	// The region of the instance
-	region string
+	// Examples:
+	// - europe-west4 (GCP)
+	// - us-east-2 (AWS)
+	// - eu-east-rack-1 (Baremetal)
+	Region string
 
 	// The instance zone
-	zone string
+	// - europe-west4-a (GCP)
+	Zone string
 
 	// This is the kind of service
-	// In case of a GCP virtual machine this could be n2-standard-8
-	kind string
+	// Examples for VMs:
+	// - n2-standard-8 (GCP)
+	// - m6.2xlarge (AWS)
+	Kind string
 
 	// The metrics collection for the specific service
-	metrics Metrics
+	Metrics Metrics
 
 	// The CPU emissions of the service during operation
-	operationalCPUEmissions ResourceEmissions
+	OperationalCPUEmissions ResourceEmissions
 
 	// The embodied emissions for the service
-	embodiedEmissions ResourceEmissions
+	EmbodiedEmissions ResourceEmissions
 
 	// Labels associated with the service
-	labels Labels
+	Labels Labels
 }
-
-// The provider of the service
-// GCP, AWS, Prometheus etc...
-func (i *Instance) Provider() Provider {
-	return i.provider
-}
-
-// The service type
-func (i *Instance) Service() string {
-	return i.service
-}
-
-// Returns the instance unique name
-// Can be either a name or a unique id
-func (i *Instance) Name() string {
-	return i.name
-}
-
-// Returns the embodied emissions for the instance
-func (i *Instance) EmbodiedEmissions() *ResourceEmissions {
-	return &i.embodiedEmissions
-}
-
-// Returns the operational CPU emissions for the instance
-func (i *Instance) OperationalCPUEmissions() ResourceEmissions {
-	return i.operationalCPUEmissions
-}
-
-// Returns the instance collected metrics
-func (i *Instance) Metrics() Metrics {
-	return i.metrics
-}
-
-// Returns the region of the instance
-func (i *Instance) Region() string {
-	return i.region
-}
-
-// Returns the instance zone
-func (i *Instance) Zone() string {
-	return i.zone
-}
-
-// Returns the instance kind
-func (i *Instance) Kind() string {
-	return i.kind
-}
-
-// Returns the instance collected labels
-func (i *Instance) Labels() Labels {
-	return i.labels
-}
-
-// Get the specific metric
-func (i *Instance) Metric(metricName string) (Metric, bool) {
-	// Get it
-	resource, exists := i.metrics[metricName]
-
-	// Return it
-	return resource, exists
-}
-
-// Makes a copy of the current instance
-// This allows to reuse the instance and just update its values and call build
-// in case when a provider returns an array of resource metrics.
-// See here as an example: pkg/providers/aws/cloudwatch.go (func getEc2Metrics())
-func (i *Instance) Build() Instance {
-	// Builds a copy of the instance
-	return Instance{
-		provider: i.provider,
-		name:     i.name,
-		region:   i.region,
-		zone:     i.zone,
-		kind:     i.kind,
-		metrics:  i.metrics,
-		labels:   i.labels,
-	}
-}
-
-// ---------------------------------------------------------------------
 
 // Create a new instance.
 // We need both the name and the provider
@@ -142,91 +62,33 @@ func NewInstance(name string, provider Provider) *Instance {
 
 	// Build the instance
 	return &Instance{
-		name:     name,
-		provider: provider,
-		metrics:  Metrics{},
-		labels:   Labels{},
+		Name:     name,
+		Provider: provider,
+		Metrics:  Metrics{},
+		Labels:   Labels{},
 	}
 }
 
 // Upsert the metric for the resource
-func (i *Instance) UpsertMetric(resource *Metric) *Instance {
-	// Upsert it
-	i.metrics.Upsert(resource)
-
-	return i
-}
-
-// Set the embodied emissions for the instance
-func (i *Instance) SetEmbodiedEmissions(embodied ResourceEmissions) *Instance {
-	i.embodiedEmissions = embodied
-	return i
-}
-
-// Set the operational CPU emissions for the instance
-func (i *Instance) SetOperationalCPUEmissions(emissions ResourceEmissions) *Instance {
-	i.operationalCPUEmissions = emissions
-	return i
-}
-
-// Set the service type
-func (i *Instance) SetService(service string) *Instance {
-	i.service = service
-	return i
-}
-
-// Sets the region where the resource is located
-// Examples:
-// - europe-west4 (GCP)
-// - us-east-2 (AWS)
-// - eu-east-rack-1 (Baremetal)
-func (i *Instance) SetRegion(region string) *Instance {
-	// Assign the region
-	i.region = region
-
-	// Allows to use it as a builder
-	return i
-}
-
-// SetZone sets the instance zone name
-// Examples
-// - europe-west4-a (GCP)
-func (i *Instance) SetZone(zone string) *Instance {
-	i.zone = zone
-
-	return i
-}
-
-// Sets the instance kind
-// Examples:
-// - n2-standard-8 (GCP)
-// - m6.2xlarge (AWS)
-func (i *Instance) SetKind(kind string) *Instance {
-	// Assign the region
-	i.kind = kind
-
-	// Allows to use it as a builder
-	return i
+func (i *Instance) UpsertMetric(resource *Metric) {
+	i.Metrics.Upsert(resource)
 }
 
 // Insert a label to the service
-func (i *Instance) AddLabel(key, value string) *Instance {
-	// Insert the label
-	i.labels.Add(key, value)
-
-	return i
+func (i *Instance) AddLabel(key, value string) {
+	i.Labels.Add(key, value)
 }
 
 func (i *Instance) PrintPretty(ctx context.Context) {
 	logger := log.FromContext(ctx)
 
-	for _, m := range i.Metrics() {
+	for _, m := range i.Metrics {
 		logger.Debug(fmt.Sprintf(
 			"Collected metric: %s %s %s %s | %s",
-			i.Service(),
-			i.Region(),
-			i.Name(),
-			i.Kind(),
+			i.Service,
+			i.Region,
+			i.Name,
+			i.Kind,
 			m.String(),
 		))
 	}

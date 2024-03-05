@@ -3,7 +3,6 @@ package gcp
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"strconv"
 
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
@@ -99,26 +98,18 @@ func (g *GCP) instanceMemoryMetrics(
 		zone := resp.GetLabelValues()[3].GetStringValue()
 		instanceType := resp.GetLabelValues()[4].GetStringValue()
 
-		m := v1.NewMetric("memory")
-		m.SetResourceUnit(v1.GB)
-		m.SetType(v1.Memory).SetUsage(
-			// convert bytes to GBs
-			float64(resp.GetPointData()[0].GetValues()[0].GetInt64Value()) / 1024 / 1024 / 1024,
-		)
-
-		// TODO: we should not fail here but collect errors
-		if err != nil {
-			slog.Error("failed to parse GCP metric", "error", err)
-			continue
-		}
-
-		m.SetLabels(v1.Labels{
+		m := v1.NewMetric(v1.Memory.String())
+		m.Unit = v1.GB
+		m.ResourceType = v1.Memory
+		// convert Bytes to GB
+		m.Usage = float64(resp.GetPointData()[0].GetValues()[0].GetInt64Value()) / 1024 / 1024 / 1024
+		m.Labels = v1.Labels{
 			"id":           instanceID,
 			"name":         instanceName,
 			"region":       region,
 			"zone":         zone,
 			"machine_type": instanceType,
-		})
+		}
 		metrics = append(metrics, m)
 	}
 	return metrics, nil
@@ -126,6 +117,7 @@ func (g *GCP) instanceMemoryMetrics(
 
 // instanceCPUMetrics runs a query on googe cloud monitoring using MQL
 // and responds with a list of CPU metrics
+
 func (g *GCP) instanceCPUMetrics(
 	ctx context.Context,
 	project, query string,
@@ -157,12 +149,12 @@ func (g *GCP) instanceCPUMetrics(
 		instanceType := resp.GetLabelValues()[4].GetStringValue()
 		totalVCPUs := resp.GetLabelValues()[5].GetStringValue()
 
-		m := v1.NewMetric("cpu")
-		m.SetResourceUnit(v1.VCPU)
-		m.SetType(v1.CPU).SetUsage(
-			// translate fraction to a percentage
-			resp.GetPointData()[0].GetValues()[0].GetDoubleValue() * 100,
-		)
+		m := v1.NewMetric(v1.CPU.String())
+		m.Unit = v1.VCPU
+		m.ResourceType = v1.CPU
+
+		// translate fraction to a percentage
+		m.Usage = resp.GetPointData()[0].GetValues()[0].GetDoubleValue() * 100
 
 		f, err := strconv.ParseFloat(totalVCPUs, 64)
 		// TODO: we should not fail here but collect errors
@@ -171,14 +163,14 @@ func (g *GCP) instanceCPUMetrics(
 			continue
 		}
 
-		m.SetUnitAmount(f)
-		m.SetLabels(v1.Labels{
+		m.UnitAmount = f
+		m.Labels = v1.Labels{
 			"id":           instanceID,
 			"name":         instanceName,
 			"region":       region,
 			"zone":         zone,
 			"machine_type": instanceType,
-		})
+		}
 		metrics = append(metrics, m)
 	}
 	return metrics, nil

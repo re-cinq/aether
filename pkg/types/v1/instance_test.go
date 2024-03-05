@@ -15,19 +15,25 @@ func TestInstanceOperations(t *testing.T) {
 	instanceID := "1234"
 
 	// Mocking the metric
-	r := NewMetric("cpu")
-	r.SetUsage(170.4).SetUnitAmount(4.0).SetResourceUnit(VCPU)
-	r.SetEmissions(NewResourceEmission(1024.57, GCO2eqkWh))
-	r.SetUpdatedAt()
+	r := &Metric{
+		Name:         CPU.String(),
+		Usage:        170.4,
+		UnitAmount:   4.0,
+		ResourceType: CPU,
+		Unit:         VCPU,
+		Emissions:    NewResourceEmission(1024.57, GCO2eqkWh),
+	}
 
 	// Create a new instance
-	instance := NewInstance(instanceID, Prometheus).SetRegion("europe-west4").SetKind("n2-standard-8")
+	instance := NewInstance(instanceID, Prometheus)
+	instance.Region = "europe-west4"
+	instance.Kind = "n2-standard-8"
 
 	// Make sure the region is assigned correctly
-	assert.Equal(t, instanceID, instance.Name())
-	assert.Equal(t, Prometheus, instance.Provider())
-	assert.Equal(t, "europe-west4", instance.Region())
-	assert.Equal(t, "n2-standard-8", instance.Kind())
+	assert.Equal(t, instanceID, instance.Name)
+	assert.Equal(t, Prometheus, instance.Provider)
+	assert.Equal(t, "europe-west4", instance.Region)
+	assert.Equal(t, "n2-standard-8", instance.Kind)
 
 	// Add the metrics
 	instance.UpsertMetric(r)
@@ -36,28 +42,14 @@ func TestInstanceOperations(t *testing.T) {
 	instance.AddLabel("name", "test")
 
 	// Make sure the label exists
-	assert.True(t, instance.Labels().Exists("name"))
+	assert.True(t, instance.Labels.Exists("name"))
 
 	// Check the resource was added
-	existingResource, exists := instance.Metric(r.Name())
+	existingResource, exists := instance.Metrics[r.Name]
 
 	// Make sure the resource exists
 	assert.True(t, exists)
 
 	// Make sure the resource is the same
 	assert.Equal(t, *r, existingResource)
-
-	// Test the Build functionality
-
-	// Build the current view of the instance
-	currentInstance := instance.Build()
-
-	// Change the region
-	instance.SetRegion("new-region")
-
-	// Build the updated view of the
-	updatedInstance := instance.Build()
-
-	// Make sure the two are actually different
-	assert.NotEqual(t, updatedInstance, currentInstance)
 }
