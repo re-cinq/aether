@@ -100,7 +100,7 @@ func (g *GCP) instanceMemoryMetrics(
 		instanceType := resp.GetLabelValues()[4].GetStringValue()
 
 		m := v1.NewMetric("memory")
-		m.SetResourceUnit(v1.Gb)
+		m.SetResourceUnit(v1.GB)
 		m.SetType(v1.Memory).SetUsage(
 			// convert bytes to GBs
 			float64(resp.GetPointData()[0].GetValues()[0].GetInt64Value()) / 1024 / 1024 / 1024,
