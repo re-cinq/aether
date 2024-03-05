@@ -15,7 +15,7 @@ var ErrParsingProvider = errors.New("unsupported Provider")
 const (
 
 	// Amazon web services API
-	Aws Provider = awsString
+	AWS Provider = awsString
 
 	// Azure cloud API
 	Azure Provider = azureString
@@ -36,7 +36,7 @@ const (
 // Providers Lookup map for listing all the supported providers
 // as well as deserializing them
 var Providers = map[string]Provider{
-	awsString:        Aws,
+	awsString:        AWS,
 	azureString:      Azure,
 	gcpString:        GCP,
 	prometheusString: Prometheus,

@@ -15,14 +15,14 @@ var ErrParsingResourceUnits = errors.New("unsupported ResourceUnits")
 // as well as deserializing them
 var ResourceUnits = map[string]ResourceUnit{
 	vCPUString: VCPU,
-	kbString:   Kb,
-	mbString:   Mb,
-	gbString:   Gb,
-	tbString:   Tb,
-	kbsString:  Kbs,
-	mbsString:  Mbs,
-	gbsString:  Gbs,
-	tbsString:  Tbs,
+	kbString:   KB,
+	mbString:   MB,
+	gbString:   GB,
+	tbString:   TB,
+	kbsString:  KBs,
+	mbsString:  MBs,
+	gbsString:  GBs,
+	tbsString:  TBs,
 }
 
 const (
@@ -33,48 +33,48 @@ const (
 	// -------------------------------------------
 	// Used for both Ram and Disk
 
-	// Kb: Kilobytes
-	Kb ResourceUnit = kbString
+	// KB: Kilobytes
+	KB ResourceUnit = kbString
 
-	// Mb: Megabytes
-	Mb ResourceUnit = mbString
+	// MB: Megabytes
+	MB ResourceUnit = mbString
 
-	// Gb: Gigabytes
-	Gb ResourceUnit = gbString
+	// GB: Gigabytes
+	GB ResourceUnit = gbString
 
-	// Tb: Terabytes
-	Tb ResourceUnit = tbString
+	// TB: Terabytes
+	TB ResourceUnit = tbString
 
-	// Pb: Petabytes
-	Pb ResourceUnit = pbString
+	// PB: Petabytes
+	PB ResourceUnit = pbString
 
 	// // -------------------------------------------
 	// Used for bandwidth
 
-	// Kbs: Kilobits per second
-	Kbs ResourceUnit = kbsString
+	// KBs: Kilobits per second
+	KBs ResourceUnit = kbsString
 
-	// Mbs: Megabits per second
-	Mbs ResourceUnit = mbsString
+	// MBs: Megabits per second
+	MBs ResourceUnit = mbsString
 
-	// Gbs: Gigabits per second
-	Gbs ResourceUnit = gbsString
+	// GBs: Gigabits per second
+	GBs ResourceUnit = gbsString
 
-	// Tbs: Terabits per second
-	Tbs ResourceUnit = tbsString
+	// TBs: Terabits per second
+	TBs ResourceUnit = tbsString
 
 	// Static strings
 	vCPUString = "vCPU"
-	kbString   = "kb"
-	mbString   = "mb"
-	gbString   = "gb"
-	tbString   = "tb"
-	pbString   = "pb"
+	kbString   = "KB"
+	mbString   = "MB"
+	gbString   = "GB"
+	tbString   = "TB"
+	pbString   = "PB"
 
-	kbsString = "kbit/s"
-	mbsString = "mbit/s"
-	gbsString = "gbit/s"
-	tbsString = "tbit/s"
+	kbsString = "KB/s"
+	mbsString = "MB/s"
+	gbsString = "GB/s"
+	tbsString = "TB/s"
 )
 
 // Returns a string representation of the Resource unit

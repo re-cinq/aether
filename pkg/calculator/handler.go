@@ -38,7 +38,7 @@ func NewEmissionCalculator(ctx context.Context, eventbus bus.Bus) *EmissionCalcu
 		return nil
 	}
 
-	awsInstances, err = getProviderEC2EmissionFactors(v1.Aws)
+	awsInstances, err = getProviderEC2EmissionFactors(v1.AWS)
 	if err != nil {
 		logger.Error("unable to get v2 Emission Factors, falling back to v1", "error", err)
 	}
