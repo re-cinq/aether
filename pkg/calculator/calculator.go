@@ -62,19 +62,23 @@ func cpu(interval time.Duration, p *parameters) (float64, error) {
 	// The hourly time is 5/60 (0.083333333) * 4 vCPU = 0.33333334
 	vCPUHours := (interval.Minutes() / float64(60)) * vCPU
 
-	// usageCPUkw is the CPU energy consumption in kilowatts.
+	// usageCPUkW is the CPU energy consumption in kilowatts.
 	// If pkgWatt values exist from the dataset, then use cubic spline interpolation
 	// to calculate the wattage based on utilization.
-	usageCPUkw, err := cubicSplineInterpolation(p.wattage, p.metric.Usage())
+	usageCPUkW, err := cubicSplineInterpolation(p.wattage, p.metric.Usage())
 	if err != nil {
 		return 0, err
 	}
 
+	// usageCPUkWh is the usage CPU in kiloWatt Hours
+	// Convert the instantaneous kilowatt value to be in hours
+	usageCPUkWh := (usageCPUkW / interval.Seconds()) * 36000
+
 	// Operational Emissions are calculated by multiplying the usageCPUkw, vCPUHours, PUE,
 	// and region gridCO2e. The PUE is collected from the providers. The CO2e grid data
 	// is the grid carbon intensity coefficient for the region at the specified time.
-	klog.Infof("CPU calculation: %+v, %+v, %+v, %+v\n", usageCPUkw, vCPUHours, p.pue, p.gridCO2e)
-	return usageCPUkw * vCPUHours * p.pue * p.gridCO2e, nil
+	klog.Infof("CPU calculation: %+v, %+v, %+v, %+v\n", usageCPUkWh, vCPUHours, p.pue, p.gridCO2e)
+	return usageCPUkWh * vCPUHours * p.pue * p.gridCO2e, nil
 }
 
 // cubicSplineInterpolation is a piecewise cubic polynomials that takes the
