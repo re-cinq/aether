@@ -3,12 +3,12 @@ package gcp
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"google.golang.org/api/iterator"
-	"k8s.io/klog/v2"
 )
 
 var (
@@ -107,7 +107,7 @@ func (g *GCP) instanceMemoryMetrics(
 
 		// TODO: we should not fail here but collect errors
 		if err != nil {
-			klog.Errorf("failed to parse GCP metric %s", err)
+			slog.Error("failed to parse GCP metric", "error", err)
 			continue
 		}
 
@@ -164,7 +164,7 @@ func (g *GCP) instanceCPUMetrics(
 		f, err := strconv.ParseFloat(totalVCPUs, 64)
 		// TODO: we should not fail here but collect errors
 		if err != nil {
-			klog.Errorf("failed to parse GCP metric %s", err)
+			slog.Error("failed to parse GCP metric", "error", err)
 			continue
 		}
 

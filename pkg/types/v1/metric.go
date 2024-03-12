@@ -2,9 +2,8 @@ package v1
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
-
-	"k8s.io/klog/v2"
 )
 
 // Metric tracks the uilization and emission of a specific resource
@@ -39,7 +38,7 @@ type Metric struct {
 func NewMetric(name string) *Metric {
 	// Make sure the service name is set
 	if name == "" {
-		klog.Error("failed to create metric, got an empty name")
+		slog.Error("failed to create metric, got an empty name")
 		return nil
 	}
 

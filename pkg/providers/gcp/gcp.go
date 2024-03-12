@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"path"
 	"strconv"
@@ -18,7 +19,6 @@ import (
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
-	"k8s.io/klog/v2"
 )
 
 // GCP is the structure used as the provider for Google Cloud Platform
@@ -216,7 +216,7 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 			break
 		}
 		if err != nil {
-			klog.Errorf("error while processes GCE instances %s", err)
+			slog.Error("failed processesing GCE instance", "error", err)
 			return
 		}
 
@@ -261,7 +261,7 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 func getValueFromURL(u string) string {
 	parsed, err := url.Parse(u)
 	if err != nil {
-		klog.Errorf("failed to parse value from %s %s", u, err)
+		slog.Error("failed to parse value from", "input", u, "error", err)
 		return ""
 	}
 

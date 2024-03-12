@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
-	"k8s.io/klog/v2"
 )
 
 var (
@@ -52,13 +53,15 @@ func NewClient(ctx context.Context, currentConfig *config.Account, customTranspo
 	// Init the ec2 client
 	ec2Client := NewEC2Client(&cfg)
 	if ec2Client == nil {
-		klog.Fatal("Could not initialize EC2 client")
+		slog.Error("Could not initialize EC2 client")
+		os.Exit(1)
 	}
 
 	// Init the cloudwatch client
 	cloudWatchClient := NewCloudWatchClient(&cfg)
 	if cloudWatchClient == nil {
-		klog.Fatal("Could not initialize CloudWatch client")
+		slog.Error("Could not initialize CloudWatch client")
+		os.Exit(1)
 	}
 
 	return &Client{
@@ -118,14 +121,16 @@ func buildAWSConfig(ctx context.Context, currentConfig *config.Account, customTr
 		if customTransportConfig.Proxy.HTTPProxy != "" {
 			proxyURL, err = url.Parse(customTransportConfig.Proxy.HTTPProxy)
 			if err != nil {
-				klog.Fatalf("failed to parse config 'HTTPProxy' url")
+				slog.Error("failed to parse config 'HTTPProxy' url")
+				os.Exit(1)
 			}
 		}
 
 		if customTransportConfig.Proxy.HTTPSProxy != "" {
 			proxyURL, err = url.Parse(customTransportConfig.Proxy.HTTPSProxy)
 			if err != nil {
-				klog.Fatalf("failed to parse config 'HTTPSProxy' url")
+				slog.Error("failed to parse config 'HTTPSProxy' url")
+				os.Exit(1)
 			}
 		}
 

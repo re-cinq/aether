@@ -3,12 +3,12 @@ package calculator
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/cnkei/gospline"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	data "github.com/re-cinq/emissions-data/pkg/types/v2"
-	"k8s.io/klog/v2"
 )
 
 type parameters struct {
@@ -73,7 +73,7 @@ func cpu(interval time.Duration, p *parameters) (float64, error) {
 	// Operational Emissions are calculated by multiplying the usageCPUkw, vCPUHours, PUE,
 	// and region gridCO2e. The PUE is collected from the providers. The CO2e grid data
 	// is the grid carbon intensity coefficient for the region at the specified time.
-	klog.Infof("CPU calculation: %+v, %+v, %+v, %+v\n", usageCPUkw, vCPUHours, p.pue, p.gridCO2e)
+	slog.Info(fmt.Sprintf("CPU calculation: %+v, %+v, %+v, %+v\n", usageCPUkw, vCPUHours, p.pue, p.gridCO2e))
 	return usageCPUkw * vCPUHours * p.pue * p.gridCO2e, nil
 }
 

@@ -1,6 +1,9 @@
 package v1
 
-import "k8s.io/klog/v2"
+import (
+	"fmt"
+	"log/slog"
+)
 
 // The instance for which we are collecting the metrics
 // The fields are not exported for several reasons:
@@ -130,7 +133,7 @@ func (i *Instance) Build() Instance {
 func NewInstance(name string, provider Provider) *Instance {
 	// Make sure the instance name is set
 	if name == "" {
-		klog.Error("failed to create service, got an empty name")
+		slog.Error("failed to create service, got an empty name")
 		return nil
 	}
 
@@ -213,13 +216,13 @@ func (i *Instance) AddLabel(key, value string) *Instance {
 
 func (i *Instance) PrintPretty() {
 	for _, m := range i.Metrics() {
-		klog.Infof(
+		slog.Info(fmt.Sprintf(
 			"Collected metric: %s %s %s %s | %s",
 			i.Service(),
 			i.Region(),
 			i.Name(),
 			i.Kind(),
 			m.String(),
-		)
+		))
 	}
 }

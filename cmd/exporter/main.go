@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"log/slog"
+
 	"github.com/re-cinq/cloud-carbon/pkg/api"
 	"github.com/re-cinq/cloud-carbon/pkg/calculator"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
@@ -18,7 +20,6 @@ import (
 	"github.com/re-cinq/cloud-carbon/pkg/scheduler"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	bus "github.com/re-cinq/go-bus"
-	"k8s.io/klog/v2"
 )
 
 const startUpLog = `
@@ -60,7 +61,7 @@ func main() {
 	ctx := context.Background()
 
 	// print the logo
-	klog.Infof("%v", startUpLog)
+	slog.Info(startUpLog)
 
 	// check if we got args passed
 	args := os.Args
@@ -72,7 +73,6 @@ func main() {
 	}
 
 	// Parse the flags
-	klog.InitFlags(nil)
 	flag.Parse()
 
 	// At this point load the config
@@ -112,7 +112,7 @@ func main() {
 	go apiServer.Start()
 
 	// Print the start
-	klog.Infof("started in %v", time.Since(start))
+	slog.Info("started", "time", time.Since(start))
 
 	// Start the scheduler manager
 	scraper.Start(ctx)
@@ -143,12 +143,12 @@ func await(shutdownHook func()) {
 		terminationSignal := <-signalChan
 
 		// Warn that we are terminating
-		klog.Infof("terminating: %s", terminationSignal)
+		slog.Info("terminating", "signal", terminationSignal)
 
 		// Run the shutdown hook
 		shutdownHook()
 
-		klog.Info("--- terminated Successfully")
+		slog.Info("terminated Successfully")
 
 		terminating <- true
 	}()

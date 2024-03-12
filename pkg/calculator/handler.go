@@ -2,10 +2,10 @@ package calculator
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"gopkg.in/yaml.v2"
-	"k8s.io/klog/v2"
 
 	"github.com/re-cinq/cloud-carbon/pkg/config"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
@@ -29,13 +29,13 @@ type EmissionCalculator struct {
 func NewEmissionCalculator(eventBus bus.Bus) *EmissionCalculator {
 	err := factors.CloneAndUpdateFactorsData()
 	if err != nil {
-		klog.Errorf("error with emissions repo: %+v", err)
+		slog.Error("error with emissions repo", "error", err)
 		return nil
 	}
 
 	awsInstances, err = getProviderEC2EmissionFactors(v1.Aws)
 	if err != nil {
-		klog.Error("unable to get v2 Emission Factors, falling back to v1: ", err)
+		slog.Error("unable to get v2 Emission Factors, falling back to v1", "error", err)
 	}
 
 	return &EmissionCalculator{
@@ -66,7 +66,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 	// Make sure we got the right event
 	metricsCollected, ok := event.(v1.MetricsCollected)
 	if !ok {
-		klog.Errorf("EmissionCalculator got an unknown event: %+v", event)
+		slog.Error("EmissionCalculator got an unknown event", "event", event)
 		return
 	}
 	eventInstance := metricsCollected.Instance
@@ -77,13 +77,13 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		factors.DataPath,
 	)
 	if err != nil {
-		klog.Errorf("error getting emission factors: %+v", err)
+		slog.Error("error getting emission factors", "error", err)
 		return
 	}
 
 	gridCO2eTons, ok := emFactors.Coefficient[eventInstance.Region()]
 	if !ok {
-		klog.Errorf("error region: %s does not exist in factors for %s", eventInstance.Region(), "gcp")
+		slog.Error("region does not exist in factors for provider", "region", eventInstance.Region(), "provider", "gcp")
 		return
 	}
 	// TODO: hotfix until updated in emissions data
@@ -97,7 +97,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 
 	specs, ok := emFactors.Embodied[eventInstance.Kind()]
 	if !ok {
-		klog.Errorf("error finding instance: %s kind: %s in factor data", eventInstance.Name(), eventInstance.Kind())
+		slog.Error("failed finding instance in factor data", "instance", eventInstance.Name(), "kind", eventInstance.Kind())
 		return
 	}
 
@@ -126,7 +126,7 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		params.metric = &v
 		opEm, err := operationalEmissions(interval, &params)
 		if err != nil {
-			klog.Errorf("error calculating %s operational emissions: %+v", v.Name(), err)
+			slog.Error("failed calculating operational emissions", "type", v.Name(), "error", err)
 			continue
 		}
 		params.metric.SetEmissions(v1.NewResourceEmission(opEm, v1.GCO2eqkWh))

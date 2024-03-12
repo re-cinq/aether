@@ -2,6 +2,7 @@ package exporter
 
 import (
 	"context"
+	"log/slog"
 
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	bus "github.com/re-cinq/go-bus"
@@ -9,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	api "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/metric"
-	"k8s.io/klog/v2"
 )
 
 type PrometheusEventHandler struct {
@@ -20,7 +20,7 @@ type PrometheusEventHandler struct {
 func NewPrometheusEventHandler(eventBus bus.Bus) *PrometheusEventHandler {
 	exporter, err := prometheus.New()
 	if err != nil {
-		klog.Fatal(err)
+		slog.Error("failed setting up prometheus", "error", err)
 	}
 
 	meter := metric.NewMeterProvider(
@@ -36,7 +36,7 @@ func NewPrometheusEventHandler(eventBus bus.Bus) *PrometheusEventHandler {
 func (c *PrometheusEventHandler) Apply(event bus.Event) {
 	e, ok := event.(v1.EmissionsCalculated)
 	if !ok {
-		klog.Errorf("PrometheusEventHandler got an unknown event: %T", event)
+		slog.Error("PrometheusEventHandler got an unknown event", "event", event)
 		return
 	}
 
@@ -46,7 +46,7 @@ func (c *PrometheusEventHandler) Apply(event bus.Event) {
 		api.WithDescription("co2eq of various services"),
 	)
 	if err != nil {
-		klog.Errorf("[otel] failed setting up emissions metric")
+		slog.Error("[otel] failed setting up emissions metric")
 		return
 	}
 
@@ -56,7 +56,7 @@ func (c *PrometheusEventHandler) Apply(event bus.Event) {
 		api.WithDescription("co2eq of various services"),
 	)
 	if err != nil {
-		klog.Errorf("[otel] failed setting up embodied emissions metric")
+		slog.Error("[otel] failed setting up embodied emissions metric")
 		return
 	}
 
@@ -74,7 +74,7 @@ func (c *PrometheusEventHandler) Apply(event bus.Event) {
 			return nil
 		}, embodied)
 	if err != nil {
-		klog.Errorf("error occurred setting embodied metric for %v", e.Instance.Name())
+		slog.Error("failed setting embodied metric", "instance", e.Instance.Name())
 		return
 	}
 
@@ -99,7 +99,7 @@ func (c *PrometheusEventHandler) Apply(event bus.Event) {
 				return nil
 			}, emissions)
 		if err != nil {
-			klog.Errorf("error occurred setting metric for %v", e.Instance.Name())
+			slog.Error("failed setting metric", "instance", e.Instance.Name())
 		}
 	}
 }
