@@ -4,6 +4,8 @@ package amazon
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -12,7 +14,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/re-cinq/cloud-carbon/pkg/providers/util"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
-	"k8s.io/klog/v2"
 )
 
 // Helper service to get EC2 data
@@ -29,8 +30,8 @@ func NewEC2Client(cfg *aws.Config) *ec2Client {
 
 	// Make sure the initialisation was successful
 	if client == nil {
-		klog.Fatal("failed to create AWS EC2 client")
-		return nil
+		slog.Error("failed to create AWS EC2 client")
+		os.Exit(1)
 	}
 
 	// Return the ec2 service

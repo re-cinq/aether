@@ -3,7 +3,9 @@ package api
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -11,7 +13,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
-	"k8s.io/klog/v2"
 )
 
 // ApiServer object
@@ -76,12 +77,12 @@ func (api *API) init() {
 
 	// Make sure we have got a router
 	if router == nil {
-		klog.Fatal("Could not create API router")
-		return
+		slog.Error("Could not create API router")
+		os.Exit(1)
 	}
 
 	// Print to the user where the API is listening
-	klog.Infof("listening on: %s", api.hostPort)
+	slog.Info("server started", "port", api.hostPort)
 
 	// Init the HTTP server
 	api.server = &http.Server{
@@ -94,13 +95,14 @@ func (api *API) init() {
 func (api *API) Start() {
 	// Listen to it
 	if err := api.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		klog.Fatalf("failed to listen to %s %s", api.hostPort, err)
+		slog.Error("failed to listen on port", "port", api.hostPort, "error", err)
+		os.Exit(1)
 	}
 }
 
 // Stop the api server
 func (api *API) Stop() {
-	klog.Infof("Shutting down the API server...")
+	slog.Info("Shutting down the API server")
 
 	// Create a timeout for shutting down
 	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*15)
@@ -110,6 +112,6 @@ func (api *API) Stop() {
 
 	// Shutdown the server
 	if err := api.server.Shutdown(ctxTimeout); err != nil {
-		klog.Errorf("failed to gracefully shutdown the API: %s", err)
+		slog.Error("failed to gracefully shutdown the API", "error", err)
 	}
 }

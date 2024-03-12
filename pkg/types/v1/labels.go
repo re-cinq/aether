@@ -1,6 +1,6 @@
 package v1
 
-import "k8s.io/klog/v2"
+import "log/slog"
 
 // Labels definition
 type Labels map[string]string
@@ -9,7 +9,7 @@ type Labels map[string]string
 func (labels Labels) Add(key, value string) {
 	// Make sure the map is initialized
 	if labels == nil {
-		klog.Fatal("labels map is nil")
+		slog.Error("labels map is nil")
 	}
 
 	// Assign the label

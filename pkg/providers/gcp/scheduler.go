@@ -2,12 +2,12 @@ package gcp
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/re-cinq/cloud-carbon/pkg/config"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	bus "github.com/re-cinq/go-bus"
-	"k8s.io/klog/v2"
 )
 
 type scheduler struct {
@@ -52,7 +52,7 @@ func NewScheduler(ctx context.Context, eventBus bus.Bus) []v1.Scheduler {
 		// Init the GCP Client
 		gcp, shutdown, err := New(ctx, &account)
 		if err != nil {
-			klog.Errorf("failed to Initialize GCP provider %s", err)
+			slog.Error("failed to Initialize GCP provider", "error", err)
 			return nil
 		}
 
@@ -76,7 +76,7 @@ func NewScheduler(ctx context.Context, eventBus bus.Bus) []v1.Scheduler {
 // to run at certain intervals
 func (s *scheduler) process(ctx context.Context) {
 	if s.project == "" {
-		klog.Error("no GCP project defined in the config")
+		slog.Error("no GCP project defined in the config")
 		return
 	}
 
@@ -85,7 +85,7 @@ func (s *scheduler) process(ctx context.Context) {
 	instances, err := s.gcp.GetMetricsForInstances(ctx, s.project, "5m")
 
 	if err != nil {
-		klog.Errorf("failed to scrape instance metrics %s", err)
+		slog.Error("failed to scrape instance metrics", "error", err)
 		return
 	}
 
@@ -111,7 +111,7 @@ func (s *scheduler) Schedule(ctx context.Context) {
 		}
 	}()
 
-	klog.Info("started GCP scheduling")
+	slog.Info("started GCP scheduling")
 
 	// Do the first call
 	s.process(ctx)

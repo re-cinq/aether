@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -12,7 +14,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/re-cinq/cloud-carbon/pkg/providers/util"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
-	"k8s.io/klog/v2"
 )
 
 // Helper service to get CloudWatch data
@@ -29,8 +30,8 @@ func NewCloudWatchClient(cfg *aws.Config) *cloudWatchClient {
 
 	// Make sure the initialisation was successful
 	if client == nil {
-		klog.Fatal("failed to create AWS CloudWatch client")
-		return nil
+		slog.Error("failed to create AWS CloudWatch client")
+		os.Exit(1)
 	}
 
 	// Return the cloudwatch service client
@@ -64,14 +65,14 @@ func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interva
 
 		instanceID, ok := metric.Labels().Get("instanceID")
 		if !ok {
-			klog.Errorf("error metric doesn't have an instanceID: %+v", metric)
+			slog.Error("metric does not have an instanceID", "metric", metric)
 			continue
 		}
 
 		// load the instance metadata from the cache, because the query does not give us instance info
 		cachedInstance, exists := ca.Get(util.CacheKey(region, ec2Service, instanceID))
 		if cachedInstance == nil || !exists {
-			klog.Warningf("instance id %s is not present in the metadata, temporarily skipping collecting metrics", instanceID)
+			slog.Warn("instance id  is not present in the metadata, temporarily skipping collecting metrics", "id", instanceID)
 			continue
 		}
 

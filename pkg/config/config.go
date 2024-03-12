@@ -3,14 +3,14 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sync"
 	"time"
 
+	"log/slog"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
-	"k8s.io/klog/v2"
 )
 
 var (
@@ -36,10 +36,7 @@ func InitConfig() {
 
 	// Handle errors reading the config file
 	if err != nil {
-		klog.Fatalf("could not parse/read config file: %s", err)
-
-		// This is superfluous, but it clearly states what the expected exit code
-		// is when calling klog.Fatalf
+		slog.Error("could not parse/read config file", "error", err)
 		os.Exit(255)
 	}
 
@@ -49,7 +46,7 @@ func InitConfig() {
 	// Setup a call back on the file changes
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		// Log the fact that the config file was changed
-		klog.Infof("config file %s changed %s", fmt.Sprintf("%s.yaml", getEnvConfig()), e.Name)
+		slog.Info("config file changed", "file", fmt.Sprintf("%s.yaml", getEnvConfig()), "event", e.Name)
 
 		// Lock the reading of the file untile we parsed it
 		lock.Lock()
@@ -61,7 +58,7 @@ func InitConfig() {
 		lock.Unlock()
 
 		// Log the fact that the new config file was reloaded
-		klog.Infof("config file %s reloaded", fmt.Sprintf("%s.yaml", getEnvConfig()))
+		slog.Info("config file reloaded", "file", fmt.Sprintf("%s.yaml", getEnvConfig()))
 	})
 
 	// Setup a watch in case the config file is changed
@@ -92,7 +89,7 @@ func parseApplicationConfig() *ApplicationConfig {
 
 	// Parse the config file
 	if err := viper.Unmarshal(&config); err != nil {
-		log.Println("Error parsing config file", err)
+		slog.Error("Error parsing config file", "error", err)
 		os.Exit(1)
 	}
 
