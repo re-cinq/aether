@@ -55,12 +55,15 @@ func cpu(interval time.Duration, p *parameters) (float64, error) {
 		vCPU = p.metric.UnitAmount()
 	}
 
-	// vCPUHours represents the count of virtual CPUs within a specific time frame.
-	// To get vCPUHours, we first get the interval in hours and multiply that by the
+	// vCPUTime represents the count of virtual CPUs within a specific time frame,
+	// specifically the interval time specified in the config.
+	// To get vCPUTime, we first get the interval in seconds and multiply that by the
 	// number of vCPUs.
 	// For example, if the machine has 4 vCPUs and an interval of time of 5 minutes
-	// The hourly time is 5/60 (0.083333333) * 4 vCPU = 0.33333334
-	vCPUHours := (interval.Minutes() / float64(60)) * vCPU
+	// To get the vCPUTime over 5 minutes, we get the interval in Seconds and divide
+	// by 3600 (the amount of seconds in an hour) and multiple that by the vCPUs
+	// So, 300/3600 = 0.083333333 * 4 = 0.333333333
+	vCPUTime := (interval.Seconds() / 3600) * vCPU
 
 	// usageCPUkW is the CPU energy consumption in kilowatts.
 	// If pkgWatt values exist from the dataset, then use cubic spline interpolation
@@ -70,15 +73,13 @@ func cpu(interval time.Duration, p *parameters) (float64, error) {
 		return 0, err
 	}
 
-	// usageCPUkWh is the usage CPU in kiloWatt Hours
-	// Convert the instantaneous kilowatt value to be in hours
-	usageCPUkWh := (usageCPUkW / interval.Seconds()) * 36000
+	usageCPUTime := usageCPUkW * interval.Seconds()
 
 	// Operational Emissions are calculated by multiplying the usageCPUkw, vCPUHours, PUE,
 	// and region gridCO2e. The PUE is collected from the providers. The CO2e grid data
 	// is the grid carbon intensity coefficient for the region at the specified time.
-	klog.Infof("CPU calculation: %+v, %+v, %+v, %+v\n", usageCPUkWh, vCPUHours, p.pue, p.gridCO2e)
-	return usageCPUkWh * vCPUHours * p.pue * p.gridCO2e, nil
+	klog.Infof("CPU calculation: %+v, %+v, %+v, %+v\n", usageCPUTime, vCPUTime, p.pue, p.gridCO2e)
+	return usageCPUTime * vCPUTime * p.pue * p.gridCO2e, nil
 }
 
 // cubicSplineInterpolation is a piecewise cubic polynomials that takes the
