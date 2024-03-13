@@ -22,7 +22,7 @@ type cloudWatchClient struct {
 }
 
 // New cloudwatch client instance
-func NewCloudWatchClient(cfg *aws.Config) *cloudWatchClient {
+func NewCloudWatchClient(ctx context.Context, cfg *aws.Config) *cloudWatchClient {
 	emptyOptions := func(o *cloudwatch.Options) {}
 
 	// Init the Cloudwatch client

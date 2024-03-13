@@ -1,6 +1,7 @@
 package amazon
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -15,7 +16,7 @@ import (
 
 func TestGetMetricsData(t *testing.T) {
 	stubber := testtools.NewStubber()
-	client := NewCloudWatchClient(stubber.SdkConfig)
+	client := NewCloudWatchClient(context.TODO(), stubber.SdkConfig)
 
 	region := "test region"
 	interval := 5 * time.Minute

@@ -1,8 +1,11 @@
 package v1
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+
+	"github.com/re-cinq/cloud-carbon/pkg/log"
 )
 
 // The instance for which we are collecting the metrics
@@ -214,9 +217,11 @@ func (i *Instance) AddLabel(key, value string) *Instance {
 	return i
 }
 
-func (i *Instance) PrintPretty() {
+func (i *Instance) PrintPretty(ctx context.Context) {
+	logger := log.FromContext(ctx)
+
 	for _, m := range i.Metrics() {
-		slog.Info(fmt.Sprintf(
+		logger.Debug(fmt.Sprintf(
 			"Collected metric: %s %s %s %s | %s",
 			i.Service(),
 			i.Region(),

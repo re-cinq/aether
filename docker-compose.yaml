@@ -10,6 +10,7 @@ services:
       - 8080:8080
     volumes:
       - ./:/src
+      - ../go-bus:/go-bus
       # Volume for Google Cloud Credentials
       - ~/.config/gcloud/application_default_credentials.json:/credentials/application_default_credentials.json
       # volume for AWS credentials

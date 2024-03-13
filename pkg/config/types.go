@@ -12,6 +12,7 @@ type ApplicationConfig struct {
 	Proxy           ProxyConfig `mapstructure:"proxy"`
 	ProvidersConfig `mapstructure:"providersConfig"`
 	Providers       map[v1.Provider]Provider `mapstructure:"providers"`
+	LogLevel        string                   `mapstructure:"logLevel"`
 }
 
 // Defines the configuration for the API

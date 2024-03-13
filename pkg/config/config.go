@@ -2,14 +2,14 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sync"
 	"time"
 
-	"log/slog"
-
 	"github.com/fsnotify/fsnotify"
+	"github.com/re-cinq/cloud-carbon/pkg/log"
 	"github.com/spf13/viper"
 )
 
@@ -24,41 +24,47 @@ var (
 	UpdatedAt time.Time
 )
 
-func InitConfig() {
+func InitConfig(ctx context.Context) {
+	logger := log.FromContext(ctx)
+
 	viper.SetEnvPrefix("CARBON")        // sets an environment variable prefix CARBON_
 	viper.SetConfigName(getEnvConfig()) // name of config file (without extension)
 	viper.SetConfigType("yaml")         // REQUIRED if the config file does not have the extension in the name
 	viper.AddConfigPath(".")            // optionally look for config in the working directory
 	viper.AddConfigPath("conf")         // path to look for the config file in the "./conf" path
 
+	//Set defaults
+	viper.SetDefault("api.metricsPath", "/metrics")
+	viper.SetDefault("logLevel", "info")
+
 	// Find and read the config file
 	err := viper.ReadInConfig()
 
 	// Handle errors reading the config file
 	if err != nil {
-		slog.Error("could not parse/read config file", "error", err)
+		logger.Error("could not parse/read config file", "error", err)
 		os.Exit(255)
 	}
 
 	// parse the application config
-	config = parseApplicationConfig()
+	config = parseApplicationConfig(ctx)
 
 	// Setup a call back on the file changes
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		// Log the fact that the config file was changed
-		slog.Info("config file changed", "file", fmt.Sprintf("%s.yaml", getEnvConfig()), "event", e.Name)
+		logger.Info("config file changed", "file", fmt.Sprintf("%s.yaml", getEnvConfig()), "event", e.Name)
 
 		// Lock the reading of the file untile we parsed it
 		lock.Lock()
 
 		// Parse the config file
-		config = parseApplicationConfig()
+		config = parseApplicationConfig(ctx)
 
 		// Unlock so that the file can be accessed again
 		lock.Unlock()
 
 		// Log the fact that the new config file was reloaded
-		slog.Info("config file reloaded", "file", fmt.Sprintf("%s.yaml", getEnvConfig()))
+		logger.Info("config file reloaded", "file", fmt.Sprintf("%s.yaml", getEnvConfig()))
 	})
 
 	// Setup a watch in case the config file is changed
@@ -78,7 +84,9 @@ func AppConfig() *ApplicationConfig {
 }
 
 // ParseApplicationConfig reads the config file into a struct
-func parseApplicationConfig() *ApplicationConfig {
+func parseApplicationConfig(ctx context.Context) *ApplicationConfig {
+	logger := log.FromContext(ctx)
+
 	var config ApplicationConfig
 
 	// Override the config file via the environment variables
@@ -89,7 +97,7 @@ func parseApplicationConfig() *ApplicationConfig {
 
 	// Parse the config file
 	if err := viper.Unmarshal(&config); err != nil {
-		slog.Error("Error parsing config file", "error", err)
+		logger.Error("Error parsing config file", "error", err)
 		os.Exit(1)
 	}
 

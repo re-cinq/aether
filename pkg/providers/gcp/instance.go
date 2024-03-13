@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
+	"github.com/re-cinq/cloud-carbon/pkg/log"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"google.golang.org/api/iterator"
 )
@@ -131,6 +132,8 @@ func (g *GCP) instanceCPUMetrics(
 ) ([]*v1.Metric, error) {
 	var metrics []*v1.Metric
 
+	logger := log.FromContext(ctx)
+
 	it := g.monitoring.QueryTimeSeries(ctx, &monitoringpb.QueryTimeSeriesRequest{
 		Name:  fmt.Sprintf("projects/%s", project),
 		Query: query,
@@ -164,7 +167,7 @@ func (g *GCP) instanceCPUMetrics(
 		f, err := strconv.ParseFloat(totalVCPUs, 64)
 		// TODO: we should not fail here but collect errors
 		if err != nil {
-			slog.Error("failed to parse GCP metric", "error", err)
+			logger.Error("failed to parse GCP metric", "error", err)
 			continue
 		}
 

@@ -1,12 +1,13 @@
 package calculator
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/cnkei/gospline"
+	"github.com/re-cinq/cloud-carbon/pkg/log"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	data "github.com/re-cinq/emissions-data/pkg/types/v2"
 )
@@ -22,10 +23,10 @@ type parameters struct {
 
 // operationalEmissions determines the correct function to run to calculate the
 // operational emissions for the metric type
-func operationalEmissions(interval time.Duration, p *parameters) (float64, error) {
+func operationalEmissions(ctx context.Context, interval time.Duration, p *parameters) (float64, error) {
 	switch p.metric.Name() {
 	case v1.CPU.String():
-		return cpu(interval, p)
+		return cpu(ctx, interval, p)
 	case v1.Memory.String():
 		return 0, errors.New("error memory is not yet being calculated")
 	case v1.Storage.String():
@@ -43,7 +44,7 @@ func operationalEmissions(interval time.Duration, p *parameters) (float64, error
 // The initial calculation uses the wattage conversion factor based on the turbostat and
 // turbostress to stress test the CPU on baremetal servers as inspired by Teads.
 // More information can be found in our docs/METHODOLOGIES.md
-func cpu(interval time.Duration, p *parameters) (float64, error) {
+func cpu(ctx context.Context, interval time.Duration, p *parameters) (float64, error) {
 	vCPU := p.vCPU
 	// vCPU are virtual CPUs that are mapped to physical cores (a core is a physical
 	// component to the CPU the VM is running on). If vCPU from the dataset (p.vCPU)
@@ -73,7 +74,8 @@ func cpu(interval time.Duration, p *parameters) (float64, error) {
 	// Operational Emissions are calculated by multiplying the usageCPUkw, vCPUHours, PUE,
 	// and region gridCO2e. The PUE is collected from the providers. The CO2e grid data
 	// is the grid carbon intensity coefficient for the region at the specified time.
-	slog.Info(fmt.Sprintf("CPU calculation: %+v, %+v, %+v, %+v\n", usageCPUkw, vCPUHours, p.pue, p.gridCO2e))
+	logger := log.FromContext(ctx)
+	logger.Debug(fmt.Sprintf("CPU calculation: %+v, %+v, %+v, %+v\n", usageCPUkw, vCPUHours, p.pue, p.gridCO2e))
 	return usageCPUkw * vCPUHours * p.pue * p.gridCO2e, nil
 }
 
