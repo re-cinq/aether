@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/re-cinq/cloud-carbon/pkg/log"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	bus "github.com/re-cinq/go-bus"
 	"go.opentelemetry.io/otel/attribute"
@@ -13,14 +14,17 @@ import (
 )
 
 type PrometheusEventHandler struct {
-	eventBus bus.Bus
+	eventbus bus.Bus
 	meter    api.Meter
+	logger   *slog.Logger
 }
 
-func NewPrometheusEventHandler(eventBus bus.Bus) *PrometheusEventHandler {
+func NewPrometheusEventHandler(ctx context.Context, eventbus bus.Bus) *PrometheusEventHandler {
+	logger := log.FromContext(ctx)
+
 	exporter, err := prometheus.New()
 	if err != nil {
-		slog.Error("failed setting up prometheus", "error", err)
+		logger.Error("failed setting up prometheus", "error", err)
 	}
 
 	meter := metric.NewMeterProvider(
@@ -28,41 +32,42 @@ func NewPrometheusEventHandler(eventBus bus.Bus) *PrometheusEventHandler {
 	).Meter("cloud-carbon")
 
 	return &PrometheusEventHandler{
-		eventBus: eventBus,
-		meter:    meter,
+		eventbus,
+		meter,
+		logger,
 	}
 }
 
-func (c *PrometheusEventHandler) Apply(event bus.Event) {
+func (p *PrometheusEventHandler) Apply(event bus.Event) {
 	e, ok := event.(v1.EmissionsCalculated)
 	if !ok {
-		slog.Error("PrometheusEventHandler got an unknown event", "event", event)
+		p.logger.Error("PrometheusEventHandler got an unknown event", "event", event)
 		return
 	}
 
 	// setup emissions gauge
-	emissions, err := c.meter.Float64ObservableGauge(
+	emissions, err := p.meter.Float64ObservableGauge(
 		"emissions",
 		api.WithDescription("co2eq of various services"),
 	)
 	if err != nil {
-		slog.Error("[otel] failed setting up emissions metric")
+		p.logger.Error("[otel] failed setting up emissions metric")
 		return
 	}
 
 	// setup embodied emissions gauge
-	embodied, err := c.meter.Float64ObservableGauge(
+	embodied, err := p.meter.Float64ObservableGauge(
 		"embodied",
 		api.WithDescription("co2eq of various services"),
 	)
 	if err != nil {
-		slog.Error("[otel] failed setting up embodied emissions metric")
+		p.logger.Error("[otel] failed setting up embodied emissions metric")
 		return
 	}
 
 	// register embodied emissions metrics for instance
 	// NOTE: this will not change based on different types of metrics
-	_, err = c.meter.RegisterCallback(
+	_, err = p.meter.RegisterCallback(
 		func(ctx context.Context, o api.Observer) error {
 			o.ObserveFloat64(
 				embodied,
@@ -74,7 +79,7 @@ func (c *PrometheusEventHandler) Apply(event bus.Event) {
 			return nil
 		}, embodied)
 	if err != nil {
-		slog.Error("failed setting embodied metric", "instance", e.Instance.Name())
+		p.logger.Error("failed setting embodied metric", "instance", e.Instance.Name())
 		return
 	}
 
@@ -89,7 +94,7 @@ func (c *PrometheusEventHandler) Apply(event bus.Event) {
 		)
 
 		// register emission metrics for instance
-		_, err := c.meter.RegisterCallback(
+		_, err := p.meter.RegisterCallback(
 			func(ctx context.Context, o api.Observer) error {
 				o.ObserveFloat64(
 					emissions,
@@ -99,7 +104,7 @@ func (c *PrometheusEventHandler) Apply(event bus.Event) {
 				return nil
 			}, emissions)
 		if err != nil {
-			slog.Error("failed setting metric", "instance", e.Instance.Name())
+			p.logger.Error("failed setting metric", "instance", e.Instance.Name())
 		}
 	}
 }

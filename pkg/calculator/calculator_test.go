@@ -1,6 +1,7 @@
 package calculator
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -162,7 +163,7 @@ func TestCalculateCPU(t *testing.T) {
 		}(),
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			res, err := cpu(test.interval, test.params)
+			res, err := cpu(context.TODO(), test.interval, test.params)
 			assert.Equalf(t, test.expRes, res, "Result should be: %v, got: %v", test.expRes, res)
 			if test.hasErr {
 				assert.Errorf(t, err, test.expErr)

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -16,19 +15,14 @@ import (
 	"github.com/re-cinq/cloud-carbon/pkg/calculator"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
 	"github.com/re-cinq/cloud-carbon/pkg/exporter"
+	"github.com/re-cinq/cloud-carbon/pkg/log"
 	"github.com/re-cinq/cloud-carbon/pkg/pathfinder"
 	"github.com/re-cinq/cloud-carbon/pkg/scheduler"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	bus "github.com/re-cinq/go-bus"
 )
 
-const startUpLog = `
-  ___  __    _____  __  __  ____      ___    __    ____  ____  _____  _  _ 
- / __)(  )  (  _  )(  )(  )(  _ \    / __)  /__\  (  _ \(  _ \(  _  )( \( )
-( (__  )(__  )(_)(  )(__)(  )(_) )  ( (__  /(__)\  )   / ) _ < )(_)(  )  ( 
- \___)(____)(_____)(______)(____/    \___)(__)(__)(_)\_)(____/(_____)(_)\_)
-                                                                                              
-`
+const shutdownTTL = time.Second * 15
 
 var (
 	description    = "Cloud Carbon collection exporter"
@@ -55,13 +49,15 @@ func PrintVersion() {
 }
 
 func main() {
+	logger, lvl := setupLogger()
+
 	// Record when the program is started
 	start := time.Now()
 
 	ctx := context.Background()
 
-	// print the logo
-	slog.Info(startUpLog)
+	// add logger to context
+	ctx = log.WithContext(ctx, logger)
 
 	// check if we got args passed
 	args := os.Args
@@ -72,47 +68,46 @@ func main() {
 		return
 	}
 
-	// Parse the flags
-	flag.Parse()
-
 	// At this point load the config
-	config.InitConfig()
+	config.InitConfig(ctx)
+
+	setLogLevel(lvl, config.AppConfig().LogLevel)
 
 	// Init the application bus
-	eventBus := bus.NewEventBus(8192, runtime.NumCPU())
+	eventbus := bus.NewEventBus(8192, runtime.NumCPU())
 
 	// Subscribe to the metrics collections
-	eventBus.Subscribe(
+	eventbus.Subscribe(
 		v1.MetricsCollectedTopic,
-		calculator.NewEmissionCalculator(eventBus),
+		calculator.NewEmissionCalculator(ctx, eventbus),
 	)
 
 	// Subscribe to update the prometheus exporter
-	eventBus.Subscribe(
+	eventbus.Subscribe(
 		v1.EmissionsCalculatedTopic,
-		exporter.NewPrometheusEventHandler(eventBus),
+		exporter.NewPrometheusEventHandler(ctx, eventbus),
 	)
 
 	// Subscribe to update the pathfinder handler
-	eventBus.Subscribe(
+	eventbus.Subscribe(
 		v1.EmissionsCalculatedTopic,
-		pathfinder.NewPathfinderEventHandler(eventBus),
+		pathfinder.NewPathfinderEventHandler(ctx, eventbus),
 	)
 
 	// Start the bus
-	eventBus.Start()
+	eventbus.Start()
 
 	// Create the API object
-	apiServer := api.NewAPIServer()
+	server := api.New()
 
 	// Scheduler manager
-	scraper := scheduler.NewScrapingManager(ctx, eventBus)
+	scraper := scheduler.NewScrapingManager(ctx, eventbus)
 
 	// Start the API
-	go apiServer.Start()
+	go server.Start(ctx)
 
 	// Print the start
-	slog.Info("started", "time", time.Since(start))
+	logger.Info("started", "time", time.Since(start))
 
 	// Start the scheduler manager
 	scraper.Start(ctx)
@@ -120,20 +115,27 @@ func main() {
 	// Graceful shutdown
 	// Await for the signals to teminate the program
 	await(func() {
+
+		// Create a timeout context
+		// We need to expect that processes will shutdown in this amount of time
+		// or we need to force them
+		cancelCtx, cancel := context.WithTimeout(ctx, shutdownTTL)
+		defer cancel()
+
 		// Shutdown the API server
-		apiServer.Stop()
+		server.Stop(cancelCtx)
 
 		// Stop all the scraping
 		scraper.Stop()
 
 		// Shutdown the bus
-		eventBus.Stop()
+		eventbus.Stop()
 	})
 }
 
 // await for the signals and run the shutdown function
 func await(shutdownHook func()) {
-	terminating := make(chan bool, 1)
+	terminated := make(chan bool, 1)
 
 	// Signals channel
 	signalChan := make(chan os.Signal, 1)
@@ -148,11 +150,33 @@ func await(shutdownHook func()) {
 		// Run the shutdown hook
 		shutdownHook()
 
-		slog.Info("terminated Successfully")
-
-		terminating <- true
+		terminated <- true
 	}()
 
 	// Here we wait
-	<-terminating
+	<-terminated
+	slog.Info("terminated successfully")
+}
+
+func setupLogger() (*slog.Logger, *slog.LevelVar) {
+	// the default log level is INFO
+	lvl := new(slog.LevelVar)
+	return slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: lvl,
+	})), lvl
+}
+
+func setLogLevel(lvl *slog.LevelVar, level string) {
+	switch level {
+	case "debug":
+		lvl.Set(slog.LevelDebug)
+	case "info":
+		lvl.Set(slog.LevelInfo)
+	case "warn":
+		lvl.Set(slog.LevelWarn)
+	case "error":
+		lvl.Set(slog.LevelError)
+	default:
+		lvl.Set(slog.LevelInfo)
+	}
 }

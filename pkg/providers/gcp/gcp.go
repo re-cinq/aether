@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/url"
 	"path"
 	"strconv"
@@ -15,6 +14,7 @@ import (
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	cache "github.com/patrickmn/go-cache"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
+	"github.com/re-cinq/cloud-carbon/pkg/log"
 	"github.com/re-cinq/cloud-carbon/pkg/providers/util"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	"google.golang.org/api/iterator"
@@ -203,6 +203,8 @@ func getMetadata(m *v1.Metric) (*metadata, error) {
 // for a project and stores metadata in order to help with
 // metric collections
 func (g *GCP) Refresh(ctx context.Context, project string) {
+	logger := log.FromContext(ctx)
+
 	iter := g.instances.AggregatedList(
 		ctx,
 		&computepb.AggregatedListInstancesRequest{
@@ -216,12 +218,15 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 			break
 		}
 		if err != nil {
-			slog.Error("failed processesing GCE instance", "error", err)
+			logger.Error("failed processesing GCE instance", "error", err)
 			return
 		}
 
 		for _, instance := range resp.Value.Instances {
-			zone := getValueFromURL(instance.GetZone())
+			zone, err := getValueFromURL(instance.GetZone())
+			if err != nil {
+				logger.Error("failed to get zone from url")
+			}
 			instanceID := strconv.FormatUint(instance.GetId(), 10)
 			name := instance.GetName()
 
@@ -236,6 +241,10 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 			}
 
 			if instance.GetStatus() == "RUNNING" {
+				kind, err := getValueFromURL(instance.GetMachineType())
+				if err != nil {
+					logger.Error("failed to get instance type from url")
+				}
 				// TODO potentially we do not need a custom resource to cache, maybe
 				// just cache the instance (Kind fields are different in resource and
 				// instance) - will need to consolidate
@@ -244,7 +253,7 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 					Name:        name,
 					Region:      zone, // TODO: Why is region set to zone
 					Service:     service,
-					Kind:        getValueFromURL(instance.GetMachineType()),
+					Kind:        kind,
 					Lifecycle:   instance.GetScheduling().GetProvisioningModel(),
 					VCPUCount:   0,
 					LastUpdated: time.Now().UTC(),
@@ -258,12 +267,11 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 // example:
 // input: https://www.googleapis.com/.../machineTypes/e2-micro
 // output: e2-micro
-func getValueFromURL(u string) string {
+func getValueFromURL(u string) (string, error) {
 	parsed, err := url.Parse(u)
 	if err != nil {
-		slog.Error("failed to parse value from", "input", u, "error", err)
-		return ""
+		return "", err
 	}
 
-	return path.Base(parsed.Path)
+	return path.Base(parsed.Path), nil
 }

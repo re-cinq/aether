@@ -10,7 +10,8 @@ type Metrics map[string]Metric
 func (m Metrics) Upsert(metric *Metric) {
 	// Make sure the map is initialized
 	if m == nil {
-		//TODO we should rteurn an error for this function
+		//TODO we should initilize this instead of showing an error
+		// we should also change this to use pointers
 		slog.Error("metrics map is nil")
 	}
 

@@ -2,10 +2,10 @@ package gcp
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/re-cinq/cloud-carbon/pkg/config"
+	"github.com/re-cinq/cloud-carbon/pkg/log"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	bus "github.com/re-cinq/go-bus"
 )
@@ -33,6 +33,8 @@ type scheduler struct {
 // NewScheduler returns the a list of schedulers that
 // conform to the scheduler interface
 func NewScheduler(ctx context.Context, eventBus bus.Bus) []v1.Scheduler {
+	logger := log.FromContext(ctx)
+
 	// Load the GCP config
 	cfg, exists := config.AppConfig().Providers[provider]
 
@@ -52,7 +54,7 @@ func NewScheduler(ctx context.Context, eventBus bus.Bus) []v1.Scheduler {
 		// Init the GCP Client
 		gcp, shutdown, err := New(ctx, &account)
 		if err != nil {
-			slog.Error("failed to Initialize GCP provider", "error", err)
+			logger.Error("failed to Initialize GCP provider", "error", err)
 			return nil
 		}
 
@@ -75,8 +77,10 @@ func NewScheduler(ctx context.Context, eventBus bus.Bus) []v1.Scheduler {
 // process is the logic for the scheduler
 // to run at certain intervals
 func (s *scheduler) process(ctx context.Context) {
+	logger := log.FromContext(ctx)
+
 	if s.project == "" {
-		slog.Error("no GCP project defined in the config")
+		logger.Error("no GCP project defined in the config")
 		return
 	}
 
@@ -85,7 +89,7 @@ func (s *scheduler) process(ctx context.Context) {
 	instances, err := s.gcp.GetMetricsForInstances(ctx, s.project, "5m")
 
 	if err != nil {
-		slog.Error("failed to scrape instance metrics", "error", err)
+		logger.Error("failed to scrape instance metrics", "error", err)
 		return
 	}
 
@@ -100,6 +104,8 @@ func (s *scheduler) process(ctx context.Context) {
 // Schedule setups a schedule and runs it according to a time intervals
 // only stops when receives a done signal
 func (s *scheduler) Schedule(ctx context.Context) {
+	logger := log.FromContext(ctx)
+
 	go func() {
 		for {
 			select {
@@ -111,7 +117,7 @@ func (s *scheduler) Schedule(ctx context.Context) {
 		}
 	}()
 
-	slog.Info("started GCP scheduling")
+	logger.Info("started GCP scheduling")
 
 	// Do the first call
 	s.process(ctx)
