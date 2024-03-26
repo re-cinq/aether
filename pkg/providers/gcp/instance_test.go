@@ -19,15 +19,15 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func withMonitoringTestClient(c *monitoring.QueryClient) options {
-	return func(g *GCP) {
-		g.monitoring = c
+func withMonitoringTestClient(mc *monitoring.QueryClient) options {
+	return func(c *Client) {
+		c.monitoring = mc
 	}
 }
 
-func withInstancesTestClient(c *compute.InstancesClient) options {
-	return func(g *GCP) {
-		g.instances = c
+func withInstancesTestClient(ic *compute.InstancesClient) options {
+	return func(c *Client) {
+		c.instances = ic
 	}
 }
 

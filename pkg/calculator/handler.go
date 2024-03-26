@@ -8,12 +8,12 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/re-cinq/cloud-carbon/pkg/bus"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
 	"github.com/re-cinq/cloud-carbon/pkg/log"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
 	factors "github.com/re-cinq/cloud-carbon/pkg/types/v1/factors"
 	data "github.com/re-cinq/emissions-data/pkg/types/v2"
-	bus "github.com/re-cinq/go-bus"
 )
 
 var awsInstances map[string]data.Instance
@@ -24,12 +24,15 @@ var awsInstances map[string]data.Instance
 // https://www.theregister.com/2022/08/02/microsoft_server_life_extension/
 const serverLifespan = 6
 
-type EmissionCalculator struct {
-	eventbus bus.Bus
-	logger   *slog.Logger
+// CalculatorHandler is used to handle events when metrics have been collected
+type CalculatorHandler struct {
+	Bus    *bus.Bus
+	logger *slog.Logger
 }
 
-func NewEmissionCalculator(ctx context.Context, eventbus bus.Bus) *EmissionCalculator {
+// NewHandler returns a new configuered instance of CalculatorHandler
+// as well as setups the factor datasets
+func NewHandler(ctx context.Context, b *bus.Bus) *CalculatorHandler {
 	logger := log.FromContext(ctx)
 
 	err := factors.CloneAndUpdateFactorsData()
@@ -43,14 +46,30 @@ func NewEmissionCalculator(ctx context.Context, eventbus bus.Bus) *EmissionCalcu
 		logger.Error("unable to get v2 Emission Factors, falling back to v1", "error", err)
 	}
 
-	return &EmissionCalculator{
-		eventbus,
-		logger,
+	return &CalculatorHandler{
+		Bus:    b,
+		logger: logger,
+	}
+}
+
+// Stop is used to fulfill the EventHandler interface and all clean up
+// functionality should be run in here
+func (c *CalculatorHandler) Stop(ctx context.Context) {}
+
+// Handle is used to fulfill the EventHandler interface and recives an event
+// when handler is subscribed to it. Currently only handles v1.MetricsCollectedEvent
+func (c *CalculatorHandler) Handle(ctx context.Context, e *bus.Event) {
+	switch e.Type {
+	case v1.MetricsCollectedEvent:
+		c.handleEvent(e)
+	default:
+		return
 	}
 }
 
 func getProviderEC2EmissionFactors(provider v1.Provider) (map[string]data.Instance, error) {
-	yamlURL := fmt.Sprintf("https://raw.githubusercontent.com/re-cinq/emissions-data/main/data/v2/%s-instances.yaml", provider)
+	url := "https://raw.githubusercontent.com/re-cinq/emissions-data/main/data/v2/%s-instances.yaml"
+	yamlURL := fmt.Sprintf(url, provider)
 	resp, err := http.Get(yamlURL)
 	if err != nil {
 		return nil, err
@@ -66,32 +85,33 @@ func getProviderEC2EmissionFactors(provider v1.Provider) (map[string]data.Instan
 	return awsInstances, nil
 }
 
-func (ec *EmissionCalculator) Apply(event bus.Event) {
+// handleEvent is the business logic for handeling a v1.MetricsCollectedEvent
+// and runs the emissions calculations on the metrics that where received
+func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 	interval := config.AppConfig().ProvidersConfig.Interval
 
-	// Make sure we got the right event
-	metricsCollected, ok := event.(v1.MetricsCollected)
+	instance, ok := e.Data.(v1.Instance)
 	if !ok {
-		ec.logger.Error("EmissionCalculator got an unknown event", "event", event)
+		c.logger.Error("EmissionCalculator got an unknown event", "event", e)
 		return
 	}
-	eventInstance := metricsCollected.Instance
 
 	// Gets PUE, grid data, and machine specs
 	emFactors, err := factors.GetProviderEmissionFactors(
-		eventInstance.Provider,
+		instance.Provider,
 		factors.DataPath,
 	)
 	if err != nil {
-		ec.logger.Error("error getting emission factors", "error", err)
+		c.logger.Error("error getting emission factors", "error", err)
 		return
 	}
 
-	gridCO2eTons, ok := emFactors.Coefficient[eventInstance.Region]
+	gridCO2eTons, ok := emFactors.Coefficient[instance.Region]
 	if !ok {
-		ec.logger.Error("region does not exist in factors for provider", "region", eventInstance.Region, "provider", "gcp")
+		c.logger.Error("region does not exist in factors for provider", "region", instance.Region, "provider", "gcp")
 		return
 	}
+
 	// TODO: hotfix until updated in emissions data
 	// convert gridCO2e from metric tonnes to grams
 	gridCO2e := gridCO2eTons * (1000 * 1000)
@@ -101,13 +121,13 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		pue:      emFactors.AveragePUE,
 	}
 
-	specs, ok := emFactors.Embodied[eventInstance.Kind]
+	specs, ok := emFactors.Embodied[instance.Kind]
 	if !ok {
-		ec.logger.Error("failed finding instance in factor data", "instance", eventInstance.Name, "kind", eventInstance.Kind)
+		c.logger.Error("failed finding instance in factor data", "instance", instance.Name, "kind", instance.Kind)
 		return
 	}
 
-	if d, ok := awsInstances[eventInstance.Kind]; ok {
+	if d, ok := awsInstances[instance.Kind]; ok {
 		params.wattage = d.PkgWatt
 		params.vCPU = float64(d.VCPU)
 		params.embodiedFactor = d.EmbodiedHourlyGCO2e
@@ -127,12 +147,12 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 
 	// calculate and set the operational emissions for each
 	// metric type (CPU, Memory, Storage, and networking)
-	metrics := eventInstance.Metrics
+	metrics := instance.Metrics
 	for _, v := range metrics {
 		params.metric = &v
-		opEm, err := operationalEmissions(log.WithContext(context.Background(), ec.logger), interval, &params)
+		opEm, err := operationalEmissions(log.WithContext(context.Background(), c.logger), interval, &params)
 		if err != nil {
-			ec.logger.Error("failed calculating operational emissions", "type", v.Name, "error", err)
+			c.logger.Error("failed calculating operational emissions", "type", v.Name, "error", err)
 			continue
 		}
 		params.metric.Emissions = v1.NewResourceEmission(opEm, v1.GCO2eqkWh)
@@ -140,16 +160,18 @@ func (ec *EmissionCalculator) Apply(event bus.Event) {
 		metrics.Upsert(params.metric)
 	}
 
-	eventInstance.EmbodiedEmissions = v1.NewResourceEmission(
+	instance.EmbodiedEmissions = v1.NewResourceEmission(
 		embodiedEmissions(interval, params.embodiedFactor),
 		v1.GCO2eqkWh,
 	)
 
-	ec.eventbus.Publish(v1.EmissionsCalculated{
-		Instance: eventInstance,
-	})
-
-	eventInstance.PrintPretty(log.WithContext(context.Background(), ec.logger))
+	// We publish the interface on the bus once its been calculated
+	if err := c.Bus.Publish(&bus.Event{
+		Type: v1.EmissionsCalculatedEvent,
+		Data: instance,
+	}); err != nil {
+		c.logger.Error("failed publishing instance after calculation", "instance", instance.Name, "error", err)
+	}
 }
 
 func hourlyEmbodiedEmissions(e *factors.Embodied) float64 {

@@ -44,7 +44,7 @@ type Client struct {
 //     if empty the default credentials will be used
 //
 // TODO: use options pattern
-func NewClient(ctx context.Context, currentConfig *config.Account, customTransportConfig *config.TransportConfig) (*Client, error) {
+func New(ctx context.Context, currentConfig *config.Account, customTransportConfig *config.TransportConfig) (*Client, error) {
 	logger := log.FromContext(ctx)
 
 	cfg, err := buildAWSConfig(ctx, currentConfig, customTransportConfig)

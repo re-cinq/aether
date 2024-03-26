@@ -21,8 +21,8 @@ import (
 	"google.golang.org/api/option"
 )
 
-// GCP is the structure used as the provider for Google Cloud Platform
-type GCP struct {
+// Client is the structure used as the provider for Google Cloud Platform
+type Client struct {
 	// GCP Clients
 	monitoring *monitoring.QueryClient
 	instances  *compute.InstancesClient
@@ -31,7 +31,7 @@ type GCP struct {
 	cache *cache.Cache
 }
 
-type options func(*GCP)
+type options func(*Client)
 
 // New returns a new instance of the GCP provider as well as a function to
 // cleanup connections once done
@@ -39,9 +39,9 @@ func New(
 	ctx context.Context,
 	account *config.Account,
 	opts ...options,
-) (g *GCP, teardown func(), err error) {
+) (c *Client, teardown func(), err error) {
 	// set any defaults here
-	g = &GCP{
+	c = &Client{
 		// TODO do we want to expire cache?
 		cache: cache.New(3600*time.Minute, 3600*time.Minute),
 	}
@@ -58,7 +58,7 @@ func New(
 
 	// overwrite any options
 	for _, opt := range opts {
-		opt(g)
+		opt(c)
 	}
 
 	// This allows overwriting the default monitoring client
@@ -66,41 +66,41 @@ func New(
 	// a client therefore if we put this before running the options
 	// it would try authenticate against google regardless of overwriting the
 	// client
-	if g.monitoring == nil {
-		c, err := monitoring.NewQueryClient(ctx, clientOptions...)
+	if c.monitoring == nil {
+		mc, err := monitoring.NewQueryClient(ctx, clientOptions...)
 		if err != nil {
 			return nil, func() {}, err
 		}
-		g.monitoring = c
+		c.monitoring = mc
 	}
 
 	// This allows overwriting the default instances client
-	if g.instances == nil {
-		c, err := compute.NewInstancesRESTClient(ctx, clientOptions...)
+	if c.instances == nil {
+		ic, err := compute.NewInstancesRESTClient(ctx, clientOptions...)
 		if err != nil {
 			return nil, func() {}, err
 		}
-		g.instances = c
+		c.instances = ic
 	}
 
 	// teardown is used to close relevant connections
 	// and cleanup
 	teardown = func() {
-		g.monitoring.Close()
-		g.instances.Close()
+		c.monitoring.Close()
+		c.instances.Close()
 	}
 
-	return g, teardown, nil
+	return c, teardown, nil
 }
 
 // GetMetricsForInstances retrieves all the metrics for a given instance
-func (g *GCP) GetMetricsForInstances(
+func (c *Client) GetMetricsForInstances(
 	ctx context.Context,
 	project, window string,
 ) ([]v1.Instance, error) {
 	var instances []v1.Instance
 
-	cpumetrics, err := g.instanceCPUMetrics(
+	cpumetrics, err := c.instanceCPUMetrics(
 		// TODO these parameters can be cleaned up
 		ctx, project, fmt.Sprintf(CPUQuery, project, window, window),
 	)
@@ -108,7 +108,7 @@ func (g *GCP) GetMetricsForInstances(
 		return instances, err
 	}
 
-	memmetrics, err := g.instanceMemoryMetrics(
+	memmetrics, err := c.instanceMemoryMetrics(
 		ctx, project, fmt.Sprintf(MEMQuery, project, window, window),
 	)
 	if err != nil {
@@ -134,7 +134,7 @@ func (g *GCP) GetMetricsForInstances(
 		// is needed as we dont use the cache anywhere
 		// I think this is removed, and is used when the metric data doesn't have
 		// the complete resource/instance information.
-		cachedInstance, ok := g.cache.Get(util.CacheKey(meta.zone, service, meta.name))
+		cachedInstance, ok := c.cache.Get(util.CacheKey(meta.zone, service, meta.name))
 		if cachedInstance == nil && !ok {
 			continue
 		}
@@ -203,10 +203,10 @@ func getMetadata(m *v1.Metric) (*metadata, error) {
 // Refresh fetches all the Instances
 // for a project and stores metadata in order to help with
 // metric collections
-func (g *GCP) Refresh(ctx context.Context, project string) {
+func (c *Client) Refresh(ctx context.Context, project string) {
 	logger := log.FromContext(ctx)
 
-	iter := g.instances.AggregatedList(
+	iter := c.instances.AggregatedList(
 		ctx,
 		&computepb.AggregatedListInstancesRequest{
 			Project: project,
@@ -237,7 +237,7 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 
 			if instance.GetStatus() == "TERMINATED" {
 				// delete the entry from the cache
-				g.cache.Delete(util.CacheKey(zone, service, name))
+				c.cache.Delete(util.CacheKey(zone, service, name))
 				continue
 			}
 
@@ -249,7 +249,7 @@ func (g *GCP) Refresh(ctx context.Context, project string) {
 				// TODO potentially we do not need a custom resource to cache, maybe
 				// just cache the instance (Kind fields are different in resource and
 				// instance) - will need to consolidate
-				g.cache.Set(util.CacheKey(zone, service, name), v1.Resource{
+				c.cache.Set(util.CacheKey(zone, service, name), v1.Resource{
 					ID:          instanceID,
 					Name:        name,
 					Region:      zone, // TODO: Why is region set to zone
