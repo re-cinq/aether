@@ -107,6 +107,6 @@ func cubicSplineInterpolation(wattage []data.Wattage, value float64) (float64, e
 func embodiedEmissions(interval time.Duration, hourlyEmbodied float64) float64 {
 	// The embodied emissions need to be calculated for the measurement interval, so the
 	// hourly emissions further divided to the interval minutes.
-	//nolint:unconvert //conversion to minutes does affect calculation
+	//nolint:unconvert
 	return hourlyEmbodied / float64(60) * float64(interval.Minutes())
 }

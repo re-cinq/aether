@@ -115,7 +115,6 @@ func main() {
 	// Graceful shutdown
 	// Await for the signals to teminate the program
 	await(func() {
-
 		// Create a timeout context
 		// We need to expect that processes will shutdown in this amount of time
 		// or we need to force them

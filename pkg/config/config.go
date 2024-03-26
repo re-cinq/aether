@@ -33,7 +33,7 @@ func InitConfig(ctx context.Context) {
 	viper.AddConfigPath(".")            // optionally look for config in the working directory
 	viper.AddConfigPath("conf")         // path to look for the config file in the "./conf" path
 
-	//Set defaults
+	// Set defaults
 	viper.SetDefault("api.metricsPath", "/metrics")
 	viper.SetDefault("logLevel", "info")
 
