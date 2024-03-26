@@ -21,7 +21,6 @@ func NewPathfinderEventHandler(ctx context.Context, eventbus bus.Bus) *Pathfinde
 }
 
 func (p *PathfinderEventHandler) Apply(event bus.Event) {
-
 	// Make sure we got the right event
 	_, ok := event.(v1.EmissionsCalculated)
 	if !ok {
