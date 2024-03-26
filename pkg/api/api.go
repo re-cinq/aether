@@ -3,115 +3,87 @@ package api
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
+	"github.com/re-cinq/cloud-carbon/pkg/log"
 )
+
+const readHeaderTimeout = 2 * time.Second
 
 // ApiServer object
 type API struct {
-	host        string
-	port        string
-	hostPort    string
+	*http.Server
+
+	addr        string
 	metricsPath string
-	server      *http.Server
 }
 
-// NewAPIServer instance
-func NewAPIServer() *API {
-	// Local variable
-	host := config.AppConfig().APIConfig.Address
-	port := config.AppConfig().APIConfig.Port
-
-	// Make sure the metrics path is set
-	metricsPath := config.AppConfig().APIConfig.MetricsPath
-	if metricsPath == "" {
-		metricsPath = "/metrics"
+// New returns an instance of a configured API
+func New() *API {
+	api := &API{
+		metricsPath: config.AppConfig().APIConfig.MetricsPath,
+		addr: fmt.Sprintf("%s:%s",
+			config.AppConfig().APIConfig.Address,
+			config.AppConfig().APIConfig.Port,
+		),
 	}
 
-	// Return the API
-	api := API{
-		host:        host,
-		port:        port,
-		metricsPath: metricsPath,
-		hostPort:    fmt.Sprintf("%s:%s", host, port),
-	}
+	api.setup()
 
-	// Initialize it
-	api.init()
-
-	// Return it
-	return &api
+	return api
 }
 
-func (api *API) createRouter() *httprouter.Router {
-	// Configure the HTTP router
-	router := httprouter.Router{
-		RedirectTrailingSlash:  true,
-		RedirectFixedPath:      true,
-		HandleMethodNotAllowed: true,
-		HandleOPTIONS:          true,
-	}
+// router configures the routes for the API server
+func (a *API) router() *mux.Router {
+	r := mux.NewRouter()
+	r.StrictSlash(true)
 
 	// HealthCheck
-	router.GET("/v1/health", healthProbe)
+	r.HandleFunc("/healthz", healthProbe).Methods("GET")
 
 	// Prometheus exporter
 	prometheus.MustRegister(version.NewCollector("cloud_carbon_exporter"))
-	router.Handler("GET", api.metricsPath, promhttp.Handler())
+	r.Handle(a.metricsPath, promhttp.Handler()).Methods("GET")
 
-	return &router
+	return r
 }
 
-// Start the api server
-func (api *API) init() {
-	// Create the router and all the handlers
-	router := api.createRouter()
-
-	// Make sure we have got a router
-	if router == nil {
-		slog.Error("Could not create API router")
-		os.Exit(1)
-	}
-
-	// Print to the user where the API is listening
-	slog.Info("server started", "port", api.hostPort)
-
+// setup configures the API server
+func (a *API) setup() {
 	// Init the HTTP server
-	api.server = &http.Server{
-		Addr:              api.hostPort,
-		Handler:           router,
-		ReadHeaderTimeout: 2 * time.Second,
+	a.Server = &http.Server{
+		Addr:              a.addr,
+		Handler:           a.router(),
+		ReadHeaderTimeout: readHeaderTimeout,
 	}
 }
 
-func (api *API) Start() {
+// Start is a blocking event that starts the server on the configured port
+func (a *API) Start(ctx context.Context) {
+	logger := log.FromContext(ctx)
+	logger.Info("server started", "address", a.addr)
+
 	// Listen to it
-	if err := api.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		slog.Error("failed to listen on port", "port", api.hostPort, "error", err)
+	if err := a.Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		logger.Error("failed to listen on address", "address", a.addr, "error", err)
 		os.Exit(1)
 	}
 }
 
-// Stop the api server
-func (api *API) Stop() {
-	slog.Info("Shutting down the API server")
-
-	// Create a timeout for shutting down
-	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*15)
-
-	// Release the context
-	defer cancel()
+// Stop sends a termination signal to the api server
+func (a *API) Stop(ctx context.Context) {
+	logger := log.FromContext(ctx)
+	logger.Info("shutting down the api server")
 
 	// Shutdown the server
-	if err := api.server.Shutdown(ctxTimeout); err != nil {
-		slog.Error("failed to gracefully shutdown the API", "error", err)
+	if err := a.Server.Shutdown(ctx); err != nil {
+		logger.Error("failed to gracefully shutdown the API", "error", err)
 	}
 }
