@@ -75,7 +75,7 @@ func cpu(ctx context.Context, interval time.Duration, p *parameters) (float64, e
 	// and region gridCO2e. The PUE is collected from the providers. The CO2e grid data
 	// is the grid carbon intensity coefficient for the region at the specified time.
 	logger := log.FromContext(ctx)
-	logger.Debug(fmt.Sprintf("CPU calculation: %+v, %+v, %+v, %+v\n", usageCPUkw, vCPUHours, p.pue, p.gridCO2e))
+	logger.Debug(fmt.Sprintf("CPU calculation: %+v, %+v, %+v, %+v", usageCPUkw, vCPUHours, p.pue, p.gridCO2e))
 	return usageCPUkw * vCPUHours * p.pue * p.gridCO2e, nil
 }
 
@@ -107,6 +107,5 @@ func cubicSplineInterpolation(wattage []data.Wattage, value float64) (float64, e
 func embodiedEmissions(interval time.Duration, hourlyEmbodied float64) float64 {
 	// The embodied emissions need to be calculated for the measurement interval, so the
 	// hourly emissions further divided to the interval minutes.
-	//nolint:unconvert
 	return hourlyEmbodied / float64(60) * float64(interval.Minutes())
 }

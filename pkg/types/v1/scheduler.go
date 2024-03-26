@@ -10,3 +10,8 @@ type Scheduler interface {
 	// Cancel the scraping of the provider data
 	Cancel()
 }
+
+type Scraper interface {
+	Start(context.Context)
+	Stop(context.Context)
+}

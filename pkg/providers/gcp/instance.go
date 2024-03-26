@@ -70,13 +70,13 @@ var (
 
 // instanceMetrics runs a query on googe cloud monitoring using MQL
 // and responds with a list of metrics
-func (g *GCP) instanceMemoryMetrics(
+func (c *Client) instanceMemoryMetrics(
 	ctx context.Context,
 	project, query string,
 ) ([]*v1.Metric, error) {
 	var metrics []*v1.Metric
 
-	it := g.monitoring.QueryTimeSeries(ctx, &monitoringpb.QueryTimeSeriesRequest{
+	it := c.monitoring.QueryTimeSeries(ctx, &monitoringpb.QueryTimeSeriesRequest{
 		Name:  fmt.Sprintf("projects/%s", project),
 		Query: query,
 	})
@@ -117,8 +117,7 @@ func (g *GCP) instanceMemoryMetrics(
 
 // instanceCPUMetrics runs a query on googe cloud monitoring using MQL
 // and responds with a list of CPU metrics
-
-func (g *GCP) instanceCPUMetrics(
+func (c *Client) instanceCPUMetrics(
 	ctx context.Context,
 	project, query string,
 ) ([]*v1.Metric, error) {
@@ -126,7 +125,7 @@ func (g *GCP) instanceCPUMetrics(
 
 	logger := log.FromContext(ctx)
 
-	it := g.monitoring.QueryTimeSeries(ctx, &monitoringpb.QueryTimeSeriesRequest{
+	it := c.monitoring.QueryTimeSeries(ctx, &monitoringpb.QueryTimeSeriesRequest{
 		Name:  fmt.Sprintf("projects/%s", project),
 		Query: query,
 	})

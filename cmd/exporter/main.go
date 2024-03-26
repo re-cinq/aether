@@ -12,14 +12,13 @@ import (
 	"log/slog"
 
 	"github.com/re-cinq/cloud-carbon/pkg/api"
+	"github.com/re-cinq/cloud-carbon/pkg/bus"
 	"github.com/re-cinq/cloud-carbon/pkg/calculator"
 	"github.com/re-cinq/cloud-carbon/pkg/config"
 	"github.com/re-cinq/cloud-carbon/pkg/exporter"
 	"github.com/re-cinq/cloud-carbon/pkg/log"
-	"github.com/re-cinq/cloud-carbon/pkg/pathfinder"
-	"github.com/re-cinq/cloud-carbon/pkg/scheduler"
+	"github.com/re-cinq/cloud-carbon/pkg/scraper"
 	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
-	bus "github.com/re-cinq/go-bus"
 )
 
 const shutdownTTL = time.Second * 15
@@ -74,34 +73,33 @@ func main() {
 	setLogLevel(lvl, config.AppConfig().LogLevel)
 
 	// Init the application bus
-	eventbus := bus.NewEventBus(8192, runtime.NumCPU())
+	b := bus.New()
 
 	// Subscribe to the metrics collections
-	eventbus.Subscribe(
-		v1.MetricsCollectedTopic,
-		calculator.NewEmissionCalculator(ctx, eventbus),
+	b.Subscribe(
+		v1.MetricsCollectedEvent,
+		calculator.NewHandler(ctx, b),
 	)
 
 	// Subscribe to update the prometheus exporter
-	eventbus.Subscribe(
-		v1.EmissionsCalculatedTopic,
-		exporter.NewPrometheusEventHandler(ctx, eventbus),
-	)
-
-	// Subscribe to update the pathfinder handler
-	eventbus.Subscribe(
-		v1.EmissionsCalculatedTopic,
-		pathfinder.NewPathfinderEventHandler(ctx, eventbus),
+	b.Subscribe(
+		v1.EmissionsCalculatedEvent,
+		exporter.NewHandler(ctx, b),
 	)
 
 	// Start the bus
-	eventbus.Start()
+	b.Start(ctx)
+	logger.Info("bus started")
 
 	// Create the API object
 	server := api.New()
 
 	// Scheduler manager
-	scraper := scheduler.NewScrapingManager(ctx, eventbus)
+	scrape := scraper.NewManager(ctx, b)
+
+	// Start the scheduler manager
+	scrape.Start(ctx)
+	logger.Info("scrapers started")
 
 	// Start the API
 	go server.Start(ctx)
@@ -109,12 +107,9 @@ func main() {
 	// Print the start
 	logger.Info("started", "time", time.Since(start))
 
-	// Start the scheduler manager
-	scraper.Start(ctx)
-
 	// Graceful shutdown
 	// Await for the signals to teminate the program
-	await(func() {
+	await(ctx, func() {
 		// Create a timeout context
 		// We need to expect that processes will shutdown in this amount of time
 		// or we need to force them
@@ -125,15 +120,16 @@ func main() {
 		server.Stop(cancelCtx)
 
 		// Stop all the scraping
-		scraper.Stop()
+		scrape.Stop(ctx)
 
 		// Shutdown the bus
-		eventbus.Stop()
+		b.Stop(ctx)
 	})
 }
 
 // await for the signals and run the shutdown function
-func await(shutdownHook func()) {
+func await(ctx context.Context, shutdown func()) {
+	logger := log.FromContext(ctx)
 	terminated := make(chan bool, 1)
 
 	// Signals channel
@@ -144,17 +140,17 @@ func await(shutdownHook func()) {
 		terminationSignal := <-signalChan
 
 		// Warn that we are terminating
-		slog.Info("terminating", "signal", terminationSignal)
+		logger.Info("terminating", "signal", terminationSignal)
 
 		// Run the shutdown hook
-		shutdownHook()
+		shutdown()
 
 		terminated <- true
 	}()
 
 	// Here we wait
 	<-terminated
-	slog.Info("terminated successfully")
+	logger.Info("terminated successfully")
 }
 
 func setupLogger() (*slog.Logger, *slog.LevelVar) {
