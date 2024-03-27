@@ -11,14 +11,14 @@ import (
 
 	"log/slog"
 
-	"github.com/re-cinq/cloud-carbon/pkg/api"
-	"github.com/re-cinq/cloud-carbon/pkg/bus"
-	"github.com/re-cinq/cloud-carbon/pkg/calculator"
-	"github.com/re-cinq/cloud-carbon/pkg/config"
-	"github.com/re-cinq/cloud-carbon/pkg/exporter"
-	"github.com/re-cinq/cloud-carbon/pkg/log"
-	"github.com/re-cinq/cloud-carbon/pkg/scraper"
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	"github.com/re-cinq/aether/pkg/api"
+	"github.com/re-cinq/aether/pkg/bus"
+	"github.com/re-cinq/aether/pkg/calculator"
+	"github.com/re-cinq/aether/pkg/config"
+	"github.com/re-cinq/aether/pkg/exporter"
+	"github.com/re-cinq/aether/pkg/log"
+	"github.com/re-cinq/aether/pkg/scraper"
+	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
 const shutdownTTL = time.Second * 15
@@ -27,7 +27,7 @@ var (
 	description    = "Cloud Carbon collection exporter"
 	gitSHA         = "n/a"
 	name           = "Cloud Carbon"
-	source         = "https://github.com/re-cinq/cloud-carbon"
+	source         = "https://github.com/re-cinq/aether"
 	version        = "0.0.1-dev"
 	refType        = "branch" // branch or tag
 	refName        = ""       // the name of the branch or tag

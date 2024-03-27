@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/awsdocs/aws-doc-sdk-examples/gov2/testtools"
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	v1 "github.com/re-cinq/aether/pkg/types/v1"
 	"github.com/stretchr/testify/assert"
 )
 

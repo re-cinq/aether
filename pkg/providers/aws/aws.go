@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/patrickmn/go-cache"
-	"github.com/re-cinq/cloud-carbon/pkg/config"
-	"github.com/re-cinq/cloud-carbon/pkg/log"
+	"github.com/re-cinq/aether/pkg/config"
+	"github.com/re-cinq/aether/pkg/log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"

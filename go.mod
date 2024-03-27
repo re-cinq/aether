@@ -1,4 +1,4 @@
-module github.com/re-cinq/cloud-carbon
+module github.com/re-cinq/aether
 
 go 1.22.0
 

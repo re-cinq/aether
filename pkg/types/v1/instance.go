@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/re-cinq/cloud-carbon/pkg/log"
+	"github.com/re-cinq/aether/pkg/log"
 )
 
 // The instance for which we are collecting the metrics
