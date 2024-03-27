@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"github.com/re-cinq/cloud-carbon/pkg/bus"
+	"github.com/re-cinq/aether/pkg/bus"
 )
 
 const (

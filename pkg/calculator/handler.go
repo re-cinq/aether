@@ -8,11 +8,11 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/re-cinq/cloud-carbon/pkg/bus"
-	"github.com/re-cinq/cloud-carbon/pkg/config"
-	"github.com/re-cinq/cloud-carbon/pkg/log"
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
-	factors "github.com/re-cinq/cloud-carbon/pkg/types/v1/factors"
+	"github.com/re-cinq/aether/pkg/bus"
+	"github.com/re-cinq/aether/pkg/config"
+	"github.com/re-cinq/aether/pkg/log"
+	v1 "github.com/re-cinq/aether/pkg/types/v1"
+	factors "github.com/re-cinq/aether/pkg/types/v1/factors"
 	data "github.com/re-cinq/emissions-data/pkg/types/v2"
 )
 

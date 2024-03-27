@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	v1 "github.com/re-cinq/aether/pkg/types/v1"
 	"github.com/stretchr/testify/assert"
 )
 

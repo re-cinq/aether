@@ -3,7 +3,7 @@ package pathfinder
 import (
 	"context"
 
-	"github.com/re-cinq/cloud-carbon/pkg/bus"
+	"github.com/re-cinq/aether/pkg/bus"
 )
 
 type PathfinderHandler struct{}

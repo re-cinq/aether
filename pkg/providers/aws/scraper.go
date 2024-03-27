@@ -5,10 +5,10 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/re-cinq/cloud-carbon/pkg/bus"
-	"github.com/re-cinq/cloud-carbon/pkg/config"
-	"github.com/re-cinq/cloud-carbon/pkg/log"
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	"github.com/re-cinq/aether/pkg/bus"
+	"github.com/re-cinq/aether/pkg/config"
+	"github.com/re-cinq/aether/pkg/log"
+	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
 type Scraper struct {

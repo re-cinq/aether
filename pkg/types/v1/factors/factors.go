@@ -8,7 +8,7 @@ import (
 	git "github.com/go-git/go-git/v5"
 
 	"github.com/go-yaml/yaml"
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	factors "github.com/re-cinq/cloud-carbon/pkg/types/v1/factors"
+	factors "github.com/re-cinq/aether/pkg/types/v1/factors"
 	"github.com/stretchr/testify/require"
 )
 

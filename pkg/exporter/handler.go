@@ -4,9 +4,9 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/re-cinq/cloud-carbon/pkg/bus"
-	"github.com/re-cinq/cloud-carbon/pkg/log"
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	"github.com/re-cinq/aether/pkg/bus"
+	"github.com/re-cinq/aether/pkg/log"
+	v1 "github.com/re-cinq/aether/pkg/types/v1"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	api "go.opentelemetry.io/otel/metric"

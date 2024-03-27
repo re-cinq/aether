@@ -11,8 +11,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
-	"github.com/re-cinq/cloud-carbon/pkg/config"
-	"github.com/re-cinq/cloud-carbon/pkg/log"
+	"github.com/re-cinq/aether/pkg/config"
+	"github.com/re-cinq/aether/pkg/log"
 )
 
 const readHeaderTimeout = 2 * time.Second

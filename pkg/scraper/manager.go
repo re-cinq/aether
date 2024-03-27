@@ -3,10 +3,10 @@ package scraper
 import (
 	"context"
 
-	"github.com/re-cinq/cloud-carbon/pkg/bus"
-	amazon "github.com/re-cinq/cloud-carbon/pkg/providers/aws"
-	"github.com/re-cinq/cloud-carbon/pkg/providers/gcp"
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	"github.com/re-cinq/aether/pkg/bus"
+	amazon "github.com/re-cinq/aether/pkg/providers/aws"
+	"github.com/re-cinq/aether/pkg/providers/gcp"
+	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
 // ScraperManager used to handle the various scrapers

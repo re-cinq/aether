@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/patrickmn/go-cache"
-	"github.com/re-cinq/cloud-carbon/pkg/providers/util"
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	"github.com/re-cinq/aether/pkg/providers/util"
+	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
 // Helper service to get CloudWatch data

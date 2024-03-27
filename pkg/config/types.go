@@ -3,7 +3,7 @@ package config
 import (
 	"time"
 
-	v1 "github.com/re-cinq/cloud-carbon/pkg/types/v1"
+	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
 // ApplicationConfig is the full app config
