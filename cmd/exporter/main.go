@@ -72,7 +72,7 @@ func main() {
 
 	setLogLevel(lvl, config.AppConfig().LogLevel)
 
-	// Init the application bus
+	// nit the application bus
 	b := bus.New()
 
 	// Subscribe to the metrics collections
