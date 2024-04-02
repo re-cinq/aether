@@ -235,6 +235,12 @@ func (c *Client) Refresh(ctx context.Context, project string) {
 				continue
 			}
 
+			region, err := getRegionFromZone(zone)
+			if err != nil {
+				logger.Error("error", err)
+				continue
+			}
+
 			if instance.GetStatus() == "TERMINATED" {
 				// delete the entry from the cache
 				c.cache.Delete(util.CacheKey(zone, service, name))
@@ -272,4 +278,17 @@ func getValueFromURL(u string) (string, error) {
 	}
 
 	return path.Base(parsed.Path), nil
+}
+
+// getRegionFromZone removes the suffix from the GCE zone
+// to get the region
+// input: europe-west1-a
+// output: europe-west1
+func getRegionFromZone(z string) (string, error) {
+	x := strings.LastIndex(z, "-")
+	if x == -1 {
+		return "", fmt.Errorf("error: cannot get region from zone")
+	}
+
+	return z[:x], nil
 }
