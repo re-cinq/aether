@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"encoding/json"
 	"errors"
 )
 
@@ -28,23 +27,4 @@ const (
 // Return the emission unit as string
 func (e EmissionUnit) String() string {
 	return string(e)
-}
-
-// Custom deserialization for EmissionUnit
-func (e *EmissionUnit) UnmarshalJSON(data []byte) error {
-	var value string
-
-	// Unmarshall the bytes
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-
-	// Make sure the unmarshalled string value exists
-	if emissionUnit, ok := EmissionUnits[value]; !ok {
-		return ErrParsingEmissionUnit
-	} else {
-		*e = emissionUnit
-	}
-
-	return nil
 }
