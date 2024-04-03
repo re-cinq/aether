@@ -12,7 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/patrickmn/go-cache"
+	"github.com/eko/gocache/lib/v4/marshaler"
+	"github.com/re-cinq/aether/pkg/cache"
 	"github.com/re-cinq/aether/pkg/config"
 )
 
@@ -30,7 +31,7 @@ type Client struct {
 	ec2Client        *ec2Client
 	cloudWatchClient *cloudWatchClient
 
-	cache *cache.Cache
+	cache *marshaler.Marshaler
 }
 
 // NewClient creates a struct with the AWS config, EC2 Client, and CloudWatch Client
@@ -59,12 +60,17 @@ func New(ctx context.Context, currentConfig *config.Account, customTransportConf
 		return nil, errors.New("error initializing CloudWatch client")
 	}
 
+	c, err := cache.New(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Client{
 		cfg:              cfg,
 		ec2Client:        ec2Client,
 		cloudWatchClient: cloudWatchClient,
 		// TODO: configure expiry and deletion
-		cache: cache.New(12*time.Hour, 36*time.Minute),
+		cache: c,
 	}, nil
 }
 

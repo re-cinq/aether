@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/patrickmn/go-cache"
+	"github.com/eko/gocache/lib/v4/marshaler"
 	"github.com/re-cinq/aether/pkg/providers/util"
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
@@ -39,7 +39,7 @@ func NewEC2Client(cfg *aws.Config) *ec2Client {
 }
 
 // refresh stores all the instances for a specific region in cache
-func (e *ec2Client) Refresh(ctx context.Context, ca *cache.Cache, region string) error {
+func (e *ec2Client) Refresh(ctx context.Context, cache *marshaler.Marshaler, region string) error {
 	// Override the region
 	withRegion := func(o *ec2.Options) {
 		o.Region = region
@@ -68,7 +68,7 @@ func (e *ec2Client) Refresh(ctx context.Context, ca *cache.Cache, region string)
 			instance := reservation.Instances[index]
 
 			id := aws.ToString(instance.InstanceId)
-			ca.Set(util.CacheKey(region, ec2Service, id),
+			cache.Set(ctx, util.CacheKey(region, ec2Service, id),
 				&v1.Instance{
 					Name:     id,
 					Provider: provider,
@@ -81,7 +81,6 @@ func (e *ec2Client) Refresh(ctx context.Context, ca *cache.Cache, region string)
 						"VCPUCount": string(aws.ToInt32(instance.CpuOptions.CoreCount) * aws.ToInt32(instance.CpuOptions.ThreadsPerCore)),
 					},
 				},
-				cache.DefaultExpiration,
 			)
 		}
 	}

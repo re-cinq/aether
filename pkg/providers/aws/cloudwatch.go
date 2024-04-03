@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
-	"github.com/patrickmn/go-cache"
+	"github.com/eko/gocache/lib/v4/marshaler"
 	"github.com/re-cinq/aether/pkg/providers/util"
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
@@ -43,10 +43,11 @@ func NewCloudWatchClient(ctx context.Context, cfg *aws.Config) *cloudWatchClient
 // Get the resource consumption of an ec2 instance
 func (e *cloudWatchClient) GetEC2Metrics(
 	ctx context.Context,
-	ca *cache.Cache,
+	cache *marshaler.Marshaler,
 	region string,
 	interval time.Duration,
 ) ([]v1.Instance, error) {
+
 	instances := []v1.Instance{}
 	local := make(map[string]*v1.Instance)
 
@@ -75,8 +76,8 @@ func (e *cloudWatchClient) GetEC2Metrics(
 		}
 
 		// load the instance metadata from the cache, because the query does not give us instance info
-		cachedInstance, exists := ca.Get(util.CacheKey(region, ec2Service, instanceID))
-		if cachedInstance == nil || !exists {
+		cachedInstance, err := cache.Get(util.CacheKey(region, ec2Service, instanceID))
+		if cachedInstance == nil || err != nil {
 			slog.Warn("instance id  is not present in the metadata, temporarily skipping collecting metrics", "id", instanceID)
 			continue
 		}
