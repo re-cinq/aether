@@ -41,7 +41,12 @@ func NewCloudWatchClient(ctx context.Context, cfg *aws.Config) *cloudWatchClient
 }
 
 // Get the resource consumption of an ec2 instance
-func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interval time.Duration) ([]v1.Instance, error) {
+func (e *cloudWatchClient) GetEC2Metrics(
+	ctx context.Context,
+	ca *cache.Cache,
+	region string,
+	interval time.Duration,
+) ([]v1.Instance, error) {
 	instances := []v1.Instance{}
 	local := make(map[string]*v1.Instance)
 
@@ -49,7 +54,7 @@ func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interva
 	start := end.Add(-interval)
 
 	// Get the cpu consumption for all the instances in the region
-	cpuMetrics, err := e.getEC2CPU(region, start, end, interval)
+	cpuMetrics, err := e.getEC2CPU(ctx, region, start, end, interval)
 	if err != nil {
 		return instances, err
 	}
@@ -112,7 +117,12 @@ func (e *cloudWatchClient) GetEC2Metrics(ca *cache.Cache, region string, interva
 }
 
 // Get the CPU resource consumption of an ec2 instance
-func (e *cloudWatchClient) getEC2CPU(region string, start, end time.Time, interval time.Duration) ([]v1.Metric, error) {
+func (e *cloudWatchClient) getEC2CPU(
+	ctx context.Context,
+	region string,
+	start, end time.Time,
+	interval time.Duration,
+) ([]v1.Metric, error) {
 	// Override the region
 	withRegion := func(o *cloudwatch.Options) {
 		o.Region = region
@@ -125,7 +135,7 @@ func (e *cloudWatchClient) getEC2CPU(region string, start, end time.Time, interv
 	}
 
 	// Make the call to get the CPU metrics
-	output, err := e.client.GetMetricData(context.TODO(), &cloudwatch.GetMetricDataInput{
+	output, err := e.client.GetMetricData(ctx, &cloudwatch.GetMetricDataInput{
 		StartTime: &start,
 		EndTime:   &end,
 		MetricDataQueries: []types.MetricDataQuery{
