@@ -104,6 +104,7 @@ func (s *Scraper) scrape(ctx context.Context) {
 		}
 
 		instances, err := s.Client.cloudWatchClient.GetEC2Metrics(
+			ctx,
 			s.Client.cache,
 			region,
 			interval,

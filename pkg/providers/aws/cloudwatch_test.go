@@ -48,7 +48,7 @@ func TestGetMetricsData(t *testing.T) {
 			},
 		})
 
-		res, err := client.getEC2CPU(region, start, end, interval)
+		res, err := client.getEC2CPU(context.TODO(), region, start, end, interval)
 		testtools.ExitTest(stubber, t)
 
 		expRes := v1.Metric{
@@ -84,7 +84,7 @@ func TestGetMetricsData(t *testing.T) {
 			Error:         &testtools.StubError{Err: errors.New("Testing the error is handled")},
 		})
 
-		res, err := client.getEC2CPU(region, start, end, interval)
+		res, err := client.getEC2CPU(context.TODO(), region, start, end, interval)
 		testtools.ExitTest(stubber, t)
 
 		assert.Nil(t, res)
