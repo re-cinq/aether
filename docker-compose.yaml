@@ -9,6 +9,7 @@ services:
     ports:
       - 8080:8080
     volumes:
+      - .plugins/:/plugins
       - ./:/src
       - ../go-bus:/go-bus
       # Volume for Google Cloud Credentials

@@ -1,5 +1,5 @@
 # Ignore the binary itself
-cloud-carbon
+aether
 
 # DS Store
 **/.DS_Store
@@ -44,4 +44,10 @@ go.work
 # Built Visual Studio Code Extensions
 *.vsix
 
+# ignore temp files
 tmp/
+
+# ignore local plugin directory
+.plugins/*
+
+

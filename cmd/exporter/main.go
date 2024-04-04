@@ -17,6 +17,7 @@ import (
 	"github.com/re-cinq/aether/pkg/config"
 	"github.com/re-cinq/aether/pkg/exporter"
 	"github.com/re-cinq/aether/pkg/log"
+	"github.com/re-cinq/aether/pkg/plugin"
 	"github.com/re-cinq/aether/pkg/scraper"
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
@@ -72,7 +73,20 @@ func main() {
 
 	setLogLevel(lvl, config.AppConfig().LogLevel)
 
-	// nit the application bus
+	// Load exporter plugins
+	logger.Info("loading plugins")
+	pluginsystem := &plugin.ExportPluginSystem{
+		Dir: config.AppConfig().Plugins.ExporterDir,
+	}
+
+	err := pluginsystem.Load(ctx)
+
+	if err != nil {
+		logger.Error("failed to load exporter plugin system", "error", err)
+		os.Exit(1)
+	}
+
+	// Init the application bus
 	b := bus.New()
 
 	// Subscribe to the metrics collections
@@ -85,6 +99,11 @@ func main() {
 	b.Subscribe(
 		v1.EmissionsCalculatedEvent,
 		exporter.NewHandler(ctx, b),
+	)
+
+	b.Subscribe(
+		v1.EmissionsCalculatedEvent,
+		plugin.NewHandler(ctx, pluginsystem),
 	)
 
 	// Start the bus
