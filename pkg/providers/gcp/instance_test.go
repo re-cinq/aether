@@ -27,7 +27,7 @@ func withMonitoringTestClient(mc *monitoring.QueryClient) options {
 
 func withInstancesTestClient(ic *compute.InstancesClient) options {
 	return func(c *Client) {
-		c.instances = ic
+		c.compute = ic
 	}
 }
 
@@ -173,9 +173,9 @@ func RunTestData(t *testing.T, testdata []TestScenario) {
 
 			switch testdata[i].scenariotype {
 			case "cpu":
-				resp, err = g.instanceCPUMetrics(ctx, "", testdata[i].query)
+				err = g.cpuMetrics(ctx, "", testdata[i].query)
 			case "memory":
-				resp, err = g.instanceMemoryMetrics(ctx, "", testdata[i].query)
+				err = g.memoryMetrics(ctx, "", testdata[i].query)
 			}
 
 			if testdata[i].err == nil {

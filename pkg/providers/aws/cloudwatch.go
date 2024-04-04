@@ -4,139 +4,53 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
-	"github.com/eko/gocache/lib/v4/marshaler"
+	"github.com/re-cinq/aether/pkg/log"
 	"github.com/re-cinq/aether/pkg/providers/util"
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
-// Helper service to get CloudWatch data
-type cloudWatchClient struct {
-	client *cloudwatch.Client
-}
-
-// New cloudwatch client instance
-func NewCloudWatchClient(ctx context.Context, cfg *aws.Config) *cloudWatchClient {
-	emptyOptions := func(o *cloudwatch.Options) {}
-
-	// Init the Cloudwatch client
-	client := cloudwatch.NewFromConfig(*cfg, emptyOptions)
-
-	// Make sure the initialisation was successful
-	if client == nil {
-		slog.Error("failed to create AWS CloudWatch client")
-		return nil
-	}
-
-	// Return the cloudwatch service client
-	return &cloudWatchClient{
-		client: client,
-	}
-}
-
 // Get the resource consumption of an ec2 instance
-func (e *cloudWatchClient) GetEC2Metrics(
-	ctx context.Context,
-	cache *marshaler.Marshaler,
-	region string,
-	interval time.Duration,
-) ([]v1.Instance, error) {
-
-	instances := []v1.Instance{}
-	local := make(map[string]*v1.Instance)
-
+func (c *Client) GetEC2Metrics(ctx context.Context, region string, interval time.Duration) error {
 	end := time.Now().UTC()
 	start := end.Add(-interval)
 
 	// Get the cpu consumption for all the instances in the region
-	cpuMetrics, err := e.getEC2CPU(ctx, region, start, end, interval)
+	err := c.getEC2CPU(ctx, region, start, end, interval)
 	if err != nil {
-		return instances, err
+		return err
 	}
 
-	if len(cpuMetrics) == 0 {
-		return instances, fmt.Errorf("no cpu metrics collected from CloudWatch")
-	}
-
-	// TODO: Will need to iterate cpuMetrics and memMetrics
-	for i := range cpuMetrics {
-		// to avoid Implicit memory aliasing in for loop
-		metric := cpuMetrics[i]
-
-		instanceID, ok := metric.Labels["instanceID"]
-		if !ok {
-			slog.Error("metric does not have an instanceID", "metric", metric)
-			continue
-		}
-
-		// load the instance metadata from the cache, because the query does not give us instance info
-		cachedInstance, err := cache.Get(util.CacheKey(region, ec2Service, instanceID))
-		if cachedInstance == nil || err != nil {
-			slog.Warn("instance id  is not present in the metadata, temporarily skipping collecting metrics", "id", instanceID)
-			continue
-		}
-
-		meta := cachedInstance.(*v1.Instance)
-
-		// update local instance metadata map
-		s, exists := local[instanceID]
-		if !exists {
-			// Then create a new local instance from cached
-			s = &v1.Instance{
-				Name:     instanceID,
-				Provider: provider,
-				Service:  ec2Service, // EC2
-				Kind:     meta.Kind,
-				Region:   region,
-			}
-		}
-		s.Labels.Add("Name", meta.Name)
-
-		// ParseFloat returns 0 on failure, since that's the default
-		// value of an unassigned int, store it regardless of the
-		// error. This value for vCPUs is a fallback to that provided
-		// by the dataset.
-		if vCPUs, exists := meta.Labels["VCPUCount"]; exists {
-			metric.UnitAmount, err = strconv.ParseFloat(vCPUs, 64)
-			if err != nil {
-				slog.Error("failed to parse GCP total VCPUs", "error", err)
-			}
-		}
-		s.Metrics.Upsert(&metric)
-
-		local[instanceID] = s
-		instances = append(instances, *s)
-	}
-
-	return instances, nil
+	return nil
 }
 
 // Get the CPU resource consumption of an ec2 instance
-func (e *cloudWatchClient) getEC2CPU(
+func (c *Client) getEC2CPU(
 	ctx context.Context,
 	region string,
 	start, end time.Time,
 	interval time.Duration,
-) ([]v1.Metric, error) {
+) error {
 	// Override the region
 	withRegion := func(o *cloudwatch.Options) {
 		o.Region = region
 	}
 
+	logger := log.FromContext(ctx)
+
 	period := int32(interval.Seconds())
 	// validate the casting from float64 to int32
 	if float64(period) != interval.Seconds() {
-		return nil, fmt.Errorf("error casting %+v to int32", interval.Seconds())
+		return fmt.Errorf("error casting %+v to int32", interval.Seconds())
 	}
 
 	// Make the call to get the CPU metrics
-	output, err := e.client.GetMetricData(ctx, &cloudwatch.GetMetricDataInput{
+	output, err := c.cloudwatch.GetMetricData(ctx, &cloudwatch.GetMetricDataInput{
 		StartTime: &start,
 		EndTime:   &end,
 		MetricDataQueries: []types.MetricDataQuery{
@@ -148,30 +62,46 @@ func (e *cloudWatchClient) getEC2CPU(
 		},
 	}, withRegion)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	// Collector
-	var cpuMetrics []v1.Metric
 
 	// Loop through the result and build the intermediate awsMetric model
 	for _, metric := range output.MetricDataResults {
 		instanceID := aws.ToString(metric.Label)
 		if instanceID == "Other" {
-			return nil, errors.New("error bad query passed to GetMetricData - instanceID not found in label")
+			return errors.New("error bad query passed to GetMetricData - instanceID not found in label")
 		}
 
 		if len(metric.Values) > 0 {
-			cpu := v1.NewMetric(v1.CPU.String())
-			cpu.Unit = v1.VCPU
-			cpu.Usage = metric.Values[0]
-			cpu.ResourceType = v1.CPU
-			cpu.Labels = v1.Labels{
+			m := v1.NewMetric(v1.CPU.String())
+			m.Unit = v1.VCPU
+			m.Usage = metric.Values[0]
+			m.ResourceType = v1.CPU
+			m.Labels = v1.Labels{
 				"instanceID": instanceID,
 			}
-			cpuMetrics = append(cpuMetrics, *cpu)
+
+			// Update cached instance with metric
+			key := util.Key(region, ec2Service, instanceID)
+			instance, ok := c.instancesMap[key]
+			if !ok {
+				logger.Warn("instance not found in cache", "error", err, "key", key)
+				continue
+			}
+
+			// ParseFloat returns 0 on failure, since that's the default
+			// value of an unassigned int, store it regardless of the
+			// error. This value for vCPUs is a fallback to that provided
+			// by the dataset.
+			if vCPUs, exists := instance.Labels["VCPUCount"]; exists {
+				m.UnitAmount, err = strconv.ParseFloat(vCPUs, 64)
+				if err != nil {
+					logger.Error("failed to parse GCP total VCPUs", "error", err)
+				}
+			}
+			instance.Metrics.Upsert(m)
 		}
 	}
 
-	return cpuMetrics, nil
+	return nil
 }

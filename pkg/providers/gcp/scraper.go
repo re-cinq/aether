@@ -106,8 +106,6 @@ func (s *Scraper) scrape(ctx context.Context) error {
 		return errors.New("no project set")
 	}
 
-	// we need to repopulate the cahce on every scrape
-	// TODO: maybe we dont need cache?
 	s.Client.Refresh(ctx, *s.Project)
 
 	interval := config.AppConfig().Interval
@@ -115,26 +113,26 @@ func (s *Scraper) scrape(ctx context.Context) error {
 		return fmt.Errorf("error interval for GCP needs to be atleast 5m. It is: %+v", interval)
 	}
 
-	instances, err := s.Client.GetMetricsForInstances(ctx, *s.Project, interval.String())
-
+	err := s.Client.GetMetricsForInstances(ctx, *s.Project, interval.String())
 	if err != nil {
-		return fmt.Errorf("failed getting instances: %v", err)
+		return fmt.Errorf("failed getting instance metrics: %v", err)
 	}
 
-	for i := range instances {
-		e := s.Bus.Publish(&bus.Event{
+	var errs error
+	fmt.Println(s.Client.instancesMap)
+	for _, instance := range s.Client.instancesMap {
+		err = s.Bus.Publish(&bus.Event{
 			Type: v1.MetricsCollectedEvent,
-			Data: instances[i],
+			Data: *instance,
 		})
-		if e != nil {
-			err = errors.Join(
-				err,
-				fmt.Errorf("failed to publish for instance %s: %v", instances[i].Name, e),
+		if err != nil {
+			errs = errors.Join(
+				errs,
+				fmt.Errorf("failed to publish for instance %s: %v", instance.Name, err),
 			)
 		}
 	}
-
-	return err
+	return errs
 }
 
 // Stop is used to gracefully stop the scrapper

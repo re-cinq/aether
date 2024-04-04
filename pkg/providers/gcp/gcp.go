@@ -2,17 +2,15 @@ package gcp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/url"
 	"path"
 	"strconv"
-	"time"
+	"strings"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
-	cache "github.com/patrickmn/go-cache"
 	"github.com/re-cinq/aether/pkg/config"
 	"github.com/re-cinq/aether/pkg/log"
 	"github.com/re-cinq/aether/pkg/providers/util"
@@ -27,8 +25,8 @@ type Client struct {
 	monitoring *monitoring.QueryClient
 	compute    *compute.InstancesClient
 
-	// Caching mechanism
-	cache *cache.Cache
+	// hashmap of instances
+	instancesMap map[string]*v1.Instance
 }
 
 type options func(*Client)
@@ -40,10 +38,9 @@ func New(
 	account *config.Account,
 	opts ...options,
 ) (c *Client, teardown func(), err error) {
-	// set any defaults here
 	c = &Client{
-		// TODO do we want to expire cache?
-		cache: cache.New(3600*time.Minute, 3600*time.Minute),
+		// initilize instance lookup table
+		instancesMap: make(map[string]*v1.Instance),
 	}
 
 	var clientOptions []option.ClientOption
@@ -94,110 +91,23 @@ func New(
 }
 
 // GetMetricsForInstances retrieves all the metrics for a given instance
+// And updates the cached instance with the metrics
 func (c *Client) GetMetricsForInstances(
 	ctx context.Context,
 	project, window string,
-) ([]v1.Instance, error) {
-	var instances []v1.Instance
-
-	cpumetrics, err := c.instanceCPUMetrics(
-		// TODO these parameters can be cleaned up
-		ctx, project, fmt.Sprintf(CPUQuery, project, window, window),
-	)
+) error {
+	// TODO these parameters can be cleaned up
+	err := c.cpuMetrics(ctx, project, fmt.Sprintf(CPUQuery, project, window, window))
 	if err != nil {
-		return instances, err
+		return err
 	}
 
-	memmetrics, err := c.instanceMemoryMetrics(
-		ctx, project, fmt.Sprintf(MEMQuery, project, window, window),
-	)
+	err = c.memoryMetrics(ctx, project, fmt.Sprintf(MEMQuery, project, window, window))
 	if err != nil {
-		return instances, err
+		return err
 	}
 
-	// we use a lookup to add different metrics to the same instance
-	lookup := make(map[string]*v1.Instance)
-
-	// TODO there seems to be duplicated logic here
-	// Why not create instance whuile collecting metric instead of handeling
-	// it in two steps
-	for _, m := range append(cpumetrics, memmetrics...) {
-		metric := *m
-
-		meta, err := getMetadata(&metric)
-		if err != nil {
-			continue
-		}
-
-		// Load the cache
-		// TODO make this more explicit, im not sure why this
-		// is needed as we dont use the cache anywhere
-		// I think this is removed, and is used when the metric data doesn't have
-		// the complete resource/instance information.
-		cachedInstance, ok := c.cache.Get(util.CacheKey(meta.zone, service, meta.name))
-		if cachedInstance == nil && !ok {
-			continue
-		}
-
-		i, ok := lookup[meta.id]
-		if !ok {
-			i = v1.NewInstance(meta.id, provider)
-			i.Service = service
-		}
-
-		i.Kind = meta.machineType
-		i.Region = meta.region
-		i.Zone = meta.zone
-		i.Metrics.Upsert(&metric)
-
-		lookup[meta.id] = i
-	}
-
-	// create list of instances
-	// TODO: this seems repetitive
-	for _, v := range lookup {
-		instances = append(instances, *v)
-	}
-
-	return instances, nil
-}
-
-type metadata struct {
-	zone, region, name, id, machineType string
-}
-
-func getMetadata(m *v1.Metric) (*metadata, error) {
-	zone, ok := m.Labels["zone"]
-	if !ok {
-		return &metadata{}, errors.New("zone not found")
-	}
-
-	region, ok := m.Labels["region"]
-	if !ok {
-		return &metadata{}, errors.New("region not found")
-	}
-
-	name, ok := m.Labels["name"]
-	if !ok {
-		return &metadata{}, errors.New("instance name not found")
-	}
-
-	id, ok := m.Labels["id"]
-	if !ok {
-		return &metadata{}, errors.New("instance id not found")
-	}
-
-	machineType, ok := m.Labels["machine_type"]
-	if !ok {
-		return &metadata{}, errors.New("machine type not found")
-	}
-	return &metadata{
-		zone:        zone,
-		region:      region,
-		name:        name,
-		id:          id,
-		machineType: machineType,
-	}, nil
+	return nil
 }
 
 // Refresh fetches all the Instances
@@ -213,6 +123,9 @@ func (c *Client) Refresh(ctx context.Context, project string) {
 		},
 	)
 
+	// instances is a slice of all valid instances
+	// that will be stored as a value in the cache
+	// with the key `gcp-valid-instances`
 	for {
 		resp, err := iter.Next()
 		if err == iterator.Done {
@@ -224,27 +137,24 @@ func (c *Client) Refresh(ctx context.Context, project string) {
 		}
 
 		for _, instance := range resp.Value.Instances {
-			zone, err := getValueFromURL(instance.GetZone())
-			if err != nil {
-				logger.Error("failed to get zone from url")
-			}
 			instanceID := strconv.FormatUint(instance.GetId(), 10)
 			name := instance.GetName()
 
-			if zone == "" {
+			zone, err := getValueFromURL(instance.GetZone())
+			if err != nil || zone == "" {
+				logger.Error("failed to get zone", "error", err, "instanceID", instanceID)
 				continue
 			}
 
 			region, err := getRegionFromZone(zone)
 			if err != nil {
-				logger.Error("error", err)
+				logger.Error("error getting region", "error", err, "instanceID", instanceID)
 				continue
 			}
 
 			if instance.GetStatus() == "TERMINATED" {
 				// delete the entry from the cache
-				c.cache.Delete(util.CacheKey(zone, service, name))
-				continue
+				delete(c.instancesMap, util.Key(zone, service, name))
 			}
 
 			if instance.GetStatus() == "RUNNING" {
@@ -252,16 +162,21 @@ func (c *Client) Refresh(ctx context.Context, project string) {
 				if err != nil {
 					logger.Error("failed to get instance type from url")
 				}
-				c.cache.Set(util.CacheKey(zone, service, name), v1.Instance{
-					Name:    name,
-					Zone:    zone,
-					Service: service,
-					Kind:    kind,
+
+				// Add running instances to the cache
+				key := util.Key(zone, service, name)
+				c.instancesMap[key] = &v1.Instance{
+					Provider: provider,
+					Name:     name,
+					Region:   region,
+					Zone:     zone,
+					Service:  service,
+					Kind:     kind,
 					Labels: v1.Labels{
 						"Lifecycle": instance.GetScheduling().GetProvisioningModel(),
 						"ID":        instanceID,
 					},
-				}, cache.DefaultExpiration)
+				}
 			}
 		}
 	}
