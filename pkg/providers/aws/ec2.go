@@ -45,9 +45,15 @@ func (c *Client) updateInstancesMap(region string, res []types.Reservation) {
 			instance := r.Instances[index]
 
 			id := aws.ToString(instance.InstanceId)
-			vCPUs := aws.ToInt32(instance.CpuOptions.CoreCount) * aws.ToInt32(instance.CpuOptions.ThreadsPerCore)
-
 			key := util.Key(region, ec2Service, id)
+
+			// Remove non-running instances
+			if instance.State.Name != types.InstanceStateNameRunning {
+				delete(c.instancesMap, key)
+				continue
+			}
+
+			vCPUs := aws.ToInt32(instance.CpuOptions.CoreCount) * aws.ToInt32(instance.CpuOptions.ThreadsPerCore)
 			c.instancesMap[key] = &v1.Instance{
 				Name:     id,
 				Provider: provider,
