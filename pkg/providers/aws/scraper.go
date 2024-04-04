@@ -2,6 +2,8 @@ package amazon
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -52,7 +54,7 @@ func SetupScrapers(ctx context.Context, b *bus.Bus) []v1.Scraper {
 
 		// Build the initial cache of instances
 		for _, region := range regions {
-			err := c.ec2Client.Refresh(ctx, c.cache, region)
+			err := c.Refresh(ctx, region)
 			if err != nil {
 				logger.Error("error refreshing cache for region", "region", region, "error", err)
 				continue
@@ -79,51 +81,58 @@ func (s *Scraper) Start(ctx context.Context) {
 			case <-s.Done:
 				return
 			case <-s.ticker.C:
-				s.scrape(ctx)
+				err := s.scrape(ctx)
+				if err != nil {
+					s.logger.Error("scraping error", "error", err)
+				}
 			}
 		}
 	}()
 
 	// do the first scrape
-	s.scrape(ctx)
+	err := s.scrape(ctx)
+	if err != nil {
+		s.logger.Error("scraping error", "error", err)
+	}
 }
 
-func (s *Scraper) scrape(ctx context.Context) {
+func (s *Scraper) scrape(ctx context.Context) error {
 	if len(s.regions) == 0 {
-		s.logger.Error("no AWS regions defined in the config")
-		return
+		return errors.New("no AWS regions defined in the config")
 	}
 
 	interval := config.AppConfig().Interval
 
 	for _, region := range s.regions {
 		// refresh instance cache
-		if err := s.Client.ec2Client.Refresh(ctx, s.Client.cache, region); err != nil {
-			s.logger.Error("error refreshing EC2 instances", "error", err)
-			return
+		if err := s.Client.Refresh(ctx, region); err != nil {
+			return err
 		}
 
-		instances, err := s.Client.cloudWatchClient.GetEC2Metrics(
+		err := s.Client.GetEC2Metrics(
 			ctx,
-			s.Client.cache,
 			region,
 			interval,
 		)
 		if err != nil {
-			s.logger.Error("error getting EC2 Metrics with cloudwatch", "error", err)
-			return
-		}
-
-		for i := range instances {
-			// Publish the metrics
-			if err := s.Bus.Publish(&bus.Event{
-				Type: v1.MetricsCollectedEvent,
-				Data: instances[i],
-			}); err != nil {
-				s.logger.Error("failed publishing instance", "error", err, "instance", instances[i].Name)
-			}
+			return err
 		}
 	}
+
+	var errs error
+	for _, instance := range s.Client.instancesMap {
+		err := s.Bus.Publish(&bus.Event{
+			Type: v1.MetricsCollectedEvent,
+			Data: *instance,
+		})
+		if err != nil {
+			errs = errors.Join(
+				errs,
+				fmt.Errorf("failed to publish for instance %s: %v", instance.Name, err),
+			)
+		}
+	}
+	return errs
 }
 
 func (s *Scraper) Stop(ctx context.Context) {

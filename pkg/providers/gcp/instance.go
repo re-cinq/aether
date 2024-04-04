@@ -7,6 +7,7 @@ import (
 
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	"github.com/re-cinq/aether/pkg/log"
+	"github.com/re-cinq/aether/pkg/providers/util"
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
 	"google.golang.org/api/iterator"
 )
@@ -70,11 +71,8 @@ var (
 
 // instanceMetrics runs a query on googe cloud monitoring using MQL
 // and responds with a list of metrics
-func (c *Client) instanceMemoryMetrics(
-	ctx context.Context,
-	project, query string,
-) ([]*v1.Metric, error) {
-	var metrics []*v1.Metric
+func (c *Client) memoryMetrics(ctx context.Context, project, query string) error {
+	logger := log.FromContext(ctx)
 
 	it := c.monitoring.QueryTimeSeries(ctx, &monitoringpb.QueryTimeSeriesRequest{
 		Name:  fmt.Sprintf("projects/%s", project),
@@ -87,7 +85,7 @@ func (c *Client) instanceMemoryMetrics(
 			break
 		}
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// This is dependant on the MQL query
@@ -110,19 +108,24 @@ func (c *Client) instanceMemoryMetrics(
 			"zone":         zone,
 			"machine_type": instanceType,
 		}
-		metrics = append(metrics, m)
+
+		// Get the stored instance, update the metric and restore
+		// the instance in the cache
+		key := util.Key(zone, service, instanceName)
+		instance, ok := c.instancesMap[key]
+		if !ok {
+			logger.Warn("instance not found in cache", "error", err, "key", key)
+			continue
+		}
+
+		instance.Metrics.Upsert(m)
 	}
-	return metrics, nil
+	return nil
 }
 
 // instanceCPUMetrics runs a query on googe cloud monitoring using MQL
 // and responds with a list of CPU metrics
-func (c *Client) instanceCPUMetrics(
-	ctx context.Context,
-	project, query string,
-) ([]*v1.Metric, error) {
-	var metrics []*v1.Metric
-
+func (c *Client) cpuMetrics(ctx context.Context, project, query string) error {
 	logger := log.FromContext(ctx)
 
 	it := c.monitoring.QueryTimeSeries(ctx, &monitoringpb.QueryTimeSeriesRequest{
@@ -136,7 +139,7 @@ func (c *Client) instanceCPUMetrics(
 			break
 		}
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// This is dependant on the MQL query
@@ -171,7 +174,20 @@ func (c *Client) instanceCPUMetrics(
 			"zone":         zone,
 			"machine_type": instanceType,
 		}
-		metrics = append(metrics, m)
+
+		// Get the cached instance, update the metric and restore
+		// the instance in the cache
+		key := util.Key(zone, service, instanceName)
+		instance, ok := c.instancesMap[key]
+		if !ok {
+			logger.Warn("instance not found in cache", "error", err, "key", key)
+			continue
+		}
+
+		// We are updating the instance based on the stored pointer.
+		// Since it's by reference, we don't need to restore the
+		// object in the map
+		instance.Metrics.Upsert(m)
 	}
-	return metrics, nil
+	return nil
 }

@@ -4,87 +4,64 @@ package amazon
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/eko/gocache/lib/v4/marshaler"
 	"github.com/re-cinq/aether/pkg/providers/util"
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
-// Helper service to get EC2 data
-type ec2Client struct {
-	client *ec2.Client
-}
-
-// New instance
-func NewEC2Client(cfg *aws.Config) *ec2Client {
-	emptyOptions := func(o *ec2.Options) {}
-
-	// Init the EC2 client
-	client := ec2.NewFromConfig(*cfg, emptyOptions)
-
-	// Make sure the initialisation was successful
-	if client == nil {
-		slog.Error("failed to create AWS EC2 client")
-		return nil
-	}
-
-	// Return the ec2 service
-	return &ec2Client{
-		client: client,
-	}
-}
-
 // refresh stores all the instances for a specific region in cache
-func (e *ec2Client) Refresh(ctx context.Context, cache *marshaler.Marshaler, region string) error {
+func (c *Client) Refresh(ctx context.Context, region string) error {
 	// Override the region
 	withRegion := func(o *ec2.Options) {
 		o.Region = region
 	}
 
 	// First request
-	output, err := e.client.DescribeInstances(ctx, buildListPaginationRequest(nil), withRegion)
+	output, err := c.ec2.DescribeInstances(ctx, buildListPaginationRequest(nil), withRegion)
 	if err != nil || output == nil {
 		return fmt.Errorf("failed to retrieve ec2 instances from region: %s: %s", region, err)
 	}
 
-	// Collect all the responses for all the pages
-	instances := []ec2.DescribeInstancesOutput{*output}
+	c.updateInstancesMap(region, output.Reservations)
 
 	for output.NextToken != nil {
-		output, err = e.client.DescribeInstances(ctx, buildListPaginationRequest(output.NextToken), withRegion)
+		output, err = c.ec2.DescribeInstances(ctx, buildListPaginationRequest(output.NextToken), withRegion)
 		if err != nil || output == nil {
 			return fmt.Errorf("failed to retrieve ec2 instances %s", err)
 		}
 
-		instances = append(instances, *output)
+		c.updateInstancesMap(region, output.Reservations)
 	}
 
-	for _, reservation := range output.Reservations {
-		for index := range reservation.Instances {
-			instance := reservation.Instances[index]
+	return nil
+}
+
+func (c *Client) updateInstancesMap(region string, res []types.Reservation) {
+	for _, r := range res {
+		for index := range r.Instances {
+			instance := r.Instances[index]
 
 			id := aws.ToString(instance.InstanceId)
-			cache.Set(ctx, util.CacheKey(region, ec2Service, id),
-				&v1.Instance{
-					Name:     id,
-					Provider: provider,
-					Service:  ec2Service,
-					Region:   region,
-					Kind:     string(instance.InstanceType),
-					Labels: v1.Labels{
-						"Name":      getInstanceTag(instance.Tags, "Name"),
-						"Lifecycle": string(instance.InstanceLifecycle),
-						"VCPUCount": string(aws.ToInt32(instance.CpuOptions.CoreCount) * aws.ToInt32(instance.CpuOptions.ThreadsPerCore)),
-					},
+			vCPUs := aws.ToInt32(instance.CpuOptions.CoreCount) * aws.ToInt32(instance.CpuOptions.ThreadsPerCore)
+
+			key := util.Key(region, ec2Service, id)
+			c.instancesMap[key] = &v1.Instance{
+				Name:     id,
+				Provider: provider,
+				Service:  ec2Service,
+				Region:   region,
+				Kind:     string(instance.InstanceType),
+				Labels: v1.Labels{
+					"Name":      getInstanceTag(instance.Tags, "Name"),
+					"Lifecycle": string(instance.InstanceLifecycle),
+					"VCPUCount": fmt.Sprint(vCPUs),
 				},
-			)
+			}
 		}
 	}
-	return nil
 }
 
 func getInstanceTag(tags []types.Tag, key string) string {

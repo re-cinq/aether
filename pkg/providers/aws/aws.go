@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/eko/gocache/lib/v4/marshaler"
-	"github.com/re-cinq/aether/pkg/cache"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/re-cinq/aether/pkg/config"
+	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
 var (
@@ -28,10 +29,10 @@ type Client struct {
 	cfg *aws.Config
 
 	// service APIs
-	ec2Client        *ec2Client
-	cloudWatchClient *cloudWatchClient
+	ec2        *ec2.Client
+	cloudwatch *cloudwatch.Client
 
-	cache *marshaler.Marshaler
+	instancesMap map[string]*v1.Instance
 }
 
 // NewClient creates a struct with the AWS config, EC2 Client, and CloudWatch Client
@@ -47,31 +48,24 @@ func New(ctx context.Context, currentConfig *config.Account, customTransportConf
 	if err != nil {
 		return nil, fmt.Errorf("error initializing AWS client: %s", err)
 	}
-
-	// Init the ec2 client
-	ec2Client := NewEC2Client(cfg)
-	if ec2Client == nil {
-		return nil, errors.New("error initializing EC2 client")
+	c := &Client{
+		cfg:          cfg,
+		instancesMap: make(map[string]*v1.Instance),
 	}
 
-	// Init the cloudwatch client
-	cloudWatchClient := NewCloudWatchClient(ctx, cfg)
-	if cloudWatchClient == nil {
+	// TODO: fix options pattern
+	c.ec2 = ec2.NewFromConfig(*cfg, func(o *ec2.Options) {})
+	if c.ec2 == nil {
+		return nil, fmt.Errorf("unable to initialize ec2 client")
+	}
+
+	// TODO: fix options pattern
+	c.cloudwatch = cloudwatch.NewFromConfig(*cfg, func(o *cloudwatch.Options) {})
+	if c.cloudwatch == nil {
 		return nil, errors.New("error initializing CloudWatch client")
 	}
 
-	c, err := cache.New(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Client{
-		cfg:              cfg,
-		ec2Client:        ec2Client,
-		cloudWatchClient: cloudWatchClient,
-		// TODO: configure expiry and deletion
-		cache: c,
-	}, nil
+	return c, nil
 }
 
 // Helper function to builde the AWS config
