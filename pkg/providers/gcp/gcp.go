@@ -25,7 +25,7 @@ import (
 type Client struct {
 	// GCP Clients
 	monitoring *monitoring.QueryClient
-	instances  *compute.InstancesClient
+	compute    *compute.InstancesClient
 
 	// Caching mechanism
 	cache *cache.Cache
@@ -75,19 +75,19 @@ func New(
 	}
 
 	// This allows overwriting the default instances client
-	if c.instances == nil {
+	if c.compute == nil {
 		ic, err := compute.NewInstancesRESTClient(ctx, clientOptions...)
 		if err != nil {
 			return nil, func() {}, err
 		}
-		c.instances = ic
+		c.compute = ic
 	}
 
 	// teardown is used to close relevant connections
 	// and cleanup
 	teardown = func() {
 		c.monitoring.Close()
-		c.instances.Close()
+		c.compute.Close()
 	}
 
 	return c, teardown, nil
@@ -206,7 +206,7 @@ func getMetadata(m *v1.Metric) (*metadata, error) {
 func (c *Client) Refresh(ctx context.Context, project string) {
 	logger := log.FromContext(ctx)
 
-	iter := c.instances.AggregatedList(
+	iter := c.compute.AggregatedList(
 		ctx,
 		&computepb.AggregatedListInstancesRequest{
 			Project: project,
