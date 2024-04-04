@@ -1,0 +1,37 @@
+syntax = "proto3";
+package proto;
+option go_package = "./proto";
+
+message ResourceEmissions {
+    double value = 1;
+    string unit = 2; 
+}
+
+message Metric {
+    string name = 1;
+    double usage = 2;
+    double unit_amount = 3;
+    ResourceEmissions emissions = 4;
+    map<string, string> labels = 5;
+    string unit = 6;
+    int64 updated_at = 7;
+    string resource_type = 8;
+}
+
+message InstanceRequest {
+  string provider = 1;
+  string service = 2;
+  string name = 3;
+  string region = 4;
+  string zone = 5;
+  string kind = 6;
+  ResourceEmissions EmbodiedEmissions = 8;
+  map<string, Metric> metrics = 9;
+  map<string, string> labels = 10;
+}
+
+message Empty {}
+
+service Exporter {
+  rpc Send(InstanceRequest) returns (Empty);
+}

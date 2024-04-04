@@ -14,6 +14,7 @@ type ApplicationConfig struct {
 	Providers       map[v1.Provider]Provider `mapstructure:"providers"`
 	LogLevel        string                   `mapstructure:"logLevel"`
 	Cache           Cache                    `mapstructure:"cache"`
+	Plugins         PluginConfig             `mapstructure:"plugins"`
 }
 
 // Defines the configuration for the API
@@ -26,6 +27,11 @@ type APIConfig struct {
 
 	// The prometheus metrics path
 	MetricsPath string `mapstructure:"metricsPath"`
+}
+
+type PluginConfig struct {
+	// Where to load exporter plugins from
+	ExporterDir string `mapstructure:"exporterDir"`
 }
 
 type ProvidersConfig struct {
