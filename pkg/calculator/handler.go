@@ -155,14 +155,14 @@ func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 			c.logger.Error("failed calculating operational emissions", "type", v.Name, "error", err)
 			continue
 		}
-		params.metric.Emissions = v1.NewResourceEmission(opEm, v1.GCO2eqkWh)
+		params.metric.Emissions = v1.NewResourceEmission(opEm, v1.GCO2eq)
 		// update the instance metrics
 		metrics.Upsert(params.metric)
 	}
 
 	instance.EmbodiedEmissions = v1.NewResourceEmission(
 		embodiedEmissions(interval, params.embodiedFactor),
-		v1.GCO2eqkWh,
+		v1.GCO2eq,
 	)
 
 	// We publish the interface on the bus once its been calculated

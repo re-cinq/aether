@@ -13,15 +13,15 @@ var ErrParsingEmissionUnit = errors.New("unsupported EmissionUnit")
 // EmissionUnits Lookup map for listing all the supported emissions
 // as well as deserializing them
 var EmissionUnits = map[string]EmissionUnit{
-	GCO2eqkWhString: GCO2eqkWhString,
+	GCO2eqString: GCO2eqString,
 }
 
 const (
 	// Grams of carbon per kilowatt hour
-	GCO2eqkWh EmissionUnit = GCO2eqkWhString
+	GCO2eq EmissionUnit = GCO2eqString
 
 	// Constant string definitions
-	GCO2eqkWhString = "gCO2eqkWh"
+	GCO2eqString = "gCO2eq"
 )
 
 // Return the emission unit as string

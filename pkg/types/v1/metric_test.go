@@ -16,7 +16,7 @@ func TestResourceFunctionalities(t *testing.T) {
 	r.UnitAmount = 4.0
 	r.Unit = VCPU
 	r.ResourceType = CPU
-	r.Emissions = NewResourceEmission(1056.76, GCO2eqkWh)
+	r.Emissions = NewResourceEmission(1056.76, GCO2eq)
 
 	// Validate the data
 	assert.Equal(t, r.Name, "cpu")
@@ -25,7 +25,7 @@ func TestResourceFunctionalities(t *testing.T) {
 	assert.Equal(t, r.ResourceType, CPU)
 	assert.Equal(t, r.Unit, VCPU)
 	assert.Equal(t, r.Emissions.Value, float64(1056.76))
-	assert.Equal(t, r.Emissions.Unit, GCO2eqkWh)
+	assert.Equal(t, r.Emissions.Unit, GCO2eq)
 
 	// Now create a metric with an empty name which should return nil
 	r = NewMetric("")
