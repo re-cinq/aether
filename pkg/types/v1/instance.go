@@ -39,10 +39,8 @@ type Instance struct {
 	Kind string
 
 	// The metrics collection for the specific service
+	// Operational emissions are stored here
 	Metrics Metrics
-
-	// The CPU emissions of the service during operation
-	OperationalCPUEmissions ResourceEmissions
 
 	// The embodied emissions for the service
 	EmbodiedEmissions ResourceEmissions
