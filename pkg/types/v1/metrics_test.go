@@ -16,7 +16,7 @@ func TestMetricsParser(t *testing.T) {
 		Unit:         VCPU,
 		Emissions: ResourceEmissions{
 			Value: 1056.76,
-			Unit:  GCO2eqkWh,
+			Unit:  GCO2eq,
 		},
 	}
 	assert.NotNil(t, cpuResource)
