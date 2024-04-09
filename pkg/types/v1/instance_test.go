@@ -21,7 +21,7 @@ func TestInstanceOperations(t *testing.T) {
 		UnitAmount:   4.0,
 		ResourceType: CPU,
 		Unit:         VCPU,
-		Emissions:    NewResourceEmission(1024.57, GCO2eqkWh),
+		Emissions:    NewResourceEmission(1024.57, GCO2eq),
 	}
 
 	// Create a new instance

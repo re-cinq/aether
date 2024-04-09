@@ -13,12 +13,12 @@ type testEmissionStruct struct {
 
 func TestEmissionUnitParser(t *testing.T) {
 	testData := `{
-		"emissionUnit": "gCO2eqkWh"
+		"emissionUnit": "gCO2eq"
 	}`
 
 	var testEmissionUnit testEmissionStruct
 	err := json.Unmarshal([]byte(testData), &testEmissionUnit)
 	assert.Nil(t, err)
 
-	assert.Equal(t, testEmissionUnit.TestUnit, GCO2eqkWh)
+	assert.Equal(t, testEmissionUnit.TestUnit, GCO2eq)
 }
