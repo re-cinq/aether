@@ -27,7 +27,7 @@ var (
 func InitConfig(ctx context.Context) {
 	logger := log.FromContext(ctx)
 
-	viper.SetEnvPrefix("CARBON")        // sets an environment variable prefix CARBON_
+	viper.SetEnvPrefix("AETHER")        // sets an environment variable prefix AETHER_
 	viper.SetConfigName(getEnvConfig()) // name of config file (without extension)
 	viper.SetConfigType("yaml")         // REQUIRED if the config file does not have the extension in the name
 	viper.AddConfigPath(".")            // optionally look for config in the working directory

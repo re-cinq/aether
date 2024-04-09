@@ -1,0 +1,42 @@
+logLevel: "debug"
+# Defines the address and port the aether api listens to
+api:
+  # The address the API server should listen to
+  # Can be overridden via: AETHER_API_ADDRESS=localhost
+  # Default: 127.0.0.1
+  address: 0.0.0.0
+
+  # The port the API server should listen to
+  # Can be overridden via: AETHER_API_PORT=8181
+  # Default: 8080
+  port: 8080
+
+# Aether support pulling data from multiple providers
+# Each provider has a set of configurations
+providers:
+  # GCP Provider
+  gcp:
+    accounts:
+      # List of projects to scrape
+      - project: 'my-google-cloud-project-id'
+  # AWS Provider
+  aws:            
+    accounts:                              
+      # List of regions to read the cloud watch metrics for 
+      - regions:
+        - 'eu-north-1'
+        # A namespace is a container for CloudWatch metrics.
+        # Metrics in different namespaces are isolated from each other,
+        # so that metrics from different applications are not mistakenly aggregated into the same statistics.
+        # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/aws-services-cloudwatch-metrics.html 
+        namespaces:
+          - 'AWS/EC2' # EC2 
+          - 'ContainerInsights' # EKS 
+        credentials:
+          filePaths:
+          - '/credentials/credentials'  
+
+
+
+
+
