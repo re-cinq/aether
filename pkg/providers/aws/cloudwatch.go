@@ -15,33 +15,13 @@ import (
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
-// Get the resource consumption of an ec2 instance
+const cpuExpression = `SELECT AVG(CPUUtilization) FROM "AWS/EC2" GROUP BY InstanceId`
+const memExpression = `SELECT AVG(mem_used_percent) FROM SCHEMA(CWAgent, InstanceId) GROUP BY InstanceId`
+
+// GetEC2Metrics gets the resource consumptions for EC2 instances
 func (c *Client) GetEC2Metrics(ctx context.Context, region string, interval time.Duration) error {
 	end := time.Now().UTC()
 	start := end.Add(-interval)
-
-	// Get the cpu consumption for all the instances in the region
-	err := c.getEC2CPU(ctx, region, start, end, interval)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Get the CPU resource consumption of an ec2 instance
-func (c *Client) getEC2CPU(
-	ctx context.Context,
-	region string,
-	start, end time.Time,
-	interval time.Duration,
-) error {
-	// Override the region
-	withRegion := func(o *cloudwatch.Options) {
-		o.Region = region
-	}
-
-	logger := log.FromContext(ctx)
 
 	period := int32(interval.Seconds())
 	// validate the casting from float64 to int32
@@ -49,18 +29,44 @@ func (c *Client) getEC2CPU(
 		return fmt.Errorf("error casting %+v to int32", interval.Seconds())
 	}
 
-	// Make the call to get the CPU metrics
-	output, err := c.cloudwatch.GetMetricData(ctx, &cloudwatch.GetMetricDataInput{
+	input := &cloudwatch.GetMetricDataInput{
 		StartTime: &start,
 		EndTime:   &end,
 		MetricDataQueries: []types.MetricDataQuery{
 			{
-				Id:         aws.String(v1.CPU.String()),
-				Expression: aws.String(`SELECT AVG(CPUUtilization) FROM "AWS/EC2" GROUP BY InstanceId`),
-				Period:     aws.Int32(period),
+				Id:     aws.String(v1.CPU.String()),
+				Period: aws.Int32(period),
 			},
 		},
-	}, withRegion)
+	}
+
+	input.MetricDataQueries[0].Expression = aws.String(cpuExpression)
+	err := c.cpuMetrics(ctx, region, input)
+	if err != nil {
+		return err
+	}
+
+	input.MetricDataQueries[0].Expression = aws.String(memExpression)
+	err = c.memoryMetrics(ctx, region, input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// cpuMetrics queries cloudwatch for the average CPU utilization over a window
+// of time and updates the instance with the CPU metric.
+func (c *Client) cpuMetrics(ctx context.Context, region string, input *cloudwatch.GetMetricDataInput) error {
+	logger := log.FromContext(ctx)
+
+	// Override the region
+	withRegion := func(o *cloudwatch.Options) {
+		o.Region = region
+	}
+
+	// Make the call to get the CPU metrics
+	output, err := c.cloudwatch.GetMetricData(ctx, input, withRegion)
 	if err != nil {
 		return err
 	}
@@ -102,6 +108,54 @@ func (c *Client) getEC2CPU(
 			instance.Metrics.Upsert(m)
 		}
 	}
+	return nil
+}
 
+// memoryMetrics queries cloudwatch for the memory utilization percentage over a
+// window of time and updates the EC2 instance with the memory metric.
+func (c *Client) memoryMetrics(ctx context.Context, region string, input *cloudwatch.GetMetricDataInput) error {
+	logger := log.FromContext(ctx)
+
+	// Override the region
+	withRegion := func(o *cloudwatch.Options) {
+		o.Region = region
+	}
+
+	// Make the call to get the CPU metrics
+	output, err := c.cloudwatch.GetMetricData(ctx, input, withRegion)
+	if err != nil {
+		return err
+	}
+
+	// Loop through the result and build the intermediate awsMetric model
+	for _, metric := range output.MetricDataResults {
+		instanceID := aws.ToString(metric.Label)
+		if instanceID == "Other" {
+			return errors.New("error bad query passed to GetMetricData - instanceID not found in label")
+		}
+
+		if len(metric.Values) > 0 {
+			// Update cached instance with metric
+			key := util.Key(region, ec2Service, instanceID)
+			instance, ok := c.instancesMap[key]
+			if !ok {
+				logger.Warn("instance not found in cache", "error", err, "key", key)
+				continue
+			}
+
+			instance.Metrics.Upsert(&v1.Metric{
+				Name:         v1.Memory.String(),
+				Unit:         v1.GB,
+				Usage:        metric.Values[0],
+				ResourceType: v1.Memory,
+				UpdatedAt:    time.Now(),
+				Labels: v1.Labels{
+					"instanceID": instanceID,
+					"region":     region,
+					"name":       aws.ToString(metric.Label),
+				},
+			})
+		}
+	}
 	return nil
 }
