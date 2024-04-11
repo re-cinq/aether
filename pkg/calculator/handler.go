@@ -67,28 +67,11 @@ func (c *CalculatorHandler) Handle(ctx context.Context, e *bus.Event) {
 	}
 }
 
-func getProviderEC2EmissionFactors(provider v1.Provider) (map[string]data.Instance, error) {
-	url := "https://raw.githubusercontent.com/re-cinq/emissions-data/main/data/v2/%s-instances.yaml"
-	yamlURL := fmt.Sprintf(url, provider)
-	resp, err := http.Get(yamlURL)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	decoder := yaml.NewDecoder(resp.Body)
-	err = decoder.Decode(&awsInstances)
-	if err != nil {
-		return nil, err
-	}
-
-	return awsInstances, nil
-}
-
 // handleEvent is the business logic for handeling a v1.MetricsCollectedEvent
 // and runs the emissions calculations on the metrics that where received
 func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 	interval := config.AppConfig().ProvidersConfig.Interval
+	ctx := log.WithContext(context.Background(), c.logger)
 
 	instance, ok := e.Data.(v1.Instance)
 	if !ok {
@@ -97,34 +80,31 @@ func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 	}
 
 	// Gets PUE, grid data, and machine specs
-	emFactors, err := factors.GetProviderEmissionFactors(
-		instance.Provider,
-		factors.DataPath,
-	)
+	factor, err := factors.ProviderEmissions(instance.Provider, factors.DataPath)
 	if err != nil {
 		c.logger.Error("error getting emission factors", "error", err)
 		return
 	}
 
-	gridCO2eTons, ok := emFactors.Coefficient[instance.Region]
+	grid, ok := factor.Coefficient[instance.Region]
 	if !ok {
-		c.logger.Error("region does not exist in factors for provider", "region", instance.Region, "provider", "gcp")
+		c.logger.Error("region not found in factors", "region", instance.Region, "provider", instance.Provider)
 		return
 	}
 
 	// TODO: hotfix until updated in emissions data
 	// convert gridCO2e from metric tonnes to grams
-	gridCO2e := gridCO2eTons * (1000 * 1000)
+	grid *= (1000 * 1000)
 
-	params := parameters{
-		gridCO2e: gridCO2e,
-		pue:      emFactors.AveragePUE,
-	}
-
-	specs, ok := emFactors.Embodied[instance.Kind]
+	specs, ok := factor.Embodied[instance.Kind]
 	if !ok {
 		c.logger.Error("failed finding instance in factor data", "instance", instance.Name, "kind", instance.Kind)
 		return
+	}
+
+	params := &parameters{
+		grid: grid,
+		pue:  factor.AveragePUE,
 	}
 
 	if d, ok := awsInstances[instance.Kind]; ok {
@@ -151,13 +131,15 @@ func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 	metrics := instance.Metrics
 	for _, v := range metrics {
 		params.metric = &v
-		opEm, err := operationalEmissions(log.WithContext(context.Background(), c.logger), interval, &params)
+
+		o, err := operationalEmissions(ctx, interval, params)
 		if err != nil {
-			c.logger.Error("failed calculating operational emissions", "type", v.Name, "error", err)
+			c.logger.Error("error calulating emissions", "type", v.Name, "error", err)
 			continue
 		}
-		params.metric.Emissions = v1.NewResourceEmission(opEm, v1.GCO2eq)
+
 		// update the instance metrics
+		params.metric.Emissions = v1.NewResourceEmission(o, v1.GCO2eq)
 		metrics.Upsert(params.metric)
 	}
 
@@ -192,4 +174,23 @@ func hourlyEmbodiedEmissions(e *factors.Embodied) float64 {
 		((1.0 / 24.0 / 365.0) / serverLifespan) *
 		// amount of vCPUS for instance versus total vCPUS for platform
 		(e.VCPU / e.TotalVCPU)
+}
+
+func getProviderEC2EmissionFactors(provider v1.Provider) (map[string]data.Instance, error) {
+	url := "https://raw.githubusercontent.com/re-cinq/emissions-data/main/data/v2/%s-instances.yaml"
+	u := fmt.Sprintf(url, provider)
+
+	r, err := http.Get(u)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	d := yaml.NewDecoder(r.Body)
+	err = d.Decode(&awsInstances)
+	if err != nil {
+		return nil, err
+	}
+
+	return awsInstances, nil
 }
