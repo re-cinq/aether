@@ -13,7 +13,7 @@ import (
 )
 
 type parameters struct {
-	gridCO2e       float64
+	grid           float64
 	pue            float64
 	powerCPU       []data.Wattage
 	powerRAM       []data.Wattage
@@ -73,11 +73,11 @@ func cpu(ctx context.Context, interval time.Duration, p *parameters) (float64, e
 	}
 
 	// Operational Emissions are calculated by multiplying the usageCPUkw, vCPUHours, PUE,
-	// and region gridCO2e. The PUE is collected from the providers. The CO2e grid data
+	// and region grid. The PUE is collected from the providers. The CO2e grid data
 	// is the grid carbon intensity coefficient for the region at the specified time.
 	logger := log.FromContext(ctx)
-	logger.Debug("CPU calculation", "power usage", usageCPUkw, "vCPUHours", vCPUHours, "pue", p.pue, "grid", p.gridCO2e)
-	return usageCPUkw * vCPUHours * p.pue * p.gridCO2e, nil
+	logger.Debug("CPU calculation", "energy usage", usageCPUkw, "vCPUHours", vCPUHours, "pue", p.pue, "grid", p.grid)
+	return usageCPUkw * vCPUHours * p.pue * p.grid, nil
 }
 
 // memory is calculated based on the TEADs pkgRAM calculations over
@@ -87,7 +87,7 @@ func memory(ctx context.Context, p *parameters) (float64, error) {
 	logger := log.FromContext(ctx)
 
 	if p.powerRAM == nil {
-		return 0, fmt.Errorf("RAM wattage data not found for memory calculation")
+		return 0, fmt.Errorf("not calculating memory - RAM wattage data not found")
 	}
 
 	usage, err := cubicSplineInterpolation(p.powerRAM, p.metric.Usage)
@@ -95,8 +95,8 @@ func memory(ctx context.Context, p *parameters) (float64, error) {
 		return 0, err
 	}
 
-	logger.Debug("Memory calculation", "power usage", usage)
-	return usage * p.pue * p.gridCO2e, nil
+	logger.Debug("Memory calculation", "energy usage", usage)
+	return usage * p.pue * p.grid, nil
 }
 
 // cubicSplineInterpolation is a piecewise cubic polynomials that takes the

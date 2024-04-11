@@ -22,9 +22,9 @@ var DataPath string = fmt.Sprintf("%s/data/v1", repoPath)
 // Each file is named "{provider}-{emissionFactor}" where emissionFactor
 // may be default, embodied, grid, and use.
 
-// GetProviderEmissionFactors reads in emission data for a specified
+// ProviderEmissions reads in emission data for a specified
 // provider and stores them into the emissionFactors struct for calulating
-func GetProviderEmissionFactors(provider v1.Provider, dataPath string) (*EmissionFactors, error) {
+func ProviderEmissions(provider v1.Provider, dataPath string) (*EmissionFactors, error) {
 	var err error
 	ef := &EmissionFactors{
 		Provider: provider,

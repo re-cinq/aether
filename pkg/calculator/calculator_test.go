@@ -16,9 +16,9 @@ func params() *parameters {
 		Usage: 27,
 	}
 	return &parameters{
-		gridCO2e: 7,
-		pue:      1.2,
-		metric:   m,
+		grid:   7,
+		pue:    1.2,
+		metric: m,
 		// using t3.micro AWS instance as default
 		powerCPU: []data.Wattage{
 			{
@@ -157,7 +157,7 @@ func TestCalculateCPU(t *testing.T) {
 
 		func() *testcase {
 			p := params()
-			p.gridCO2e = 402
+			p.grid = 402
 			// test an extremely high grid CO2e
 			// This value was collected from azures
 			// Germany West Central region
