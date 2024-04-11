@@ -15,7 +15,8 @@ import (
 type parameters struct {
 	gridCO2e       float64
 	pue            float64
-	wattage        []data.Wattage
+	powerCPU       []data.Wattage
+	powerRAM       []data.Wattage
 	metric         *v1.Metric
 	vCPU           float64
 	embodiedFactor float64
@@ -28,7 +29,7 @@ func operationalEmissions(ctx context.Context, interval time.Duration, p *parame
 	case v1.CPU.String():
 		return cpu(ctx, interval, p)
 	case v1.Memory.String():
-		return 0, errors.New("error memory is not yet being calculated")
+		return memory(ctx, p)
 	case v1.Storage.String():
 		return 0, errors.New("error storage is not yet being calculated")
 	case v1.Network.String():
@@ -66,7 +67,7 @@ func cpu(ctx context.Context, interval time.Duration, p *parameters) (float64, e
 	// usageCPUkw is the CPU energy consumption in kilowatts.
 	// If pkgWatt values exist from the dataset, then use cubic spline interpolation
 	// to calculate the wattage based on utilization.
-	usageCPUkw, err := cubicSplineInterpolation(p.wattage, p.metric.Usage)
+	usageCPUkw, err := cubicSplineInterpolation(p.powerCPU, p.metric.Usage)
 	if err != nil {
 		return 0, err
 	}
@@ -75,8 +76,27 @@ func cpu(ctx context.Context, interval time.Duration, p *parameters) (float64, e
 	// and region gridCO2e. The PUE is collected from the providers. The CO2e grid data
 	// is the grid carbon intensity coefficient for the region at the specified time.
 	logger := log.FromContext(ctx)
-	logger.Debug(fmt.Sprintf("CPU calculation: %+v, %+v, %+v, %+v", usageCPUkw, vCPUHours, p.pue, p.gridCO2e))
+	logger.Debug("CPU calculation", "power usage", usageCPUkw, "vCPUHours", vCPUHours, "pue", p.pue, "grid", p.gridCO2e)
 	return usageCPUkw * vCPUHours * p.pue * p.gridCO2e, nil
+}
+
+// memory is calculated based on the TEADs pkgRAM calculations over
+// various memory stress loads. Using the memory usage from the instance
+// we can get the estimated Power consumption of the instance
+func memory(ctx context.Context, p *parameters) (float64, error) {
+	logger := log.FromContext(ctx)
+
+	if p.powerRAM == nil {
+		return 0, fmt.Errorf("RAM wattage data not found for memory calculation")
+	}
+
+	usage, err := cubicSplineInterpolation(p.powerRAM, p.metric.Usage)
+	if err != nil {
+		return 0, err
+	}
+
+	logger.Debug("Memory calculation", "power usage", usage)
+	return usage * p.pue * p.gridCO2e, nil
 }
 
 // cubicSplineInterpolation is a piecewise cubic polynomials that takes the

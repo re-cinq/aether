@@ -128,11 +128,12 @@ func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 	}
 
 	if d, ok := awsInstances[instance.Kind]; ok {
-		params.wattage = d.PkgWatt
+		params.powerCPU = d.PkgWatt
+		params.powerRAM = d.RAMWatt
 		params.vCPU = float64(d.VCPU)
 		params.embodiedFactor = d.EmbodiedHourlyGCO2e
 	} else {
-		params.wattage = []data.Wattage{
+		params.powerCPU = []data.Wattage{
 			{
 				Percentage: 0,
 				Wattage:    specs.MinWatts,

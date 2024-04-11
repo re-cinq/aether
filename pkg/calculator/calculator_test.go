@@ -12,16 +12,15 @@ import (
 
 func params() *parameters {
 	m := &v1.Metric{
-		Name:         "basic",
-		ResourceType: v1.CPU,
-		Usage:        27,
+		Name:  "basic",
+		Usage: 27,
 	}
 	return &parameters{
 		gridCO2e: 7,
 		pue:      1.2,
 		metric:   m,
 		// using t3.micro AWS instance as default
-		wattage: []data.Wattage{
+		powerCPU: []data.Wattage{
 			{
 				Percentage: 0,
 				Wattage:    1.21,
@@ -37,6 +36,24 @@ func params() *parameters {
 			{
 				Percentage: 100,
 				Wattage:    9.96,
+			},
+		},
+		powerRAM: []data.Wattage{
+			{
+				Percentage: 0,
+				Wattage:    0.15,
+			},
+			{
+				Percentage: 10,
+				Wattage:    0.24,
+			},
+			{
+				Percentage: 50,
+				Wattage:    0.62,
+			},
+			{
+				Percentage: 100,
+				Wattage:    1.00,
 			},
 		},
 		vCPU:           2,
@@ -181,17 +198,17 @@ func TestCalculateCPU(t *testing.T) {
 
 func TestCubicSplineInterpolation(t *testing.T) {
 	type testcase struct {
-		name    string
-		wattage []data.Wattage
-		usage   float64
-		expRes  float64
-		hasErr  bool
-		expErr  string
+		name     string
+		powerCPU []data.Wattage
+		usage    float64
+		expRes   float64
+		hasErr   bool
+		expErr   string
 	}
 	testcases := []testcase{
 		{
 			name: "t3.micro instance at 27%",
-			wattage: []data.Wattage{
+			powerCPU: []data.Wattage{
 				{
 					Percentage: 0,
 					Wattage:    1.21,
@@ -213,16 +230,16 @@ func TestCubicSplineInterpolation(t *testing.T) {
 			expRes: 0.005324117210365854,
 		},
 		{
-			name:    "empty wattage",
-			wattage: []data.Wattage{},
-			usage:   27.01,
-			expRes:  0,
-			hasErr:  true,
-			expErr:  "error: cannot calculate CPU energy, no wattage found",
+			name:     "empty wattage",
+			powerCPU: []data.Wattage{},
+			usage:    27.01,
+			expRes:   0,
+			hasErr:   true,
+			expErr:   "error: cannot calculate CPU energy, no wattage found",
 		},
 		{
 			name: "at exactly 10% utilization",
-			wattage: []data.Wattage{
+			powerCPU: []data.Wattage{
 				{
 					Percentage: 0,
 					Wattage:    1.21,
@@ -247,13 +264,55 @@ func TestCubicSplineInterpolation(t *testing.T) {
 
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
-			res, err := cubicSplineInterpolation(test.wattage, test.usage)
+			res, err := cubicSplineInterpolation(test.powerCPU, test.usage)
 			if test.hasErr {
 				assert.Errorf(t, err, test.expErr)
 			} else {
 				assert.Nil(t, err)
 			}
 			assert.Equalf(t, test.expRes, res, "Result should be: %v, got: %v", test.expRes, res)
+		})
+	}
+}
+
+func TestCalculateMemory(t *testing.T) {
+	type testcase struct {
+		name   string
+		params *parameters
+		expRes float64
+		hasErr bool
+		expErr string
+	}
+	for _, test := range []*testcase{
+		func() *testcase {
+			// pass: default test case
+			return &testcase{
+				name:   "default t3.micro at 27%",
+				params: params(),
+				expRes: 0.0033801701414634144,
+			}
+		}(),
+		func() *testcase {
+			// fail: powerRAM wattage not set
+			p := params()
+			p.powerRAM = []data.Wattage{}
+			return &testcase{
+				name:   "default t3.micro at 27%",
+				params: p,
+				expRes: 0,
+				hasErr: true,
+				expErr: "RAM wattage data not found for memory calculation",
+			}
+		}(),
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			res, err := memory(context.TODO(), test.params)
+			assert.Equalf(t, test.expRes, res, "Result should be: %v, got: %v", test.expRes, res)
+			if test.hasErr {
+				assert.Errorf(t, err, test.expErr)
+			} else {
+				assert.Nil(t, err)
+			}
 		})
 	}
 }
