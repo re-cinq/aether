@@ -23,19 +23,20 @@ type parameters struct {
 }
 
 // operationalEmissions determines the correct function to run to calculate the
-// operational emissions for the metric type
-func operationalEmissions(ctx context.Context, interval time.Duration, p *parameters) (float64, error) {
+// operational emissions for the metric type which stores the energy consumption
+// and the carbon emissions in the metric
+func operationalEmissions(ctx context.Context, interval time.Duration, p *parameters) error {
 	switch p.metric.Name {
 	case v1.CPU.String():
 		return cpu(ctx, interval, p)
 	case v1.Memory.String():
 		return memory(ctx, p)
 	case v1.Storage.String():
-		return 0, errors.New("error storage is not yet being calculated")
+		return errors.New("error storage is not yet being calculated")
 	case v1.Network.String():
-		return 0, errors.New("error networking is not yet being calculated")
+		return errors.New("error networking is not yet being calculated")
 	default:
-		return 0, fmt.Errorf("error metric not supported: %+v", p.metric.Name)
+		return fmt.Errorf("error metric not supported: %+v", p.metric.Name)
 	}
 }
 
@@ -45,14 +46,16 @@ func operationalEmissions(ctx context.Context, interval time.Duration, p *parame
 // The initial calculation uses the wattage conversion factor based on the turbostat and
 // turbostress to stress test the CPU on baremetal servers as inspired by Teads.
 // More information can be found in our docs/METHODOLOGIES.md
-func cpu(ctx context.Context, interval time.Duration, p *parameters) (float64, error) {
+func cpu(ctx context.Context, interval time.Duration, p *parameters) error {
+	logger := log.FromContext(ctx)
+
 	vCPU := p.vCPU
 	// vCPU are virtual CPUs that are mapped to physical cores (a core is a physical
 	// component to the CPU the VM is running on). If vCPU from the dataset (p.vCPU)
 	// is not found, get the number of vCPUs from the metric collected from the query
 	if vCPU == 0 {
 		if p.metric.UnitAmount == 0 {
-			return 0, errors.New("error vCPU set to 0")
+			return errors.New("error vCPU set to 0")
 		}
 		vCPU = p.metric.UnitAmount
 	}
@@ -64,39 +67,51 @@ func cpu(ctx context.Context, interval time.Duration, p *parameters) (float64, e
 	// The hourly time is 5/60 (0.083333333) * 4 vCPU = 0.33333334
 	vCPUHours := (interval.Minutes() / float64(60)) * vCPU
 
-	// usageCPUkw is the CPU energy consumption in kilowatts.
+	// energy is the CPU energy consumption in kilowatts.
 	// If pkgWatt values exist from the dataset, then use cubic spline interpolation
 	// to calculate the wattage based on utilization.
-	usageCPUkw, err := cubicSplineInterpolation(p.powerCPU, p.metric.Usage)
+	usage, err := cubicSplineInterpolation(p.powerCPU, p.metric.Usage)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	// Operational Emissions are calculated by multiplying the usageCPUkw, vCPUHours, PUE,
+	p.metric.Energy = usage * vCPUHours
+
+	// Operational Emissions are calculated by multiplying the energy, vCPUHours, PUE,
 	// and region grid. The PUE is collected from the providers. The CO2e grid data
 	// is the grid carbon intensity coefficient for the region at the specified time.
-	logger := log.FromContext(ctx)
-	logger.Debug("CPU calculation", "energy usage", usageCPUkw, "vCPUHours", vCPUHours, "pue", p.pue, "grid", p.grid)
-	return usageCPUkw * vCPUHours * p.pue * p.grid, nil
+	p.metric.Emissions = v1.NewResourceEmission(
+		p.metric.Energy*p.pue*p.grid,
+		v1.GCO2eq,
+	)
+
+	logger.Debug("CPU calculation", "energy usage", p.metric.Energy, "emissions", p.metric.Emissions)
+	return nil
 }
 
 // memory is calculated based on the TEADs pkgRAM calculations over
 // various memory stress loads. Using the memory usage from the instance
 // we can get the estimated Power consumption of the instance
-func memory(ctx context.Context, p *parameters) (float64, error) {
+func memory(ctx context.Context, p *parameters) error {
 	logger := log.FromContext(ctx)
+	var err error
 
 	if p.powerRAM == nil {
-		return 0, fmt.Errorf("not calculating memory - RAM wattage data not found")
+		return fmt.Errorf("not calculating memory - RAM wattage data not found")
 	}
 
-	usage, err := cubicSplineInterpolation(p.powerRAM, p.metric.Usage)
+	p.metric.Energy, err = cubicSplineInterpolation(p.powerRAM, p.metric.Usage)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	logger.Debug("Memory calculation", "energy usage", usage)
-	return usage * p.pue * p.grid, nil
+	p.metric.Emissions = v1.NewResourceEmission(
+		p.metric.Energy*p.pue*p.grid,
+		v1.GCO2eq,
+	)
+
+	logger.Debug("Memory calculation", "energy usage", p.metric.Energy, "emissions", p.metric.Emissions)
+	return nil
 }
 
 // cubicSplineInterpolation is a piecewise cubic polynomials that takes the

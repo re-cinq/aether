@@ -37,6 +37,12 @@ type Metric struct {
 	// - Gb: in case of Ram
 	Unit ResourceUnit
 
+	// The energy consumption calculated
+	// for the metric. This is then multiplied
+	// by the pue and grid coefficient to get
+	// the Emissions data
+	Energy float64
+
 	// Emissions at a specific point in time
 	Emissions ResourceEmissions
 

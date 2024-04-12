@@ -132,14 +132,12 @@ func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 	for _, v := range metrics {
 		params.metric = &v
 
-		o, err := operationalEmissions(ctx, interval, params)
+		err := operationalEmissions(ctx, interval, params)
 		if err != nil {
 			c.logger.Error("error calulating emissions", "type", v.Name, "error", err)
 			continue
 		}
-
 		// update the instance metrics
-		params.metric.Emissions = v1.NewResourceEmission(o, v1.GCO2eq)
 		metrics.Upsert(params.metric)
 	}
 

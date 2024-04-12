@@ -63,12 +63,13 @@ func params() *parameters {
 
 func TestCalculateCPU(t *testing.T) {
 	type testcase struct {
-		name     string
-		interval time.Duration // this is nanoseconds
-		params   *parameters
-		expRes   float64
-		hasErr   bool
-		expErr   string
+		name      string
+		interval  time.Duration // this is nanoseconds
+		params    *parameters
+		energy    float64
+		emissions v1.ResourceEmissions
+		hasErr    bool
+		expErr    string
 	}
 
 	for _, test := range []*testcase{
@@ -78,7 +79,11 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "default t3.micro at 27% usage over 5m",
 				interval: 5 * time.Minute,
 				params:   params(),
-				expRes:   0.007453764094512195,
+				emissions: v1.ResourceEmissions{
+					Value: 0.007453764094512195,
+					Unit:  v1.GCO2eq,
+				},
+				energy: 0.0008873528683943089,
 			}
 		}(),
 		func() *testcase {
@@ -91,7 +96,11 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "vCPU set in metric, not params",
 				interval: 5 * time.Minute,
 				params:   p,
-				expRes:   0.007453764094512195,
+				emissions: v1.ResourceEmissions{
+					Value: 0.007453764094512195,
+					Unit:  v1.GCO2eq,
+				},
+				energy: 0.0008873528683943089,
 			}
 		}(),
 		func() *testcase {
@@ -104,7 +113,11 @@ func TestCalculateCPU(t *testing.T) {
 				params:   p,
 				hasErr:   true,
 				expErr:   "error vCPU set to 0",
-				expRes:   0.00,
+				emissions: v1.ResourceEmissions{
+					Value: 0.0,
+					Unit:  "",
+				},
+				energy: 0.0,
 			}
 		}(),
 
@@ -116,7 +129,11 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "default 30 second interval",
 				interval: 30 * time.Second,
 				params:   params(),
-				expRes:   0.0007453764094512195,
+				emissions: v1.ResourceEmissions{
+					Value: 0.0007453764094512195,
+					Unit:  v1.GCO2eq,
+				},
+				energy: 8.87352868394309e-05,
 			}
 		}(),
 
@@ -127,7 +144,11 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "1 hour interval",
 				interval: 1 * time.Hour,
 				params:   params(),
-				expRes:   0.08944516913414635,
+				emissions: v1.ResourceEmissions{
+					Value: 0.08944516913414635,
+					Unit:  v1.GCO2eq,
+				},
+				energy: 0.010648234420731708,
 			}
 		}(),
 
@@ -139,7 +160,11 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "4 vCPU",
 				interval: 5 * time.Minute,
 				params:   p,
-				expRes:   0.01490752818902439,
+				emissions: v1.ResourceEmissions{
+					Value: 0.01490752818902439,
+					Unit:  v1.GCO2eq,
+				},
+				energy: 0.0017747057367886179,
 			}
 		}(),
 
@@ -151,7 +176,11 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "PUE is exactly 1.0",
 				interval: 5 * time.Minute,
 				params:   p,
-				expRes:   0.006211470078760163,
+				emissions: v1.ResourceEmissions{
+					Value: 0.006211470078760163,
+					Unit:  v1.GCO2eq,
+				},
+				energy: 0.0008873528683943089,
 			}
 		}(),
 
@@ -165,7 +194,11 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "High grid CO2e",
 				interval: 5 * time.Minute,
 				params:   p,
-				expRes:   0.42805902371341464,
+				emissions: v1.ResourceEmissions{
+					Value: 0.42805902371341464,
+					Unit:  v1.GCO2eq,
+				},
+				energy: 0.0008873528683943089,
 			}
 		}(),
 
@@ -180,13 +213,21 @@ func TestCalculateCPU(t *testing.T) {
 				name:     "large server and large workload",
 				interval: 5 * time.Minute,
 				params:   p,
-				expRes:   0.013218390243902438,
+				emissions: v1.ResourceEmissions{
+					Value: 0.013218390243902438,
+					Unit:  v1.GCO2eq,
+				},
+				energy: 0.0015736178861788619,
 			}
 		}(),
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			res, err := cpu(context.TODO(), test.interval, test.params)
-			assert.Equalf(t, test.expRes, res, "Result should be: %v, got: %v", test.expRes, res)
+			err := cpu(context.TODO(), test.interval, test.params)
+			actualEnergy := test.params.metric.Energy
+			actualEmissions := test.params.metric.Emissions
+
+			assert.Equalf(t, test.energy, actualEnergy, "Result should be: %v, got: %v", test.energy, actualEnergy)
+			assert.Equalf(t, test.emissions, actualEmissions, "Result should be: %v, got: %v", test.emissions, actualEmissions)
 			if test.hasErr {
 				assert.Errorf(t, err, test.expErr)
 			} else {
@@ -198,12 +239,12 @@ func TestCalculateCPU(t *testing.T) {
 
 func TestCubicSplineInterpolation(t *testing.T) {
 	type testcase struct {
-		name     string
-		powerCPU []data.Wattage
-		usage    float64
-		expRes   float64
-		hasErr   bool
-		expErr   string
+		name      string
+		powerCPU  []data.Wattage
+		usage     float64
+		emissions float64
+		hasErr    bool
+		expErr    string
 	}
 	testcases := []testcase{
 		{
@@ -226,16 +267,16 @@ func TestCubicSplineInterpolation(t *testing.T) {
 					Wattage:    9.96,
 				},
 			},
-			usage:  27.00,
-			expRes: 0.005324117210365854,
+			usage:     27.00,
+			emissions: 0.005324117210365854,
 		},
 		{
-			name:     "empty wattage",
-			powerCPU: []data.Wattage{},
-			usage:    27.01,
-			expRes:   0,
-			hasErr:   true,
-			expErr:   "error: cannot calculate CPU energy, no wattage found",
+			name:      "empty wattage",
+			powerCPU:  []data.Wattage{},
+			usage:     27.01,
+			emissions: 0,
+			hasErr:    true,
+			expErr:    "error: cannot calculate CPU energy, no wattage found",
 		},
 		{
 			name: "at exactly 10% utilization",
@@ -257,8 +298,8 @@ func TestCubicSplineInterpolation(t *testing.T) {
 					Wattage:    9.96,
 				},
 			},
-			usage:  10,
-			expRes: 0.0030499999999999993,
+			usage:     10,
+			emissions: 0.0030499999999999993,
 		},
 	}
 
@@ -270,26 +311,28 @@ func TestCubicSplineInterpolation(t *testing.T) {
 			} else {
 				assert.Nil(t, err)
 			}
-			assert.Equalf(t, test.expRes, res, "Result should be: %v, got: %v", test.expRes, res)
+			assert.Equalf(t, test.emissions, res, "Result should be: %v, got: %v", test.emissions, res)
 		})
 	}
 }
 
 func TestCalculateMemory(t *testing.T) {
 	type testcase struct {
-		name   string
-		params *parameters
-		expRes float64
-		hasErr bool
-		expErr string
+		name      string
+		params    *parameters
+		emissions float64
+		energy    float64
+		hasErr    bool
+		expErr    string
 	}
 	for _, test := range []*testcase{
 		func() *testcase {
 			// pass: default test case
 			return &testcase{
-				name:   "default t3.micro at 27%",
-				params: params(),
-				expRes: 0.0033801701414634144,
+				name:      "default t3.micro at 27%",
+				params:    params(),
+				energy:    0.00040240120731707316,
+				emissions: 0.0033801701414634144,
 			}
 		}(),
 		func() *testcase {
@@ -297,17 +340,22 @@ func TestCalculateMemory(t *testing.T) {
 			p := params()
 			p.powerRAM = []data.Wattage{}
 			return &testcase{
-				name:   "default t3.micro at 27%",
-				params: p,
-				expRes: 0,
-				hasErr: true,
-				expErr: "RAM wattage data not found for memory calculation",
+				name:      "fail: wattage RAM data not set",
+				params:    p,
+				energy:    0,
+				emissions: 0,
+				hasErr:    true,
+				expErr:    "RAM wattage data not found for memory calculation",
 			}
 		}(),
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			res, err := memory(context.TODO(), test.params)
-			assert.Equalf(t, test.expRes, res, "Result should be: %v, got: %v", test.expRes, res)
+			err := memory(context.TODO(), test.params)
+			actualEmissions := test.params.metric.Emissions.Value
+			actualEnergy := test.params.metric.Energy
+
+			assert.Equalf(t, test.energy, actualEnergy, "Result should be: %v, got: %v", actualEnergy, test.energy)
+			assert.Equalf(t, test.emissions, actualEmissions, "Result should be: %v, got: %v", actualEmissions, test.emissions)
 			if test.hasErr {
 				assert.Errorf(t, err, test.expErr)
 			} else {
