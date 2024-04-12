@@ -166,6 +166,7 @@ func (c *Client) Refresh(ctx context.Context, project string) {
 				// Add running instances to the cache
 				key := util.Key(zone, service, name)
 				c.instancesMap[key] = &v1.Instance{
+					ID:       instanceID,
 					Provider: provider,
 					Name:     name,
 					Region:   region,

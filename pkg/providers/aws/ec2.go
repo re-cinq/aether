@@ -55,7 +55,8 @@ func (c *Client) updateInstancesMap(region string, res []types.Reservation) {
 
 			vCPUs := aws.ToInt32(instance.CpuOptions.CoreCount) * aws.ToInt32(instance.CpuOptions.ThreadsPerCore)
 			c.instancesMap[key] = &v1.Instance{
-				Name:     id,
+				ID:       id,
+				Name:     getInstanceTag(instance.Tags, "Name"),
 				Provider: provider,
 				Service:  ec2Service,
 				Region:   region,

@@ -10,6 +10,8 @@ import (
 
 // The instance for which we are collecting the metrics
 type Instance struct {
+	// unique identifier
+	ID string
 
 	// The provider used as source for this metric
 	Provider Provider

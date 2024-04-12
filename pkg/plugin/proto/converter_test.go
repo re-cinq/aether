@@ -18,6 +18,7 @@ func TestConvertToPB(t *testing.T) {
 		{
 			name: "Valid instance",
 			src: &v1.Instance{
+				ID:                "1",
 				Provider:          "test",
 				Service:           "test-service",
 				Name:              "test-instance",
@@ -39,6 +40,7 @@ func TestConvertToPB(t *testing.T) {
 				},
 			},
 			expected: &InstanceRequest{
+				Id:                "1",
 				Provider:          "test",
 				Service:           "test-service",
 				Name:              "test-instance",
@@ -88,7 +90,7 @@ func compareInstanceRequests(a, b *InstanceRequest) bool {
 
 	// Compare exported fields
 	if a.Provider != b.Provider || a.Service != b.Service || a.Name != b.Name ||
-		a.Region != b.Region || a.Zone != b.Zone || a.Kind != b.Kind {
+		a.Region != b.Region || a.Zone != b.Zone || a.Kind != b.Kind || a.Id != b.Id {
 		return false
 	}
 
@@ -175,6 +177,7 @@ func TestConvertToInstance(t *testing.T) {
 		{
 			name: "Valid InstanceRequest",
 			src: &InstanceRequest{
+				Id:       "1",
 				Provider: "test",
 				Service:  "test-service",
 				Name:     "test-instance",
@@ -203,6 +206,7 @@ func TestConvertToInstance(t *testing.T) {
 				},
 			},
 			expected: &v1.Instance{
+				ID:       "1",
 				Provider: "test",
 				Service:  "test-service",
 				Name:     "test-instance",
