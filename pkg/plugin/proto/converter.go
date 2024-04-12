@@ -15,6 +15,7 @@ func ConvertToPB(src *v1.Instance) (*InstanceRequest, error) {
 	}
 
 	dest := &InstanceRequest{
+		Id:       src.ID,
 		Provider: string(src.Provider),
 		Service:  src.Service,
 		Name:     src.Name,
@@ -55,6 +56,7 @@ func ConvertToInstance(src *InstanceRequest) (*v1.Instance, error) {
 	}
 
 	instance := &v1.Instance{
+		ID:       src.Id,
 		Provider: v1.Provider(src.Provider),
 		Service:  src.Service,
 		Name:     src.Name,

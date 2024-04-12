@@ -19,6 +19,7 @@ message Metric {
 }
 
 message InstanceRequest {
+  string id = 11;
   string provider = 1;
   string service = 2;
   string name = 3;

@@ -50,4 +50,4 @@ tmp/
 # ignore local plugin directory
 .plugins/*
 
-
+.env
