@@ -36,7 +36,7 @@ func (p *PluginHandler) SendToExporters(ctx context.Context, e *bus.Event) {
 	}
 
 	for i := range p.exporters.Plugins {
-		err := p.exporters.Plugins[i].Send(&instance)
+		err := p.exporters.Plugins[i].Exporter.Send(&instance)
 		if err != nil {
 			logger.Error("exporting instance to plugin failed", "error", err)
 		}

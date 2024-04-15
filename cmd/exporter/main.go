@@ -111,7 +111,7 @@ func main() {
 	logger.Info("bus started")
 
 	// Create the API object
-	server := api.New()
+	server := api.New(api.WithExportPluginSystem(pluginsystem))
 
 	// Scheduler manager
 	scrape := scraper.NewManager(ctx, b)

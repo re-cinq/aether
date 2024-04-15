@@ -13,6 +13,7 @@ import (
 	"github.com/prometheus/common/version"
 	"github.com/re-cinq/aether/pkg/config"
 	"github.com/re-cinq/aether/pkg/log"
+	"github.com/re-cinq/aether/pkg/plugin"
 )
 
 const readHeaderTimeout = 2 * time.Second
@@ -23,16 +24,30 @@ type API struct {
 
 	addr        string
 	metricsPath string
+
+	plugins *plugin.ExportPluginSystem
+}
+
+type option func(*API)
+
+func WithExportPluginSystem(e *plugin.ExportPluginSystem) option {
+	return func(a *API) {
+		a.plugins = e
+	}
 }
 
 // New returns an instance of a configured API
-func New() *API {
+func New(opts ...option) *API {
 	api := &API{
 		metricsPath: config.AppConfig().APIConfig.MetricsPath,
 		addr: fmt.Sprintf("%s:%s",
 			config.AppConfig().APIConfig.Address,
 			config.AppConfig().APIConfig.Port,
 		),
+	}
+
+	for _, o := range opts {
+		o(api)
 	}
 
 	api.setup()
@@ -46,7 +61,7 @@ func (a *API) router() *mux.Router {
 	r.StrictSlash(true)
 
 	// HealthCheck
-	r.HandleFunc("/healthz", healthProbe).Methods("GET")
+	r.HandleFunc("/healthz", a.healthProbe).Methods("GET")
 
 	// Prometheus exporter
 	prometheus.MustRegister(version.NewCollector("cloud_carbon_exporter"))
