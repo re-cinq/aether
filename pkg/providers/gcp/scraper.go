@@ -119,7 +119,6 @@ func (s *Scraper) scrape(ctx context.Context) error {
 	}
 
 	var errs error
-	fmt.Println(s.Client.instancesMap)
 	for _, instance := range s.Client.instancesMap {
 		err = s.Bus.Publish(&bus.Event{
 			Type: v1.MetricsCollectedEvent,

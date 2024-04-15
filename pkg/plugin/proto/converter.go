@@ -36,6 +36,7 @@ func ConvertToPB(src *v1.Instance) (*InstanceRequest, error) {
 			Usage:      metric.Usage,
 			UnitAmount: metric.UnitAmount,
 			Unit:       string(metric.Unit),
+			Energy:     metric.Energy,
 			Emissions: &ResourceEmissions{
 				Value: metric.Emissions.Value,
 				Unit:  string(metric.Emissions.Unit),
@@ -79,6 +80,7 @@ func ConvertToInstance(src *InstanceRequest) (*v1.Instance, error) {
 			Name:         metric.Name,
 			ResourceType: v1.ResourceType(metric.ResourceType),
 			Usage:        metric.Usage,
+			Energy:       metric.Energy,
 			UnitAmount:   metric.UnitAmount,
 			Unit:         v1.ResourceUnit(metric.Unit),
 			Emissions: v1.ResourceEmissions{
