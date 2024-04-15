@@ -16,6 +16,7 @@ message Metric {
     string unit = 6;
     int64 updated_at = 7;
     string resource_type = 8;
+    double energy = 9;
 }
 
 message InstanceRequest {

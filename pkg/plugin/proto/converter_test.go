@@ -32,6 +32,7 @@ func TestConvertToPB(t *testing.T) {
 						Name:       "metric1",
 						Usage:      100,
 						UnitAmount: 10.5,
+						Energy:     0.0001,
 						Unit:       "test-unit",
 						Emissions:  v1.ResourceEmissions{Value: 50, Unit: "test-unit"},
 						Labels:     map[string]string{"label1": "value1"},
@@ -54,6 +55,7 @@ func TestConvertToPB(t *testing.T) {
 						Name:       "metric1",
 						Usage:      100,
 						UnitAmount: 10.5,
+						Energy:     0.0001,
 						Unit:       "test-unit",
 						Emissions:  &ResourceEmissions{Value: 50, Unit: "test-unit"},
 						Labels:     map[string]string{"label1": "value1"},
@@ -162,7 +164,7 @@ func compareMetrics(a, b *Metric) bool {
 	}
 
 	return a.Name == b.Name && a.Usage == b.Usage &&
-		a.UnitAmount == b.UnitAmount && a.Unit == b.Unit &&
+		a.UnitAmount == b.UnitAmount && a.Unit == b.Unit && a.Energy == b.Energy &&
 		a.UpdatedAt == b.UpdatedAt && compareStringMaps(a.Labels, b.Labels) &&
 		compareResourceEmissions(a.Emissions, b.Emissions)
 }
@@ -195,6 +197,7 @@ func TestConvertToInstance(t *testing.T) {
 						ResourceType: "test-resource-type",
 						Usage:        100,
 						UnitAmount:   10.5,
+						Energy:       0.0001,
 						Unit:         "test-unit",
 						Emissions: &ResourceEmissions{
 							Value: 50,
@@ -224,6 +227,7 @@ func TestConvertToInstance(t *testing.T) {
 						ResourceType: v1.ResourceType("test-resource-type"),
 						Usage:        100,
 						UnitAmount:   10.5,
+						Energy:       0.0001,
 						Unit:         v1.ResourceUnit("test-unit"),
 						Emissions: v1.ResourceEmissions{
 							Value: 50,
