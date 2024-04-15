@@ -91,7 +91,14 @@ func (p *ExporterPlugin) GRPCClient(
 type ExportPluginSystem struct {
 	Dir string
 
-	Plugins []Exporter
+	Plugins []*RegisteredPlugin
+}
+
+// RegisteredPlugin is all the information needed to manage a registered plugin
+type RegisteredPlugin struct {
+	Name     string
+	Exporter Exporter
+	Client   plugin.ClientProtocol
 }
 
 // Load goes to a directory and runs every binary in that directory as a plugin
@@ -136,7 +143,17 @@ func (e *ExportPluginSystem) Load(ctx context.Context) error {
 
 		p := raw.(Exporter)
 
-		e.Plugins = append(e.Plugins, p)
+		// make sure plugin is reachable
+		err = rpcClient.Ping()
+		if err != nil {
+			logger.Info("failed loading plugin", "plugin", file.Name(), "error", err)
+		}
+
+		e.Plugins = append(e.Plugins, &RegisteredPlugin{
+			Name:     file.Name(),
+			Exporter: p,
+			Client:   rpcClient,
+		})
 		logger.Info("loaded plugin", "plugin", file.Name())
 	}
 
