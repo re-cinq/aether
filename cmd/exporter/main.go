@@ -19,16 +19,17 @@ import (
 	"github.com/re-cinq/aether/pkg/log"
 	"github.com/re-cinq/aether/pkg/plugin"
 	"github.com/re-cinq/aether/pkg/scraper"
+	"github.com/re-cinq/aether/pkg/source"
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
 const shutdownTTL = time.Second * 15
 
 var (
-	description    = "Cloud Carbon collection exporter"
+	description    = "Aether collection exporter"
 	gitSHA         = "n/a"
-	name           = "Cloud Carbon"
-	source         = "https://github.com/re-cinq/aether"
+	name           = "Aether"
+	repo           = "https://github.com/re-cinq/aether"
 	version        = "0.0.1-dev"
 	refType        = "branch" // branch or tag
 	refName        = ""       // the name of the branch or tag
@@ -44,7 +45,7 @@ func PrintVersion() {
 	fmt.Printf("Description:    %s\n", description)
 	fmt.Printf("Go Version:     %s\n", runtime.Version())
 	fmt.Printf("OS / Arch:      %s / %s\n", runtime.GOOS, runtime.GOARCH)
-	fmt.Printf("Source:         %s\n", source)
+	fmt.Printf("Source:         %s\n", repo)
 	fmt.Printf("Built:          %s\n", buildTimestamp)
 }
 
@@ -116,6 +117,10 @@ func main() {
 	// Scheduler manager
 	scrape := scraper.NewManager(ctx, b)
 
+	sourceManager := source.New(ctx, b)
+	sourceManager.Start(ctx)
+	logger.Info("sources loaded")
+
 	// Start the scheduler manager
 	scrape.Start(ctx)
 	logger.Info("scrapers started")
@@ -140,6 +145,9 @@ func main() {
 
 		// Stop all the scraping
 		scrape.Stop(ctx)
+
+		// deregister sources
+		sourceManager.Stop(ctx)
 
 		// Shutdown the bus
 		b.Stop(ctx)

@@ -16,16 +16,19 @@ type Manager struct {
 
 	bus *bus.Bus
 
-	Sources []Source
+	Sources []v1.Source
 }
 
-func New(b *bus.Bus) *Manager {
+func New(ctx context.Context, b *bus.Bus) *Manager {
 	m := &Manager{
 		ticker: time.NewTicker(config.AppConfig().ProvidersConfig.Interval),
 		bus:    b,
 	}
 
 	// we should load all the sources here
+	m.Sources = BuiltInSources(ctx)
+
+	// TODO load external sources here
 
 	return m
 }
@@ -44,6 +47,9 @@ func (m *Manager) Start(ctx context.Context) {
 			}
 		}
 	}()
+
+	// run fetch once the first time
+	m.Fetch(ctx)
 }
 
 // Fetch goes to all sources and fetchs the instance list from them and then
@@ -55,8 +61,8 @@ func (m *Manager) Fetch(ctx context.Context) {
 	for i := range m.Sources {
 		wg.Add(1)
 
-		go func(source Source) {
-			instances, err := source.Fetch()
+		go func(source v1.Source) {
+			instances, err := source.Fetch(ctx)
 			if err != nil {
 				logger.Error("failed fetching instances", "error", err)
 				wg.Done()
@@ -76,11 +82,11 @@ func (m *Manager) Fetch(ctx context.Context) {
 
 // publishInstances is a helper that publishes each instance in a slice on the
 // bus under the MetricsCollectedEvent
-func (m *Manager) publishInstances(instances []v1.Instance) error {
+func (m *Manager) publishInstances(instances []*v1.Instance) error {
 	for i := range instances {
 		err := m.bus.Publish(&bus.Event{
 			Type: v1.MetricsCollectedEvent,
-			Data: instances[i],
+			Data: *instances[i],
 		})
 		if err != nil {
 			return err
@@ -94,8 +100,10 @@ func (m *Manager) publishInstances(instances []v1.Instance) error {
 func (m *Manager) Stop(ctx context.Context) {
 	logger := log.FromContext(ctx)
 
+	m.ticker.Stop()
+
 	for i := range m.Sources {
-		err := m.Sources[i].Stop()
+		err := m.Sources[i].Stop(ctx)
 		if err != nil {
 			logger.Error("failed stopping source", "error", err)
 		}
