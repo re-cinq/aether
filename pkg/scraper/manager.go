@@ -5,7 +5,6 @@ import (
 
 	"github.com/re-cinq/aether/pkg/bus"
 	amazon "github.com/re-cinq/aether/pkg/providers/aws"
-	"github.com/re-cinq/aether/pkg/providers/gcp"
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
@@ -20,8 +19,6 @@ func NewManager(ctx context.Context, b *bus.Bus) *ScrapingManager {
 
 	// Add aws
 	scrapers = append(scrapers, amazon.SetupScrapers(ctx, b)...)
-	// Add GCP
-	scrapers = append(scrapers, gcp.SetupScrapers(ctx, b)...)
 
 	return &ScrapingManager{scrapers}
 }
