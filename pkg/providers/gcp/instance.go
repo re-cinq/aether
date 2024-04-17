@@ -100,7 +100,7 @@ func (c *Client) memoryMetrics(ctx context.Context, project, query string) error
 		m.Unit = v1.GB
 		m.ResourceType = v1.Memory
 		// convert Bytes to GB
-		m.Usage = float64(resp.GetPointData()[0].GetValues()[0].GetInt64Value()) / 1024 / 1024 / 1024
+		m.UnitAmount = float64(resp.GetPointData()[0].GetValues()[0].GetInt64Value()) / 1024 / 1024 / 1024
 		m.Labels = v1.Labels{
 			"id":           instanceID,
 			"name":         instanceName,

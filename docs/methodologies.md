@@ -231,6 +231,12 @@ As a reminder, this is only for CPU. To get the total CO₂e emissions for a ser
 
 <br>
 
+## Calculating Memory VM Carbon Emissions
+
+
+
+<br>
+
 ## Additional work
 
 <br>
@@ -240,7 +246,7 @@ We have been working on creating a similar dataset implementation for GCE instan
 
 <br>
 
-#### Memory, Storage, Networking
+#### Storage, Networking
 We are implementing a similar equation for calculating memory, but using the RAMWatt readings as the wattage variables. We will do a similar write up on that next. Then move onto storage and networking.
 
 <br>
