@@ -18,7 +18,6 @@ import (
 	"github.com/re-cinq/aether/pkg/exporter"
 	"github.com/re-cinq/aether/pkg/log"
 	"github.com/re-cinq/aether/pkg/plugin"
-	"github.com/re-cinq/aether/pkg/scraper"
 	"github.com/re-cinq/aether/pkg/source"
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
@@ -115,15 +114,9 @@ func main() {
 	server := api.New(api.WithExportPluginSystem(pluginsystem))
 
 	// Scheduler manager
-	scrape := scraper.NewManager(ctx, b)
-
 	sourceManager := source.New(ctx, b)
 	sourceManager.Start(ctx)
 	logger.Info("sources loaded")
-
-	// Start the scheduler manager
-	scrape.Start(ctx)
-	logger.Info("scrapers started")
 
 	// Start the API
 	go server.Start(ctx)
@@ -142,9 +135,6 @@ func main() {
 
 		// Shutdown the API server
 		server.Stop(cancelCtx)
-
-		// Stop all the scraping
-		scrape.Stop(ctx)
 
 		// deregister sources
 		sourceManager.Stop(ctx)

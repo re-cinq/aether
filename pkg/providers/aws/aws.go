@@ -35,7 +35,7 @@ type Client struct {
 	instancesMap map[string]*v1.Instance
 }
 
-// NewClient creates a struct with the AWS config, EC2 Client, and CloudWatch Client
+// New creates a struct with the AWS config, EC2 Client, and CloudWatch Client
 // It allows to pass:
 //   - configFile: the location of the config file to load. If empty the default
 //     location of the credentials file (~/.aws/config) is used
