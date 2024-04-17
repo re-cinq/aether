@@ -152,33 +152,36 @@ func (c *Client) Refresh(ctx context.Context, project string) {
 				continue
 			}
 
+			kind, err := getValueFromURL(instance.GetMachineType())
+			if err != nil {
+				logger.Error("failed to get instance type from url")
+			}
+
+			mapInstance := &v1.Instance{
+				ID:       instanceID,
+				Provider: provider,
+				Name:     name,
+				Region:   region,
+				Zone:     zone,
+				Service:  service,
+				Kind:     kind,
+				Labels: v1.Labels{
+					"Lifecycle": instance.GetScheduling().GetProvisioningModel(),
+					"ID":        instanceID,
+				},
+			}
+
 			if instance.GetStatus() == "TERMINATED" {
-				// delete the entry from the cache
-				delete(c.instancesMap, util.Key(zone, service, name))
+				mapInstance.Status = v1.InstanceTerminated
 			}
 
 			if instance.GetStatus() == "RUNNING" {
-				kind, err := getValueFromURL(instance.GetMachineType())
-				if err != nil {
-					logger.Error("failed to get instance type from url")
-				}
-
-				// Add running instances to the cache
-				key := util.Key(zone, service, name)
-				c.instancesMap[key] = &v1.Instance{
-					ID:       instanceID,
-					Provider: provider,
-					Name:     name,
-					Region:   region,
-					Zone:     zone,
-					Service:  service,
-					Kind:     kind,
-					Labels: v1.Labels{
-						"Lifecycle": instance.GetScheduling().GetProvisioningModel(),
-						"ID":        instanceID,
-					},
-				}
+				mapInstance.Status = v1.InstanceRunning
 			}
+
+			// Add running instances to the cache
+			key := util.Key(zone, service, name)
+			c.instancesMap[key] = mapInstance
 		}
 	}
 }

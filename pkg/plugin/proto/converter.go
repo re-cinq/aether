@@ -22,6 +22,7 @@ func ConvertToPB(src *v1.Instance) (*InstanceRequest, error) {
 		Region:   src.Region,
 		Zone:     src.Zone,
 		Kind:     src.Kind,
+		Status:   string(src.Status),
 		EmbodiedEmissions: &ResourceEmissions{
 			Value: src.EmbodiedEmissions.Value,
 			Unit:  string(src.EmbodiedEmissions.Unit),
@@ -64,6 +65,7 @@ func ConvertToInstance(src *InstanceRequest) (*v1.Instance, error) {
 		Region:   src.Region,
 		Zone:     src.Zone,
 		Kind:     src.Kind,
+		Status:   v1.InstanceStatus(src.Status),
 		Labels:   v1.Labels(src.Labels),
 	}
 

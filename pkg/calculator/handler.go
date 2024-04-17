@@ -79,6 +79,18 @@ func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 		return
 	}
 
+	// if an instance is terminated we do not need to calculate
+	// emissions for it
+	if instance.Status == v1.InstanceTerminated {
+		if err := c.Bus.Publish(&bus.Event{
+			Type: v1.EmissionsCalculatedEvent,
+			Data: instance,
+		}); err != nil {
+			c.logger.Error("failed publishing terminated instance", "instance", instance.Name, "error", err)
+		}
+		return
+	}
+
 	// Gets PUE, grid data, and machine specs
 	factor, err := factors.ProviderEmissions(instance.Provider, factors.DataPath)
 	if err != nil {

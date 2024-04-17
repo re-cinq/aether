@@ -63,6 +63,11 @@ func (p *PromHandler) handleEvent(e *bus.Event) {
 		return
 	}
 
+	// if instance is terminated we dont do anything
+	if i.Status == v1.InstanceTerminated {
+		return
+	}
+
 	// setup emissions gauge
 	emissions, err := p.meter.Float64ObservableGauge(
 		"emissions",
@@ -101,8 +106,8 @@ func (p *PromHandler) handleEvent(e *bus.Event) {
 		return
 	}
 
-	for _, m := range i.Metrics {
-		m := m
+	for k := range i.Metrics {
+		m := i.Metrics[k]
 		// setup metric labels
 		attrs := getAtrributesFromLabels(&m)
 		attrs = append(

@@ -67,8 +67,14 @@ func (s *Source) Fetch(ctx context.Context) ([]*v1.Instance, error) {
 	}
 
 	var instances []*v1.Instance
-	for _, instance := range s.Client.instancesMap {
+	for k, instance := range s.Client.instancesMap {
 		instances = append(instances, instance)
+
+		// remove terminated instances as we
+		// shouldnt use them anymore
+		if instance.Status == v1.InstanceTerminated {
+			delete(s.Client.instancesMap, k)
+		}
 	}
 
 	return instances, nil
