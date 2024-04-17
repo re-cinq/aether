@@ -30,6 +30,7 @@ message InstanceRequest {
   ResourceEmissions EmbodiedEmissions = 8;
   map<string, Metric> metrics = 9;
   map<string, string> labels = 10;
+  string status = 12;
 }
 
 message Empty {}

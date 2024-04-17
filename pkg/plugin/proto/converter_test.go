@@ -7,9 +7,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConvertToPB(t *testing.T) {
+	assert := require.New(t)
+
 	tests := []struct {
 		name     string
 		src      *v1.Instance
@@ -25,6 +28,7 @@ func TestConvertToPB(t *testing.T) {
 				Region:            "test-region",
 				Zone:              "test-zone",
 				Kind:              "test-kind",
+				Status:            v1.InstanceRunning,
 				EmbodiedEmissions: v1.ResourceEmissions{Value: 200, Unit: "test-unit"},
 				Labels:            map[string]string{"label1": "value1", "label2": "value2"},
 				Metrics: map[string]v1.Metric{
@@ -48,6 +52,7 @@ func TestConvertToPB(t *testing.T) {
 				Region:            "test-region",
 				Zone:              "test-zone",
 				Kind:              "test-kind",
+				Status:            string(v1.InstanceRunning),
 				EmbodiedEmissions: &ResourceEmissions{Value: 200, Unit: "test-unit"},
 				Labels:            map[string]string{"label1": "value1", "label2": "value2"},
 				Metrics: map[string]*Metric{
@@ -64,20 +69,18 @@ func TestConvertToPB(t *testing.T) {
 				},
 			},
 		},
-		// Add more test cases as needed
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result, err := ConvertToPB(test.src)
-			if err != nil {
-				t.Fatalf("ConvertToPB failed with error: %v", err)
-			}
+			assert.NoError(err)
 
 			// Compare result with expected
-			if !compareInstanceRequests(result, test.expected) {
-				t.Errorf("ConvertToPB result does not match expected")
-			}
+			assert.True(
+				compareInstanceRequests(result, test.expected),
+				"ConvertToPB result does not match expected",
+			)
 		})
 	}
 }
@@ -86,13 +89,15 @@ func compareInstanceRequests(a, b *InstanceRequest) bool {
 	if (a == nil && b != nil) || (a != nil && b == nil) {
 		return false
 	}
+
 	if a == nil && b == nil {
 		return true
 	}
 
 	// Compare exported fields
 	if a.Provider != b.Provider || a.Service != b.Service || a.Name != b.Name ||
-		a.Region != b.Region || a.Zone != b.Zone || a.Kind != b.Kind || a.Id != b.Id {
+		a.Region != b.Region || a.Zone != b.Zone || a.Kind != b.Kind || a.Id != b.Id ||
+		a.Status != b.Status {
 		return false
 	}
 

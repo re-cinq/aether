@@ -8,6 +8,20 @@ import (
 	"github.com/re-cinq/aether/pkg/log"
 )
 
+// Used to speicy the state of an instance
+type InstanceStatus string
+
+const (
+	// Instance is currently functioning
+	InstancePending InstanceStatus = "pending"
+
+	// Instance is currently functioning
+	InstanceRunning InstanceStatus = "running"
+
+	// Instance has been terminated and will be removed from the system
+	InstanceTerminated InstanceStatus = "terminated"
+)
+
 // The instance for which we are collecting the metrics
 type Instance struct {
 	// unique identifier
@@ -39,6 +53,9 @@ type Instance struct {
 	// - n2-standard-8 (GCP)
 	// - m6.2xlarge (AWS)
 	Kind string
+
+	// Status of the instance
+	Status InstanceStatus
 
 	// The metrics collection for the specific service
 	// Operational emissions are stored here
