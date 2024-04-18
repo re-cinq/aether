@@ -8,6 +8,7 @@ import (
 	"github.com/re-cinq/aether/pkg/bus"
 	"github.com/re-cinq/aether/pkg/config"
 	"github.com/re-cinq/aether/pkg/log"
+	"github.com/re-cinq/aether/pkg/plugin"
 	v1 "github.com/re-cinq/aether/pkg/types/v1"
 )
 
@@ -17,18 +18,40 @@ type Manager struct {
 	bus *bus.Bus
 
 	Sources []v1.Source
+
+	plugin *plugin.SourcePluginSystem
 }
 
-func New(ctx context.Context, b *bus.Bus) *Manager {
+type option func(m *Manager)
+
+func WithPlugins(s *plugin.SourcePluginSystem) option {
+	return func(m *Manager) {
+		m.plugin = s
+	}
+}
+
+func WithBus(b *bus.Bus) option {
+	return func(m *Manager) {
+		m.bus = b
+	}
+}
+
+func New(ctx context.Context, opts ...option) *Manager {
 	m := &Manager{
 		ticker: time.NewTicker(config.AppConfig().ProvidersConfig.Interval),
-		bus:    b,
 	}
 
-	// we should load all the sources here
+	for _, o := range opts {
+		o(m)
+	}
+
+	// load buil in sources
 	m.Sources = BuiltInSources(ctx)
 
-	// TODO load external sources here
+	// load plugin sources
+	for _, p := range m.plugin.Plugins {
+		m.Sources = append(m.Sources, p.Source)
+	}
 
 	return m
 }

@@ -52,7 +52,8 @@ type GRPCServer struct {
 // Send is used to receive the RPC requests
 func (m *GRPCServer) Send(
 	ctx context.Context,
-	req *proto.InstanceRequest) (*proto.Empty, error) {
+	req *proto.InstanceRequest,
+) (*proto.Empty, error) {
 	i, err := proto.ConvertToInstance(req)
 	if err != nil {
 		return &proto.Empty{}, err
@@ -114,6 +115,9 @@ func (e *ExportPluginSystem) Load(ctx context.Context) error {
 	}
 
 	for _, file := range files {
+		if file.IsDir() {
+			continue // Skip directories
+		}
 		// Run the plugin executable as a subprocess.
 		pluginPath := filepath.Join(e.Dir, file.Name())
 

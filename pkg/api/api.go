@@ -25,14 +25,22 @@ type API struct {
 	addr        string
 	metricsPath string
 
-	plugins *plugin.ExportPluginSystem
+	// plugin systems
+	exporters *plugin.ExportPluginSystem
+	sources   *plugin.SourcePluginSystem
 }
 
 type option func(*API)
 
 func WithExportPluginSystem(e *plugin.ExportPluginSystem) option {
 	return func(a *API) {
-		a.plugins = e
+		a.exporters = e
+	}
+}
+
+func WithSourcePluginSystem(e *plugin.SourcePluginSystem) option {
+	return func(a *API) {
+		a.sources = e
 	}
 }
 

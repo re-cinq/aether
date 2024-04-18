@@ -26,11 +26,15 @@ const (
 	// Prometheus API for baremetal and kubernetes support
 	Prometheus Provider = prometheusString
 
+	// custom third party providers
+	Custom Provider = customString
+
 	// Constant string definitions
 	awsString        = "aws"
 	azureString      = "azure"
 	gcpString        = "gcp"
 	prometheusString = "prometheus"
+	customString     = "custom"
 )
 
 // Providers Lookup map for listing all the supported providers
@@ -40,6 +44,7 @@ var Providers = map[string]Provider{
 	azureString:      Azure,
 	gcpString:        GCP,
 	prometheusString: Prometheus,
+	customString:     Custom,
 }
 
 // Return the provider as string

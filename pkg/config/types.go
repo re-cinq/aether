@@ -32,6 +32,8 @@ type APIConfig struct {
 type PluginConfig struct {
 	// Where to load exporter plugins from
 	ExporterDir string `mapstructure:"exporterDir"`
+	// Where to load source plugins from
+	SourceDir string `mapstructure:"sourceDir"`
 }
 
 type ProvidersConfig struct {

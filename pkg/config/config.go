@@ -38,7 +38,8 @@ func InitConfig(ctx context.Context) {
 	viper.SetDefault("logLevel", "info")
 	viper.SetDefault("cache.store", "bigcache")
 	viper.SetDefault("cache.expiry", "3600m")
-	viper.SetDefault("plugins.exporterDir", "/plugins")
+	viper.SetDefault("plugins.exporterDir", "/plugins/exporters")
+	viper.SetDefault("plugins.sourceDir", "/plugins/sources")
 
 	// Find and read the config file
 	err := viper.ReadInConfig()

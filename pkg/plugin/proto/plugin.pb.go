@@ -313,6 +313,53 @@ func (x *InstanceRequest) GetStatus() string {
 	return ""
 }
 
+type ListInstanceResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Instances []*InstanceRequest `protobuf:"bytes,1,rep,name=instances,proto3" json:"instances,omitempty"`
+}
+
+func (x *ListInstanceResponse) Reset() {
+	*x = ListInstanceResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_proto_plugin_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListInstanceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListInstanceResponse) ProtoMessage() {}
+
+func (x *ListInstanceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_plugin_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListInstanceResponse.ProtoReflect.Descriptor instead.
+func (*ListInstanceResponse) Descriptor() ([]byte, []int) {
+	return file_proto_plugin_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ListInstanceResponse) GetInstances() []*InstanceRequest {
+	if x != nil {
+		return x.Instances
+	}
+	return nil
+}
+
 type Empty struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -322,7 +369,7 @@ type Empty struct {
 func (x *Empty) Reset() {
 	*x = Empty{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_proto_plugin_proto_msgTypes[3]
+		mi := &file_proto_plugin_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -335,7 +382,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_plugin_proto_msgTypes[3]
+	mi := &file_proto_plugin_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -348,7 +395,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_proto_plugin_proto_rawDescGZIP(), []int{3}
+	return file_proto_plugin_proto_rawDescGZIP(), []int{4}
 }
 
 var File_proto_plugin_proto protoreflect.FileDescriptor
@@ -415,10 +462,21 @@ var file_proto_plugin_proto_rawDesc = []byte{
 	0x62, 0x65, 0x6c, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76,
 	0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75,
-	0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x07, 0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x32, 0x38,
-	0x0a, 0x08, 0x45, 0x78, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x2c, 0x0a, 0x04, 0x53, 0x65,
-	0x6e, 0x64, 0x12, 0x16, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x49, 0x6e, 0x73, 0x74, 0x61,
-	0x6e, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f,
+	0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x4c, 0x0a, 0x14, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73,
+	0x74, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x34, 0x0a,
+	0x09, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x16, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63,
+	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x09, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6e,
+	0x63, 0x65, 0x73, 0x22, 0x07, 0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x32, 0x38, 0x0a, 0x08,
+	0x45, 0x78, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x2c, 0x0a, 0x04, 0x53, 0x65, 0x6e, 0x64,
+	0x12, 0x16, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63,
+	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x32, 0x60, 0x0a, 0x06, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65,
+	0x12, 0x32, 0x0a, 0x05, 0x46, 0x65, 0x74, 0x63, 0x68, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x1b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x22, 0x0a, 0x04, 0x53, 0x74, 0x6f, 0x70, 0x12, 0x0c, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x42, 0x09, 0x5a, 0x07, 0x2e, 0x2f, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
@@ -435,30 +493,36 @@ func file_proto_plugin_proto_rawDescGZIP() []byte {
 	return file_proto_plugin_proto_rawDescData
 }
 
-var file_proto_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_proto_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_proto_plugin_proto_goTypes = []interface{}{
-	(*ResourceEmissions)(nil), // 0: proto.ResourceEmissions
-	(*Metric)(nil),            // 1: proto.Metric
-	(*InstanceRequest)(nil),   // 2: proto.InstanceRequest
-	(*Empty)(nil),             // 3: proto.Empty
-	nil,                       // 4: proto.Metric.LabelsEntry
-	nil,                       // 5: proto.InstanceRequest.MetricsEntry
-	nil,                       // 6: proto.InstanceRequest.LabelsEntry
+	(*ResourceEmissions)(nil),    // 0: proto.ResourceEmissions
+	(*Metric)(nil),               // 1: proto.Metric
+	(*InstanceRequest)(nil),      // 2: proto.InstanceRequest
+	(*ListInstanceResponse)(nil), // 3: proto.ListInstanceResponse
+	(*Empty)(nil),                // 4: proto.Empty
+	nil,                          // 5: proto.Metric.LabelsEntry
+	nil,                          // 6: proto.InstanceRequest.MetricsEntry
+	nil,                          // 7: proto.InstanceRequest.LabelsEntry
 }
 var file_proto_plugin_proto_depIdxs = []int32{
-	0, // 0: proto.Metric.emissions:type_name -> proto.ResourceEmissions
-	4, // 1: proto.Metric.labels:type_name -> proto.Metric.LabelsEntry
-	0, // 2: proto.InstanceRequest.EmbodiedEmissions:type_name -> proto.ResourceEmissions
-	5, // 3: proto.InstanceRequest.metrics:type_name -> proto.InstanceRequest.MetricsEntry
-	6, // 4: proto.InstanceRequest.labels:type_name -> proto.InstanceRequest.LabelsEntry
-	1, // 5: proto.InstanceRequest.MetricsEntry.value:type_name -> proto.Metric
-	2, // 6: proto.Exporter.Send:input_type -> proto.InstanceRequest
-	3, // 7: proto.Exporter.Send:output_type -> proto.Empty
-	7, // [7:8] is the sub-list for method output_type
-	6, // [6:7] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	0,  // 0: proto.Metric.emissions:type_name -> proto.ResourceEmissions
+	5,  // 1: proto.Metric.labels:type_name -> proto.Metric.LabelsEntry
+	0,  // 2: proto.InstanceRequest.EmbodiedEmissions:type_name -> proto.ResourceEmissions
+	6,  // 3: proto.InstanceRequest.metrics:type_name -> proto.InstanceRequest.MetricsEntry
+	7,  // 4: proto.InstanceRequest.labels:type_name -> proto.InstanceRequest.LabelsEntry
+	2,  // 5: proto.ListInstanceResponse.instances:type_name -> proto.InstanceRequest
+	1,  // 6: proto.InstanceRequest.MetricsEntry.value:type_name -> proto.Metric
+	2,  // 7: proto.Exporter.Send:input_type -> proto.InstanceRequest
+	4,  // 8: proto.Source.Fetch:input_type -> proto.Empty
+	4,  // 9: proto.Source.Stop:input_type -> proto.Empty
+	4,  // 10: proto.Exporter.Send:output_type -> proto.Empty
+	3,  // 11: proto.Source.Fetch:output_type -> proto.ListInstanceResponse
+	4,  // 12: proto.Source.Stop:output_type -> proto.Empty
+	10, // [10:13] is the sub-list for method output_type
+	7,  // [7:10] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_proto_plugin_proto_init() }
@@ -504,6 +568,18 @@ func file_proto_plugin_proto_init() {
 			}
 		}
 		file_proto_plugin_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListInstanceResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_proto_plugin_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Empty); i {
 			case 0:
 				return &v.state
@@ -522,9 +598,9 @@ func file_proto_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_proto_plugin_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   2,
 		},
 		GoTypes:           file_proto_plugin_proto_goTypes,
 		DependencyIndexes: file_proto_plugin_proto_depIdxs,
