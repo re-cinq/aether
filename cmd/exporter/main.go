@@ -80,7 +80,18 @@ func main() {
 	}
 
 	err := pluginsystem.Load(ctx)
+	if err != nil {
+		logger.Error("failed to load exporter plugin system", "error", err)
+		os.Exit(1)
+	}
 
+	// Load source plugins
+	logger.Info("loading sources")
+	sourcePluginSystem := &plugin.SourcePluginSystem{
+		Dir: config.AppConfig().Plugins.SourceDir,
+	}
+
+	err = sourcePluginSystem.Load(ctx)
 	if err != nil {
 		logger.Error("failed to load exporter plugin system", "error", err)
 		os.Exit(1)
@@ -101,6 +112,7 @@ func main() {
 		exporter.NewHandler(ctx, b),
 	)
 
+	// subscribes all exporter plugins
 	b.Subscribe(
 		v1.EmissionsCalculatedEvent,
 		plugin.NewHandler(ctx, pluginsystem),
@@ -111,10 +123,17 @@ func main() {
 	logger.Info("bus started")
 
 	// Create the API object
-	server := api.New(api.WithExportPluginSystem(pluginsystem))
+	server := api.New(
+		api.WithExportPluginSystem(pluginsystem),
+		api.WithSourcePluginSystem(sourcePluginSystem),
+	)
 
-	// Scheduler manager
-	sourceManager := source.New(ctx, b)
+	// Source manager
+	sourceManager := source.New(ctx,
+		source.WithBus(b),
+		source.WithPlugins(sourcePluginSystem),
+	)
+
 	sourceManager.Start(ctx)
 	logger.Info("sources loaded")
 

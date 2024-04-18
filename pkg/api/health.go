@@ -6,23 +6,42 @@ import (
 	"net/http"
 )
 
+type health struct {
+	Status        string   `json:"status"`
+	Exporters     string   `json:"exporters"`
+	Sources       string   `json:"sources"`
+	FailedPlugins []string `json:"failedPlugins,omitempty"`
+}
+
 // Return a 200 http status
 func (a *API) healthProbe(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	plugins := "up"
-	var failedPlugins []string
+	h := &health{
+		Status:    "up",
+		Exporters: "up",
+		Sources:   "up",
+	}
 
-	// we need to ping every registered plugin
-	for _, p := range a.plugins.Plugins {
+	// we need to ping every registered exporter
+	for _, p := range a.exporters.Plugins {
 		err := p.Client.Ping()
 		if err != nil {
-			plugins = "down"
-			failedPlugins = append(failedPlugins, p.Name)
+			h.Exporters = "down"
+			h.FailedPlugins = append(h.FailedPlugins, fmt.Sprintf("exporter:%s", p.Name))
 		}
 	}
 
-	failedPluginsJSON, err := json.Marshal(failedPlugins)
+	// we need to ping every registered source
+	for _, p := range a.sources.Plugins {
+		err := p.Client.Ping()
+		if err != nil {
+			h.Sources = "down"
+			h.FailedPlugins = append(h.FailedPlugins, fmt.Sprintf("source:%s", p.Name))
+		}
+	}
+
+	body, err := json.Marshal(h)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, `{"error": %q}`, err)
@@ -30,5 +49,5 @@ func (a *API) healthProbe(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, `{"status": "up", "plugins": %q, failedPlugins: %s}`, plugins, failedPluginsJSON)
+	fmt.Fprint(w, string(body))
 }

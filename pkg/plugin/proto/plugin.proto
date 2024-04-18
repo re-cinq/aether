@@ -33,8 +33,18 @@ message InstanceRequest {
   string status = 12;
 }
 
+message ListInstanceResponse {
+  repeated InstanceRequest instances = 1;
+}
+
 message Empty {}
 
 service Exporter {
   rpc Send(InstanceRequest) returns (Empty);
 }
+
+service Source {
+  rpc Fetch(Empty) returns (ListInstanceResponse);
+  rpc Stop(Empty) returns (Empty);
+}
+
