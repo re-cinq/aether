@@ -15,10 +15,8 @@ import (
 type parameters struct {
 	grid           float64
 	pue            float64
-	powerCPU       []data.Wattage
-	powerRAM       []data.Wattage
 	metric         *v1.Metric
-	vCPU           float64
+	factors        *data.Instance
 	embodiedFactor float64
 }
 
@@ -49,7 +47,8 @@ func operationalEmissions(ctx context.Context, interval time.Duration, p *parame
 func cpu(ctx context.Context, interval time.Duration, p *parameters) error {
 	logger := log.FromContext(ctx)
 
-	vCPU := p.vCPU
+	// TODO: remove casting once the type is changed in the factors data
+	vCPU := float64(p.factors.VCPU)
 	// vCPU are virtual CPUs that are mapped to physical cores (a core is a physical
 	// component to the CPU the VM is running on). If vCPU from the dataset (p.vCPU)
 	// is not found, get the number of vCPUs from the metric collected from the query
@@ -70,7 +69,7 @@ func cpu(ctx context.Context, interval time.Duration, p *parameters) error {
 	// energy is the CPU energy consumption in kilowatts.
 	// If pkgWatt values exist from the dataset, then use cubic spline interpolation
 	// to calculate the wattage based on utilization.
-	usage, err := cubicSplineInterpolation(p.powerCPU, p.metric.Usage)
+	usage, err := cubicSplineInterpolation(p.factors.PkgWatt, p.metric.Usage)
 	if err != nil {
 		return err
 	}
@@ -96,11 +95,11 @@ func memory(ctx context.Context, p *parameters) error {
 	logger := log.FromContext(ctx)
 	var err error
 
-	if p.powerRAM == nil {
+	if p.factors.RAMWatt == nil {
 		return fmt.Errorf("not calculating memory - RAM wattage data not found")
 	}
 
-	p.metric.Energy, err = cubicSplineInterpolation(p.powerRAM, p.metric.Usage)
+	p.metric.Energy, err = cubicSplineInterpolation(p.factors.PkgWatt, p.metric.Usage)
 	if err != nil {
 		return err
 	}
