@@ -20,43 +20,45 @@ func params() *parameters {
 		pue:    1.2,
 		metric: m,
 		// using t3.micro AWS instance as default
-		powerCPU: []data.Wattage{
-			{
-				Percentage: 0,
-				Wattage:    1.21,
+		factors: &data.Instance{
+			PkgWatt: []data.Wattage{
+				{
+					Percentage: 0,
+					Wattage:    1.21,
+				},
+				{
+					Percentage: 10,
+					Wattage:    3.05,
+				},
+				{
+					Percentage: 50,
+					Wattage:    7.16,
+				},
+				{
+					Percentage: 100,
+					Wattage:    9.96,
+				},
 			},
-			{
-				Percentage: 10,
-				Wattage:    3.05,
+			RAMWatt: []data.Wattage{
+				{
+					Percentage: 0,
+					Wattage:    0.15,
+				},
+				{
+					Percentage: 10,
+					Wattage:    0.24,
+				},
+				{
+					Percentage: 50,
+					Wattage:    0.62,
+				},
+				{
+					Percentage: 100,
+					Wattage:    1.00,
+				},
 			},
-			{
-				Percentage: 50,
-				Wattage:    7.16,
-			},
-			{
-				Percentage: 100,
-				Wattage:    9.96,
-			},
+			VCPU: 2.0,
 		},
-		powerRAM: []data.Wattage{
-			{
-				Percentage: 0,
-				Wattage:    0.15,
-			},
-			{
-				Percentage: 10,
-				Wattage:    0.24,
-			},
-			{
-				Percentage: 50,
-				Wattage:    0.62,
-			},
-			{
-				Percentage: 100,
-				Wattage:    1.00,
-			},
-		},
-		vCPU:           2,
 		embodiedFactor: 1000,
 	}
 }
@@ -89,7 +91,7 @@ func TestCalculateCPU(t *testing.T) {
 		func() *testcase {
 			// vCPUs not set in params, but set in metric
 			p := params()
-			p.vCPU = 0
+			p.factors.VCPU = 0
 			p.metric.UnitAmount = 2
 			p.metric.Unit = v1.VCPU
 			return &testcase{
@@ -106,7 +108,7 @@ func TestCalculateCPU(t *testing.T) {
 		func() *testcase {
 			// vCPUs not set
 			p := params()
-			p.vCPU = 0
+			p.factors.VCPU = 0
 			return &testcase{
 				name:     "vCPU not set",
 				interval: 5 * time.Minute,
@@ -155,7 +157,7 @@ func TestCalculateCPU(t *testing.T) {
 		func() *testcase {
 			// calculate with 4 vCPUs
 			p := params()
-			p.vCPU = 4
+			p.factors.VCPU = 4
 			return &testcase{
 				name:     "4 vCPU",
 				interval: 5 * time.Minute,
@@ -338,7 +340,7 @@ func TestCalculateMemory(t *testing.T) {
 		func() *testcase {
 			// fail: powerRAM wattage not set
 			p := params()
-			p.powerRAM = []data.Wattage{}
+			p.factors.RAMWatt = []data.Wattage{}
 			return &testcase{
 				name:      "fail: wattage RAM data not set",
 				params:    p,

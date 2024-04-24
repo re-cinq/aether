@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"reflect"
 
 	"gopkg.in/yaml.v2"
 
@@ -16,13 +17,16 @@ import (
 	data "github.com/re-cinq/emissions-data/pkg/types/v2"
 )
 
-var awsInstances map[string]data.Instance
+var instanceData map[string]data.Instance
 
 // AWS, GCP and Azure have increased their server lifespan to 6 years (2024)
 // https://sustainability.aboutamazon.com/products-services/the-cloud?energyType=true
 // https://www.theregister.com/2024/01/31/alphabet_q4_2023/
 // https://www.theregister.com/2022/08/02/microsoft_server_life_extension/
 const serverLifespan = 6
+
+//nolint:govet // don't need to write the struct fields each time
+var emptyWattage = []data.Wattage{{0, 0}, {10, 0}, {50, 0}, {100, 0}}
 
 // CalculatorHandler is used to handle events when metrics have been collected
 type CalculatorHandler struct {
@@ -41,9 +45,11 @@ func NewHandler(ctx context.Context, b *bus.Bus) *CalculatorHandler {
 		return nil
 	}
 
-	awsInstances, err = getProviderEC2EmissionFactors(v1.AWS)
-	if err != nil {
-		logger.Error("unable to get v2 Emission Factors, falling back to v1", "error", err)
+	for provider := range config.AppConfig().Providers {
+		err = getProviderEmissionFactors(provider)
+		if err != nil {
+			logger.Error("unable to get v2 Emission Factors", "error", err, "provider", provider)
+		}
 	}
 
 	return &CalculatorHandler{
@@ -119,13 +125,15 @@ func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 		pue:  factor.AveragePUE,
 	}
 
-	if d, ok := awsInstances[instance.Kind]; ok {
-		params.powerCPU = d.PkgWatt
-		params.powerRAM = d.RAMWatt
-		params.vCPU = float64(d.VCPU)
-		params.embodiedFactor = d.EmbodiedHourlyGCO2e
-	} else {
-		params.powerCPU = []data.Wattage{
+	if d, ok := instanceData[instance.Kind]; ok {
+		params.factors = &d
+	}
+
+	// fallback to use spec power min and max watt values.
+	// this is less accurate and a place holder until a
+	// different solution is implemented.
+	if reflect.DeepEqual(params.factors.PkgWatt, emptyWattage) {
+		params.factors.PkgWatt = []data.Wattage{
 			{
 				Percentage: 0,
 				Wattage:    specs.MinWatts,
@@ -135,6 +143,9 @@ func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 				Wattage:    specs.MaxWatts,
 			},
 		}
+	}
+
+	if params.embodiedFactor == 0 {
 		params.embodiedFactor = hourlyEmbodiedEmissions(&specs)
 	}
 
@@ -186,21 +197,21 @@ func hourlyEmbodiedEmissions(e *factors.Embodied) float64 {
 		(e.VCPU / e.TotalVCPU)
 }
 
-func getProviderEC2EmissionFactors(provider v1.Provider) (map[string]data.Instance, error) {
+func getProviderEmissionFactors(provider v1.Provider) error {
 	url := "https://raw.githubusercontent.com/re-cinq/emissions-data/main/data/v2/%s-instances.yaml"
 	u := fmt.Sprintf(url, provider)
 
 	r, err := http.Get(u)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer r.Body.Close()
 
 	d := yaml.NewDecoder(r.Body)
-	err = d.Decode(&awsInstances)
+	err = d.Decode(&instanceData)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return awsInstances, nil
+	return nil
 }
