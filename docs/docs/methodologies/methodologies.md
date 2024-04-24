@@ -1,10 +1,15 @@
-![title](./images/Byte-Calculating.webp)
+---
+sidebar_position: 1
+title: "How we calculate carbon emissions"
+---
+
+![title](/img/Byte-Calculating.webp)
 
 Like many others, we at re:cinq have been attempting to measure energy consumption of virtualized services running on cloud providers.
 
 Our goal is to **provide real-time analytics on cloud service carbon emissions that adhere to OpenTelemetry specification**. We are working towards building upon existing efforts and are hoping to learn, make a difference, and contribute to the initiative.
 
-<br>
+<br />
 
 ## Measuring
 When calculating energy consumption of personal machines, it is possible to utilize hardware and kernel features.
@@ -16,7 +21,7 @@ However, when working with virtualization technologies, assessing the overall po
 Thus, in order to get total operational consumption of virtual machines, an aggregation of the utilized resources must be performed. Specifically: CPU, memory, storage, and networking, with CPU and memory being of the highest utilization factors.
 
 
-<br>
+<br />
 
 ## Teads
 After much research, we decided to utilize and expand on the Teads dataset estimations. [We found their data and calculations to be meticulous and methodically curated](https://medium.com/teads-engineering/estimating-aws-ec2-instances-power-consumption-c9745e347959). They have gathered server specifications and their correlating energy consumption of Amazon EC2 instances by assuming a converting factor on vCPUs based on hardware level consumption of similar infrastructure. Their [dataset](https://docs.google.com/spreadsheets/d/1DqYgQnEDLQVQm5acMAhLgHLD8xXCG9BIrk-_Nv6jF3k/edit?usp=sharing) consists of EC2 instances, server/platform specifications, bare metal power profiles, and ratio data for various component families.
@@ -27,7 +32,7 @@ I *highly* recommend reading their blog posts for an informative explanation of 
  - [Estimating AWS EC2 Instances Power Consumption](https://medium.com/teads-engineering/estimating-aws-ec2-instances-power-consumption-c9745e347959)
  - [Building an AWS EC2 Cabon Emissions Dataset](https://medium.com/teads-engineering/building-an-aws-ec2-carbon-emissions-dataset-3f0fd76c98ac)
 
-<br>
+<br/>
 
 ## Calculating CPU VM Carbon Emissions
 
@@ -69,7 +74,7 @@ The CPU model for t3.micro instance is a `Xeon Platinum 8175M`, as shown in the 
   physical id	: 0
 ```
 
-<br>
+<br />
 
 ### Calculating vCPU Hours
 As mentioned above, **vCPU Hours** represents the count of virtual CPUs within a specific time frame. This will help us determine the energy consumption of underlying physical CPUs running the VM.
@@ -88,7 +93,7 @@ vCPUHours = (interval / 60 min) * vCPU
           = (0.083333333) * 2
           = 0.166666666 vCPUHours
 ```
-<br>
+<br/>
 
 ### Calculating CPU Energy Usage
 
@@ -103,14 +108,14 @@ The CPU energy consumption for the t3.micro, Xeon Platinum 8175M, machine with t
 Now, we use this data to determine the Wattage of the EC2 instance at a specified utilization (in our example, this is 27%). To determine this, we made the following assumptions:
 * Server CPU utilization and power consumption are not linear, as seen in the [energy proportionality phenomenon](https://blog.re-cinq.com/posts/energy-proportionality/), so we want to utilize a ***polynomial regression model***.
 
-![linear vs proportionality](./images/linear_vs_proportionality.webp)
+![linear vs proportionality](/img/linear_vs_proportionality.webp)
 
 * We have a set of four data points (0%, 10%, 50%, and 100%), so we can utilize a ***cubic model*** since we have four known values.
 * Utilization will not be below 0% or above 100%, so we can use ***interpolation*** to determine a value within this range.
 
 Therefore, for our first iteration, we have opted to use ***cubic spline interpolation*** for predicting the unknown data points.
 
-<br>
+<br/>
 
 #### Cubic Spline Interpolation
 [Cubic splines](https://blog.timodenk.com/cubic-spline-interpolation/index.html) are piecewise cubic polynomials that provide a smooth interpolation between data points.
@@ -129,13 +134,13 @@ A final reasoning for our equation choice arose from the whitepaper by Jóakim v
 
 They compare various interpolation methods for modeling power and performance of specific datasets. They found that “[Linear] regression is not as accurate as any of the piece-wise polynomial interpolation methods (equi-distant splits, dynamic splits, or splines) in cases of equi-distant data.”. The cubic spline error rate was one of the lowest, if not the lowest, method with their experimentation, as seen in the following table:
 
-![comparison interpolations](./images/comparison_interpolations.webp)
+![comparison interpolations](/img/comparison_interpolations.webp)
 
 We are aware these estimations exclude significant factors and dynamic configurations that should be part of the computation. For example, CPU frequency, dynamic power scaling, running workloads consideration, etc.
 
 A more thorough approach may be to utilize a trained regression model, similar to that of [Kepler](https://sustainable-computing.io/). They have created a [machine learning model](https://sustainable-computing.io/design/power_model/#modeling-approach) that estimates energy consumption of Kubernetes pods with input from performance counters (via ePBF), RAPL, cgroups, and other metrics. We find this method ingenious and innovative, and plan to iterate our approach to something of that caliber.
 
-<br>
+<br/>
 
 #### Calculating VM CPU energy usage with our example
 With our instance running at 27% utilization, we can plug that value into the cubic spline interpolation calculation along with the PkgWatt data points. For our use case, we are utilizing the Golang library [gospline](https://github.com/rvql/gospline), and here is a code snippit that can also be found in the [calculator package](https://github.com/re-cinq/cloud-carbon/blob/d770983e3599901233edd1107819604293656e4b/pkg/calculator/calculator.go#L84):
@@ -181,7 +186,7 @@ CPUEnergy = Usage * vCPUHours
           = 0.000887353 kWh
 ```
  
-<br>
+<br/>
 
 ## Calculating VM CPU CO₂e
 
@@ -193,7 +198,7 @@ CPUCO2e = CPUEnergy * PUE * gridFactor
 
 Both of these data coefficients can be found in our [Emissions Data](https://github.com/re-cinq/emissions-data) repository. This is where we keep, and update coefficient data that is utilized by cloud-carbon.
 
-<br>
+<br/>
 
 ### PUE
 The PUE - [Power Usage Effectiveness](https://en.wikipedia.org/wiki/Power_usage_effectiveness) is how effective a data center’s energy is. In other words, how much of their electricity usage is consumed by server computation (as opposed to cooling, lights, etc.). It is a ratio, and the lowest possible value is 1.0 depicting *all* electricity is going to the [servers](https://blog.re-cinq.com/posts/green-data-centers/).
@@ -201,14 +206,14 @@ The PUE - [Power Usage Effectiveness](https://en.wikipedia.org/wiki/Power_usage_
 We were unable to find a published PUE score from Amazon, so we made a conservative estimation of `1.2` based on an older [blog](https://aws.amazon.com/blogs/aws/cloud-computing-server-utilization-the-environment/). This value also coincides with the [reports of GCP](https://www.google.com/about/datacenters/efficiency/) having the most effective data centers with an average score of `1.1` across all regions. They also provide quarterly, region-specific PUE scores.
 
 
-<br>
+<br/>
 
 ### Grid Carbon Intensity Coefficient
 The grid carbon intensity is a coefficient value of a power grid’s carbon emissions. Some providers have specific information regarding what kind of energy is being utilized in each data center e.g. wind farms that feed directly into their data centers. For instance, GCP provides [public information](https://cloud.google.com/sustainability/region-carbon) about the regional carbon grid intensity. It seems that AWS suggests using [electricity maps](https://app.electricitymaps.com/map) to get the regional grid carbon intensity value. However, since the API is not a free service, we opted to follow in the footsteps of the [Cloud Carbon Footprint’s](https://www.cloudcarbonfootprint.org/docs/methodology/#carbon-estimates-co2e) initial methodologies of using [carbon footprint](carbonfootprint.com), [EEA emissions factors](https://www.eea.europa.eu/data-and-maps/daviz/co2-emission-intensity-14/), and the [EPA’s eGRID2020 Data](https://www.epa.gov/egrid/download-data).
 
 So, based on the 2022 [EEA emissions factors](https://www.eea.europa.eu/data-and-maps/daviz/co2-emission-intensity-14#tab-chart_6) for eu-north-1 region (Sweden), we found a grid carbon intensity of `7 gCO2eq/kWh`.
 
-<br>
+<br/>
 
 ### Final Calculations
 
@@ -229,31 +234,31 @@ Therefore, we estimated the t3.micro VM CPU carbon emissions to be **0.007453764
 
 As a reminder, this is only for CPU. To get the total CO₂e emissions for a service running on the cloud we also need to add calculations for memory, storage, and networking; which we plan to show in future posts.
 
-<br>
+<br/>
 
 ## Additional work
 
-<br>
+<br/>
 
 #### GCP
 We have been working on creating a similar dataset implementation for GCE instances, but are waiting on responses from Google, and subsequently working on [getting access](https://github.com/re-cinq/emissions-data/blob/main/docs/HELP.md) to bare-metal infrastructure. We are following a similar approach to the Teads dataset, by using comparable machine architecture families and `turbostress` to get wattage data at various workloads. In the meantime, our service still calculated CPU CO₂e for GCE, by using a “fallback” method of leveraging the SPECpower min and max server wattage to estimate CPU power consumption, similar to the [CCF](https://www.cloudcarbonfootprint.org/docs/methodology/#compute).
 
-<br>
+<br/>
 
 #### Memory, Storage, Networking
 We are implementing a similar equation for calculating memory, but using the RAMWatt readings as the wattage variables. We will do a similar write up on that next. Then move onto storage and networking.
 
-<br>
+<br/>
 
 #### Embodied Emissions
 As part of the overall emissions equations, calculating the [embodied emissions](https://blog.re-cinq.com/posts/embodied-carbon/) is equally as important. We are in the process of writing up a methodology for how we go about calculating those, and it can be read shortly.
 
-<br>
+<br/>
 
 ## Conclusion
 Calculating energy consumption of VMs running in cloud data centers is nontrivial. We expect the work we are doing to be iterated on, and continually improving. We find the biggest challenge comes from the lack of transparency from cloud providers. Any help is greatly appreciated in growing our datasets, improving our calculations, or collaborating in any way.
 
-<br>
+<br/>
 
 ## Resources
   - [The MSRs of EC2](https://www.brendangregg.com/blog/2014-09-15/the-msrs-of-ec2.html)
