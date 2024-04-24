@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/cnkei/gospline"
@@ -28,7 +29,7 @@ func operationalEmissions(ctx context.Context, interval time.Duration, p *parame
 	case v1.CPU.String():
 		return cpu(ctx, interval, p)
 	case v1.Memory.String():
-		return memory(ctx, p)
+		return memory(ctx, interval, p)
 	case v1.Storage.String():
 		return errors.New("error storage is not yet being calculated")
 	case v1.Network.String():
@@ -91,18 +92,27 @@ func cpu(ctx context.Context, interval time.Duration, p *parameters) error {
 // memory is calculated based on the TEADs pkgRAM calculations over
 // various memory stress loads. Using the memory usage from the instance
 // we can get the estimated Power consumption of the instance
-func memory(ctx context.Context, p *parameters) error {
+func memory(ctx context.Context, interval time.Duration, p *parameters) error {
 	logger := log.FromContext(ctx)
 	var err error
 
-	if p.factors.RAMWatt == nil {
+	if reflect.DeepEqual(p.factors.RAMWatt, emptyWattage) {
 		return fmt.Errorf("not calculating memory - RAM wattage data not found")
 	}
 
-	p.metric.Energy, err = cubicSplineInterpolation(p.factors.PkgWatt, p.metric.Usage)
+	if p.metric.Usage == 0 {
+		return fmt.Errorf("no memory usage found")
+	}
+
+	p.metric.Energy, err = cubicSplineInterpolation(p.factors.RAMWatt, p.metric.Usage)
 	if err != nil {
 		return err
 	}
+
+	// RAMWatt is the energy consumption for a single GB of memory, so multiply
+	// the energy usage by the total instance memoryHours to get the energy consumption
+	memoryHours := (interval.Minutes() / float64(60)) * p.factors.MemoryGB
+	p.metric.Energy *= memoryHours
 
 	p.metric.Emissions = v1.NewResourceEmission(
 		p.metric.Energy*p.pue*p.grid,
