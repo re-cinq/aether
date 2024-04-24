@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -110,6 +111,9 @@ func (e *ExportPluginSystem) Load(ctx context.Context) error {
 
 	// Open the plugin directory.
 	files, err := os.ReadDir(e.Dir)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
