@@ -57,7 +57,8 @@ func params() *parameters {
 					Wattage:    1.00,
 				},
 			},
-			VCPU: 2.0,
+			VCPU:     2.0,
+			MemoryGB: 1,
 		},
 		embodiedFactor: 1000,
 	}
@@ -322,6 +323,7 @@ func TestCalculateMemory(t *testing.T) {
 	type testcase struct {
 		name      string
 		params    *parameters
+		interval  time.Duration // this is nanoseconds
 		emissions float64
 		energy    float64
 		hasErr    bool
@@ -333,8 +335,9 @@ func TestCalculateMemory(t *testing.T) {
 			return &testcase{
 				name:      "default t3.micro at 27%",
 				params:    params(),
-				energy:    0.00040240120731707316,
-				emissions: 0.0033801701414634144,
+				interval:  5 * time.Minute,
+				energy:    3.353343394308943e-05,
+				emissions: 0.0002816808451219512,
 			}
 		}(),
 		func() *testcase {
@@ -352,7 +355,7 @@ func TestCalculateMemory(t *testing.T) {
 		}(),
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			err := memory(context.TODO(), test.params)
+			err := memory(context.TODO(), test.interval, test.params)
 			actualEmissions := test.params.metric.Emissions.Value
 			actualEnergy := test.params.metric.Energy
 
