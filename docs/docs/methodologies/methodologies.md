@@ -209,7 +209,7 @@ We were unable to find a published PUE score from Amazon, so we made a conservat
 <br/>
 
 ### Grid Carbon Intensity Coefficient
-The grid carbon intensity is a coefficient value of a power grid’s carbon emissions. Some providers have specific information regarding what kind of energy is being utilized in each data center e.g. wind farms that feed directly into their data centers. For instance, GCP provides [public information](https://cloud.google.com/sustainability/region-carbon) about the regional carbon grid intensity. It seems that AWS suggests using [electricity maps](https://app.electricitymaps.com/map) to get the regional grid carbon intensity value. However, since the API is not a free service, we opted to follow in the footsteps of the [Cloud Carbon Footprint’s](https://www.cloudcarbonfootprint.org/docs/methodology/#carbon-estimates-co2e) initial methodologies of using [carbon footprint](carbonfootprint.com), [EEA emissions factors](https://www.eea.europa.eu/data-and-maps/daviz/co2-emission-intensity-14/), and the [EPA’s eGRID2020 Data](https://www.epa.gov/egrid/download-data).
+The grid carbon intensity is a coefficient value of a power grid’s carbon emissions. Some providers have specific information regarding what kind of energy is being utilized in each data center e.g. wind farms that feed directly into their data centers. For instance, GCP provides [public information](https://cloud.google.com/sustainability/region-carbon) about the regional carbon grid intensity. It seems that AWS suggests using [electricity maps](https://app.electricitymaps.com/map) to get the regional grid carbon intensity value. However, since the API is not a free service, we opted to follow in the footsteps of the [Cloud Carbon Footprint’s](https://www.cloudcarbonfootprint.org/docs/methodology/#carbon-estimates-co2e) initial methodologies of using [carbon footprint][1], [EEA emissions factors](https://www.eea.europa.eu/data-and-maps/daviz/co2-emission-intensity-14/), and the [EPA’s eGRID2020 Data](https://www.epa.gov/egrid/download-data).
 
 So, based on the 2022 [EEA emissions factors](https://www.eea.europa.eu/data-and-maps/daviz/co2-emission-intensity-14#tab-chart_6) for eu-north-1 region (Sweden), we found a grid carbon intensity of `7 gCO2eq/kWh`.
 
@@ -274,3 +274,6 @@ Calculating energy consumption of VMs running in cloud data centers is nontrivia
   - [Virtual Machine Power Modelling in Multi-tenant Ecosystems: Challenges and Pitfalls](https://www.dpss.inesc-id.pt/~lveiga/papers/ICT-Energy_Letters_10_lsharifi.pdf)
   - [The problem with cubic splines](https://www.proven-reserves.com/CubicSplines.php)
   - [Univariate Interpolation-based Modeling of Power and Performance](https://eudl.eu/doi/10.4108/eai.14-12-2015.2262579)
+
+
+[1]: https://carbonfootprint.com

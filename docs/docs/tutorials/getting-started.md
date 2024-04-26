@@ -16,5 +16,5 @@ Due to the variability of cloud providers, each cloud provider works slightly
 differently so please see the [sources][1] for more information on
 the different source types
 
-[1]: ../sources/sources
+[1]: ../sources/sources.md
 
