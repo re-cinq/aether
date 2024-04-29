@@ -51,6 +51,14 @@ proxy:
 # Aether support pulling data from multiple providers
 # Each provider has a set of configurations
 providers:
+  # Google Cloud Provider
+  gcp:
+    accounts:
+      # List of projects to scrape
+      - project: 'my-google-cloud-project-id'
+        credentials: # optional, defaults to GOOGLE_APPLICATION_CREDENTIALS
+          filePaths:
+            - '/credentials/application_default_credentials.json'
   # AWS Provider  
   aws:
     # List of regions to read the cloud watch metrics for

@@ -3,20 +3,15 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Aether',
+  title: 'aether',
   tagline: 'Computational Carbon Measurements',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://your-docusaurus-site.example.com',
+  url: 'https://aether.green',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
-
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: 're-cinq', // Usually your GitHub org/user name.
-  projectName: 'aether', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -46,8 +41,11 @@ const config: Config = {
   themeConfig: {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
+    colorMode: {
+      defaultMode: 'dark',
+    },
     navbar: {
-      title: 'Aether',
+      title: 'aether',
       logo: {
         alt: 'Aether Logo',
         src: 'img/logo.svg',
@@ -60,6 +58,11 @@ const config: Config = {
           label: 'Documentation',
         },
         {
+          href: 'https://blog.re-cinq.com',
+          label: 'Blog',
+          position: 'left',
+        },
+        {
           href: 'https://github.com/re-cinq/aether',
           label: 'GitHub',
           position: 'right',
@@ -70,16 +73,15 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Links',
           items: [
             {
-              label: 'Docs',
-              to: '/docs/intro',
+              label: 're:cinq',
+              to: 'https://re-cinq.com',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} re:cinq, ApS. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
