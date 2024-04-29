@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: "How we calculate carbon emissions"
+title: "Calculations"
 ---
 
 ![title](/img/Byte-Calculating.webp)
