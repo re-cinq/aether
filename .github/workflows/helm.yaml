@@ -23,7 +23,5 @@ jobs:
 
       - name: run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
-        with:
-          owner: re-cinq
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
