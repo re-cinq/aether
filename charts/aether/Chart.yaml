@@ -1,6 +1,6 @@
 apiVersion: v2
 name: aether
-description: Monitoring carbon emissions of your infrastructure
+description: Helm chart for aether
 
 # A chart can be either an 'application' or a 'library' chart.
 #
