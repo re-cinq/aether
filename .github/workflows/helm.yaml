@@ -1,0 +1,29 @@
+name: helm
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: run chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
+        with:
+          owner: re-cinq
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

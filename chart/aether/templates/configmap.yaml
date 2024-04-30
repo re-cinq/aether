@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "aether.labels" . | nindent 4 }}
+  name: {{ include "aether.fullname" . }}
+data:
+  local.yaml: |
+    {{- toYaml .Values.config | nindent 4 }}
