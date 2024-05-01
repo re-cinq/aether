@@ -53,7 +53,7 @@ and then we can create a kubernetes secret from this file
 
 ```bash
 kubectl create secret generic credentials \
-    -from-file=credentials.json
+    --from-file=credentials.json
 ```
 
 once this secret has been created you can update your `values.yaml`
