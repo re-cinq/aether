@@ -25,4 +25,5 @@ words:
   - turbostress
   - gcloud 
   - gserviceaccount
-
+  - configmap
+  - servicemonitors
