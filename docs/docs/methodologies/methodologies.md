@@ -30,7 +30,7 @@ We have stored the Amazon EC2 instance data from Teads as a [YAML](https://githu
 
 I *highly* recommend reading their blog posts for an informative explanation of how the data is collected and calculated:
  - [Estimating AWS EC2 Instances Power Consumption](https://medium.com/teads-engineering/estimating-aws-ec2-instances-power-consumption-c9745e347959)
- - [Building an AWS EC2 Cabon Emissions Dataset](https://medium.com/teads-engineering/building-an-aws-ec2-carbon-emissions-dataset-3f0fd76c98ac)
+ - [Building an AWS EC2 Carbon Emissions Dataset](https://medium.com/teads-engineering/building-an-aws-ec2-carbon-emissions-dataset-3f0fd76c98ac)
 
 <br/>
 
@@ -264,12 +264,12 @@ Calculating energy consumption of VMs running in cloud data centers is nontrivia
   - [The MSRs of EC2](https://www.brendangregg.com/blog/2014-09-15/the-msrs-of-ec2.html)
   - [turbostat](https://www.linux.org/docs/man8/turbostat.html)
   - [Estimating AWS EC2 Instances Power Consumption](https://medium.com/teads-engineering/estimating-aws-ec2-instances-power-consumption-c9745e347959)
-  - [Building an AWS EC2 Cabon Emissions Dataset](https://medium.com/teads-engineering/building-an-aws-ec2-carbon-emissions-dataset-3f0fd76c98ac)
+  - [Building an AWS EC2 Carbon Emissions Dataset](https://medium.com/teads-engineering/building-an-aws-ec2-carbon-emissions-dataset-3f0fd76c98ac)
   - [Cloud Carbon Footprint](https://www.cloudcarbonfootprint.org/docs/methodology)
   - [Teads Dataset](https://docs.google.com/spreadsheets/d/1DqYgQnEDLQVQm5acMAhLgHLD8xXCG9BIrk-_Nv6jF3k/edit)
   - [Teads AWS YAML](https://github.com/re-cinq/emissions-data/blob/main/data/v2/aws-instances.yaml)
   - [cloud-carbon GitHub repo](https://github.com/re-cinq/cloud-carbon)
-  - [Exploring Keplers Potential Unveiling Cloud Application Power Consumption](https://www.cncf.io/blog/2023/10/11/exploring-keplers-potentials-unveiling-cloud-application-power-consumption/)
+  - [Exploring Kepler's Potential Unveiling Cloud Application Power Consumption](https://www.cncf.io/blog/2023/10/11/exploring-keplers-potentials-unveiling-cloud-application-power-consumption/)
   - [Energy Consumption Model for Virtual Machines in Cloud Data Centre](https://www.warse.org/IJATCSE/static/pdf/file/ijatcse05914sl2020.pdf)
   - [Virtual Machine Power Modelling in Multi-tenant Ecosystems: Challenges and Pitfalls](https://www.dpss.inesc-id.pt/~lveiga/papers/ICT-Energy_Letters_10_lsharifi.pdf)
   - [The problem with cubic splines](https://www.proven-reserves.com/CubicSplines.php)
