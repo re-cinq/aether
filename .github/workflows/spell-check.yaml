@@ -12,5 +12,5 @@ jobs:
         name: spell check
         with:
           files: |
-            docs/docs/*.md
+            docs/**/*.md
           config: .cspell.yaml 

@@ -11,7 +11,7 @@ calculates emissions in real-time based on factors. There are three main
 components to Aether
 
 - [Sources][1]
-- Calulation engine
+- Calculation engine
 - Exporters
 
 ![Architecture](/img/architecture.webp)
