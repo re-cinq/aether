@@ -40,6 +40,9 @@ func InitConfig(ctx context.Context) {
 	viper.SetDefault("cache.expiry", "3600m")
 	viper.SetDefault("plugins.exporterDir", "/plugins/exporters")
 	viper.SetDefault("plugins.sourceDir", "/plugins/sources")
+	viper.SetDefault("api.address", "0.0.0.0")
+	viper.SetDefault("api.port", "8080")
+	viper.SetDefault("providersConfig.scrapingInterval", "5m")
 
 	// Find and read the config file
 	err := viper.ReadInConfig()
