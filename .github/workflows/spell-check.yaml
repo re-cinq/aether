@@ -13,4 +13,5 @@ jobs:
         with:
           files: |
             docs/**/*.md
+            *.md
           config: .cspell.yaml 
