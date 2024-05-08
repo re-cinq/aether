@@ -117,7 +117,6 @@ func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 	specs, ok := factor.Embodied[instance.Kind]
 	if !ok {
 		c.logger.Error("failed finding instance in factor data", "instance", instance.Name, "kind", instance.Kind)
-		return
 	}
 
 	params := &parameters{
