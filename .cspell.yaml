@@ -27,3 +27,4 @@ words:
   - gserviceaccount
   - configmap
   - servicemonitors
+  - OTEL
