@@ -16,6 +16,34 @@ secretName: ""
 
 config: {}
 
+# some plugins need extra environment variables
+# you can set them here
+# example
+# env:
+# - name: EXAMPLE_ENV
+#   value: foobar
+env: []
+
+# plugin configuration
+plugins:
+  # image used to download the binaries
+  # requires wget
+  image:
+    repository: alpine
+    pullPolicy: IfNotPresent
+    tag: "3.15" 
+
+  # a list of links that get plugins from
+  # example:
+  # exporters:
+  # - link: https://example.com/example
+  #   name: example
+  # sources:
+  # - link: https://example.com/example
+  #   name: example
+  exporters: []
+  sources: []
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
