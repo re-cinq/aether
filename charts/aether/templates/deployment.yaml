@@ -36,6 +36,51 @@ spec:
           configMap:
             defaultMode: 420
             name: {{ include "aether.fullname" . }}
+        {{- if .Values.plugins.exporters }}
+        - name: exporters
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.plugins.sources }}
+        - name: sources
+          emptyDir: {}
+        {{- end }}
+      initContainers:
+      {{- if .Values.plugins.exporters }}
+      - name: download-exporters
+        image: "{{ .Values.plugins.image.repository }}:{{ .Values.plugins.image.tag }}"
+        command:
+        - sh
+        - -c
+        args:
+        - echo Downloading Exporters;
+          {{- range .Values.plugins.exporters }}
+          echo Fetching "{{ .link }}";
+          wget "{{ .link }}" -O /exporters/{{ .name }};
+          chmod 755 /exporters/{{ .name }};
+          {{- end }}
+          echo Finished downloading;
+        volumeMounts:
+        - mountPath: /exporters
+          name: exporters
+      {{- end }}
+      {{- if .Values.plugins.sources }}
+      - name: download-sources
+        image: "{{ .Values.plugins.image.repository }}:{{ .Values.plugins.image.tag }}"
+        command:
+        - sh
+        - -c
+        args:
+        - echo Downloading Sources;
+          {{- range .Values.plugins.exporters }}
+          echo Fetching "{{ .link }}";
+          wget "{{ .link }}" -O /sources/{{ .name }};
+          chmod 755 /exporters/{{ .name }};
+          {{- end }}
+          echo Finished downloading;
+        volumeMounts:
+        - mountPath: /sources
+          name: sources
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -49,12 +94,21 @@ spec:
           env:
           - name: AETHER_CONFIG
             value: local
+            {{- toYaml .Values.env | nindent 10 }}
           volumeMounts:
             - mountPath: /conf
               name: config
             {{- if .Values.secretName }}
             - name: credentials
               mountPath: /etc/secrets
+            {{- end }}
+            {{- if .Values.plugins.exporters }}
+            - mountPath: /plugins/exporters 
+              name: exporters
+            {{- end }}
+            {{- if .Values.plugins.sources }}
+            - mountPath: /plugins/sources
+              name: sources
             {{- end }}
           livenessProbe:
             httpGet:
