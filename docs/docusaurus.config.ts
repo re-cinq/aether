@@ -45,7 +45,7 @@ const config: Config = {
       defaultMode: 'dark',
     },
     navbar: {
-      title: 'aether',
+      title: '',
       logo: {
         alt: 'Aether Logo',
         src: 'img/logo.svg',

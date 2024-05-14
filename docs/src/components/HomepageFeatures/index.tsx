@@ -10,32 +10,32 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
+    title: 'Open Source',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Aether was designed to be transparent and open, this way we can all work together to get the most accurate
+        emissions data, and make it available to everyone!
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Extendable',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Do you want to export your data to another platform? How about integrate a custom source? We have created a 
+        plugin system so you can handle all usecases
       </>
     ),
   },
   {
-    title: 'Powered by React',
+    title: 'Easy to Use',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        The mission is to make calculating your emissions accessible. If you have any questions or are having difficulty setting 
+        aether up, let us know on Github!
       </>
     ),
   },
