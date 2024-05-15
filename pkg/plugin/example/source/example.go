@@ -25,10 +25,10 @@ type ExampleSource struct {
 // Fetch is what gets run by aether, it should return a list of instances with
 // the metrics attached to them (CPU, Memory, Networking, Storage)
 // Your business logic should be handeled here
-func (e *ExampleSource) Fetch(ctx context.Context) ([]*v1.Instance, error) {
+func (e *ExampleSource) Fetch(ctx context.Context) (map[string]*v1.Instance, error) {
 	// business logic here
-	return []*v1.Instance{
-		{
+	return map[string]*v1.Instance{
+		"example": {
 			ID:       "123456789",
 			Provider: v1.Custom,
 			Service:  "On-Prem",
