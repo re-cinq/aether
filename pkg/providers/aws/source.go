@@ -47,7 +47,7 @@ func Sources(ctx context.Context, cfg *config.Provider) []v1.Source {
 
 // Fetch returns a slice of instances, this is to adhere to the sources
 // interface
-func (s *Source) Fetch(ctx context.Context) ([]*v1.Instance, error) {
+func (s *Source) Fetch(ctx context.Context) (map[string]*v1.Instance, error) {
 	if s.Region == "" {
 		return nil, errors.New("no region set")
 	}
@@ -64,12 +64,7 @@ func (s *Source) Fetch(ctx context.Context) ([]*v1.Instance, error) {
 		return nil, fmt.Errorf("failed getting instance metrics: %v", err)
 	}
 
-	var instances []*v1.Instance
-	for _, instance := range s.Client.instancesMap {
-		instances = append(instances, instance)
-	}
-
-	return instances, nil
+	return s.Client.instancesMap, nil
 }
 
 // Stop is used to gracefully shutdown a source
