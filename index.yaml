@@ -3,6 +3,16 @@ entries:
   aether:
   - apiVersion: v2
     appVersion: 0.0.1-alpha.7
+    created: "2024-05-15T07:40:19.999027549Z"
+    description: Helm chart for aether
+    digest: 5d3faa6c694a2a407d433d01cc256da3dfeadbd55aa1b06b8744291586e9dca7
+    name: aether
+    type: application
+    urls:
+    - https://github.com/re-cinq/aether/releases/download/aether-0.1.1/aether-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: 0.0.1-alpha.7
     created: "2024-04-30T11:41:59.336799737Z"
     description: Monitoring carbon emissions of your infrastructure
     digest: 9a185a5d34c13410dc5e19ec640b77f6b474e6960d10fab13b65becb60f7eb33
@@ -11,4 +21,4 @@ entries:
     urls:
     - https://github.com/re-cinq/aether/releases/download/aether-0.1.0/aether-0.1.0.tgz
     version: 0.1.0
-generated: "2024-04-30T11:41:59.336810267Z"
+generated: "2024-05-15T07:40:19.999059569Z"
