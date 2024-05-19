@@ -14,7 +14,9 @@ image:
 # this secret will be volumed under `/etc/secrets`
 secretName: ""
 
-config: {}
+config:
+  providersConfig:
+    scrapingInterval: 5m
 
 # some plugins need extra environment variables
 # you can set them here
