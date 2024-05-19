@@ -71,12 +71,12 @@ spec:
         - -c
         args:
         - echo Downloading Sources;
-          {{- range .Values.plugins.exporters }}
+          {{- range .Values.plugins.sources }}
           echo Fetching "{{ .link }}";
           wget "{{ .link }}" -O /sources/{{ .name }};
-          chmod 755 /exporters/{{ .name }};
+          chmod 755 /sources/{{ .name }};
+          echo Finished downloading {{ .name }};
           {{- end }}
-          echo Finished downloading;
         volumeMounts:
         - mountPath: /sources
           name: sources
