@@ -109,19 +109,47 @@ func (c *CalculatorHandler) handleEvent(e *bus.Event) {
 		c.logger.Error("region not found in factors", "region", instance.Region, "provider", instance.Provider)
 		return
 	}
-
 	// TODO: hotfix until updated in emissions data
 	// convert gridCO2e from metric tonnes to grams
 	grid *= (1000 * 1000)
 
-	specs, ok := factor.Embodied[instance.Kind]
-	if !ok {
-		c.logger.Error("failed finding instance in factor data", "instance", instance.Name, "kind", instance.Kind)
+	// energy consumption is already computed for kepler, so we just need to calculate
+	// the carbon emissions
+	// TODO this is a hack until the energy consumption is calculator is separated from
+	// the emissions calculator
+	if instance.Service == "kepler" {
+		for _, m := range instance.Metrics {
+			m.Emissions = v1.NewResourceEmission(
+				m.Energy*factor.AveragePUE*grid,
+				v1.GCO2eq,
+			)
+			if err != nil {
+				c.logger.Error("error calulating emissions", "type", m.Name, "error", err)
+				continue
+			}
+			// update the instance metrics
+			instance.Metrics.Upsert(&m)
+		}
+
+		// We publish the interface on the bus once its been calculated
+		if err := c.Bus.Publish(&bus.Event{
+			Type: v1.EmissionsCalculatedEvent,
+			Data: instance,
+		}); err != nil {
+			c.logger.Error("failed publishing instance after calculation", "instance", instance.Name, "error", err)
+		}
+		return
 	}
 
 	params := &parameters{
 		grid: grid,
 		pue:  factor.AveragePUE,
+	}
+
+	specs, ok := factor.Embodied[instance.Kind]
+	if !ok {
+		c.logger.Error("failed finding instance in factor data", "instance", instance.Name, "kind", instance.Kind)
+		return
 	}
 
 	if d, ok := instanceData[instance.Kind]; ok {
