@@ -33,7 +33,7 @@ func NewHandler(ctx context.Context, b *bus.Bus) *PromHandler {
 
 	meter := metric.NewMeterProvider(
 		metric.WithReader(exporter),
-	).Meter("cloud-carbon")
+	).Meter("aether")
 
 	return &PromHandler{
 		Bus:    b,
