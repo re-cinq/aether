@@ -30,7 +30,7 @@ env:
 # to the binary
 plugins:
   sources:
-    - link: https://github.com/re-cinq/aether-kepler-source/tree/[version]
+    - link: https://github.com/re-cinq/aether-kepler-source/releases/download/[version]/kepler
       name: kepler 
 ```
 
