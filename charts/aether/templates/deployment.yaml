@@ -94,7 +94,9 @@ spec:
           env:
           - name: AETHER_CONFIG
             value: local
+            {{- if .Values.env }}
             {{- toYaml .Values.env | nindent 10 }}
+            {{- end }}
           volumeMounts:
             - mountPath: /conf
               name: config
