@@ -2,7 +2,6 @@ package amazon
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -75,7 +74,8 @@ func (c *Client) cpuMetrics(ctx context.Context, region string, input *cloudwatc
 	for _, metric := range output.MetricDataResults {
 		instanceID := aws.ToString(metric.Label)
 		if instanceID == "Other" {
-			return errors.New("error bad query passed to GetMetricData - instanceID not found in label")
+			logger.Warn("instanceID not found in cloudwatch query. Skipping computation", "instanceID", instanceID, "query", cpuExpression)
+			continue
 		}
 
 		if len(metric.Values) > 0 {
@@ -131,7 +131,8 @@ func (c *Client) memoryMetrics(ctx context.Context, region string, input *cloudw
 	for _, metric := range output.MetricDataResults {
 		instanceID := aws.ToString(metric.Label)
 		if instanceID == "Other" {
-			return errors.New("error bad query passed to GetMetricData - instanceID not found in label")
+			logger.Warn("instanceID not found in cloudwatch query. Skipping computation", "instanceID", instanceID, "query", memExpression)
+			continue
 		}
 
 		if len(metric.Values) > 0 {
