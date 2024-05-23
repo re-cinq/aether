@@ -49,6 +49,12 @@ configure either using helm values
 | config     | The yaml config to setup aether with, please see the [config docs][2]        | {}      |
 |            |                                                                              |         |
 
+> Note: If you want metrics to be exported to prometheus you will need to deploy an aether [ServiceMonitor][3].
+> More information can be found in the [grafana documentation][4].
+
 [1]: ../sources/sources.md
 [2]: ../config.md
+[3]: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/design.md#servicemonitor
+[4]: grafana.md
+```
 
