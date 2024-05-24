@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   aether:
   - apiVersion: v2
+    appVersion: 0.0.1-alpha.10
+    created: "2024-05-24T13:27:54.370576534Z"
+    description: Helm chart for aether
+    digest: 380cdf20d42206af7faac90a9e28160e6f778677297b82fb489723b761c69779
+    name: aether
+    type: application
+    urls:
+    - https://github.com/re-cinq/aether/releases/download/aether-0.1.3/aether-0.1.3.tgz
+    version: 0.1.3
+  - apiVersion: v2
     appVersion: 0.0.1-alpha.9
     created: "2024-05-23T12:00:09.846923726Z"
     description: Helm chart for aether
@@ -31,4 +41,4 @@ entries:
     urls:
     - https://github.com/re-cinq/aether/releases/download/aether-0.1.0/aether-0.1.0.tgz
     version: 0.1.0
-generated: "2024-05-23T12:00:09.846939836Z"
+generated: "2024-05-24T13:27:54.370596281Z"
