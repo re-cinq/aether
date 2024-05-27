@@ -75,6 +75,71 @@ providers:
       - 'ContainerInsights' # EKS
 ```
 
+## ServiceAccount Setup
+
+To set up a service account for aether running on Amazon EKS to query the EC2 and CloudWatch metrics API, follow these steps:
+
+The service account needs to have the following policy actions:
+* `ec2:DescribeInstances`
+* `cloudwatch:GetMetricData`
+
+1. Create an IAM OIDC Identity Provider:
+Follow these [steps][4] to see if you have an OIDC identity provider already set up, and if not how to set one up.
+
+2. Create the IAM Policy file:
+Create a file named `aether-iam-policy.json` with the following policy:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "cloudwatch:GetMetricData"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+3. Create the IAM Policy:
+```bash
+aws iam create-policy --policy-name aether-read-metrics --policy-document file://aether-iam-policy.json
+```
+
+4. Create and attach the IAM policy to the service account:
+
+By default, the aether helm install creates an empty service account for you, named `aether`
+
+There are multiple ways to attach the IAM policy to the service account:
+* If eksctl is installed, you can use the following command to create the IAM role and service account.
+
+```bash
+eksctl create iamserviceaccount \
+  --name your-service-account \
+  --namespace default \
+  --cluster your-cluster-name \
+  --attach-policy-arn arn:aws:iam::account-id:policy/aether-read-metrics \
+  --approve
+```
+> note: If you created a role for the SA, then attach that with `--role`. Otherwise, eksctl will create a role for you.
+  To use the default `aether` service account you need to append the command with `--override-existing-serviceaccounts`
+
+* Follow the [AWS documentation][5] to use the aws client.
+
+* Create a role with the policy via the UI and annotate the service account with the role ARN
+```bash
+kubectl annotate serviceaccount aether \
+  eks.amazonaws.com/role-arn=arn:aws:iam::your-account-id:role/your-role-name
+```
+
+5. Validate that the service account has the role annotated. For additional validation tactics, refer to the AWS documentation.
+```bash
+kubectl get serviceaccount aether -o yaml
+```
+
 ### CloudWatch
 
 Currently aether only supports metric scraping from [CloudWatch][2], which incurs costs. We are planning to
@@ -87,3 +152,5 @@ So to get memory energy consumption, the [CWAgent][3] needs to be installed on i
 [1]: https://aws.github.io/aws-sdk-go-v2/docs/configuring-sdk
 [2]: https://aws.amazon.com/cloudwatch/
 [3]: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html
+[4]: https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html
+[5]: https://docs.aws.amazon.com/eks/latest/userguide/associate-service-account-role.html
