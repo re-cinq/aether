@@ -43,11 +43,14 @@ helm upgrade --install aether aether/aether -f values.yaml
 The default installation has no sources setup, therefore you will need to
 configure either using helm values
 
-| value      | description                                                                  | default |
-|------------|------------------------------------------------------------------------------|---------|
-| secretName | The name of the secret to volume into aether, generally used for credentials | ""      |
-| config     | The yaml config to setup aether with, please see the [config docs][2]        | {}      |
-|            |                                                                              |         |
+**NOTE**: It is recommended to leave aether running on port 8080 in kubernetes, as changing
+this you will need to update the service port in the config as well.
+
+| value             | description                                                                                                                     | default |
+|------------       |------------------------------------------------------------------------------                                                   |---------|
+| secretName        | The name of the secret to volume into aether, generally used for credentials                                                    | ""      |
+| config            | The yaml config to setup aether with, please see the [config docs][2] for more information on values that can go under this key | {}      |
+| service.port      | The service port, note this will need to match with `config.api.port`                                                           | 8080    |
 
 > Note: If you want metrics to be exported to prometheus you will need to deploy an aether [ServiceMonitor][3].
 > More information can be found in the [grafana documentation][4].
