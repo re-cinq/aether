@@ -91,7 +91,7 @@ func (m *Manager) Fetch(ctx context.Context) {
 				wg.Done()
 				return
 			}
-
+			logger.Debug("publishing instances", "instance count", len(instances))
 			err = m.publishInstances(instances)
 			if err != nil {
 				logger.Error("failed publishing instances", "error", err)
