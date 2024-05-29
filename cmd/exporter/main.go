@@ -74,7 +74,7 @@ func main() {
 	setLogLevel(lvl, config.AppConfig().LogLevel)
 
 	// Load exporter plugins
-	logger.Info("loading plugins")
+	logger.Info("loading exporters", "dir", config.AppConfig().Plugins.ExporterDir)
 	pluginsystem := &plugin.ExportPluginSystem{
 		Dir: config.AppConfig().Plugins.ExporterDir,
 	}
@@ -84,9 +84,11 @@ func main() {
 		logger.Error("failed to load exporter plugin system", "error", err)
 		os.Exit(1)
 	}
+	logger.Info("finished loading exporters", "output",
+		fmt.Sprintf("%d loaded", len(pluginsystem.Plugins)))
 
 	// Load source plugins
-	logger.Info("loading sources")
+	logger.Info("loading sources", "dir", config.AppConfig().Plugins.SourceDir)
 	sourcePluginSystem := &plugin.SourcePluginSystem{
 		Dir: config.AppConfig().Plugins.SourceDir,
 	}
@@ -96,6 +98,8 @@ func main() {
 		logger.Error("failed to load exporter plugin system", "error", err)
 		os.Exit(1)
 	}
+	logger.Info("finished loading sources", "output",
+		fmt.Sprintf("%d loaded", len(sourcePluginSystem.Plugins)))
 
 	// Init the application bus
 	b := bus.New()

@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
@@ -133,6 +134,12 @@ func (e *ExportPluginSystem) Load(ctx context.Context) error {
 			},
 			AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 			Cmd:              exec.Command(pluginPath),
+			Logger: hclog.New(&hclog.LoggerOptions{
+				Name:       "exporter",
+				Output:     os.Stdout,
+				Level:      hclog.Debug,
+				JSONFormat: true,
+			}),
 		})
 
 		// Start the plugin process.
