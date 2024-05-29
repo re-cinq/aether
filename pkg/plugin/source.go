@@ -166,7 +166,7 @@ func (s *SourcePluginSystem) Load(ctx context.Context) error {
 			Logger: hclog.New(&hclog.LoggerOptions{
 				Name:       "source",
 				Output:     os.Stdout,
-				Level:      hclog.Debug,
+				Level:      getLogLevel(),
 				JSONFormat: true,
 			}),
 		})
