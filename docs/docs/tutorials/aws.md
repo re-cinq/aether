@@ -61,18 +61,19 @@ provider information.
 providers:
   # AWS Provider
   aws:
+    accounts:
     # List of regions to read the metrics for
-    regions:
-      - us-east-2
-      - us-west-1
+    - regions:
+        - us-east-2
+        - us-west-1
 
-    # A namespace is a container for CloudWatch metrics.
-    # Metrics in different namespaces are isolated from each other,
-    # so that metrics from different applications are not mistakenly aggregated into the same statistics.
-    # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/aws-services-cloudwatch-metrics.html
-    namespaces:
-      - 'AWS/EC2' # EC2
-      - 'ContainerInsights' # EKS
+      # A namespace is a container for CloudWatch metrics.
+      # Metrics in different namespaces are isolated from each other,
+      # so that metrics from different applications are not mistakenly aggregated into the same statistics.
+      # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/aws-services-cloudwatch-metrics.html
+      namespaces:
+        - 'AWS/EC2' # EC2
+        - 'ContainerInsights' # EKS
 ```
 
 ## ServiceAccount Setup
