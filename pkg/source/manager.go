@@ -105,11 +105,11 @@ func (m *Manager) Fetch(ctx context.Context) {
 
 // publishInstances is a helper that publishes each instance in a slice on the
 // bus under the MetricsCollectedEvent
-func (m *Manager) publishInstances(instances []*v1.Instance) error {
-	for i := range instances {
+func (m *Manager) publishInstances(instances map[string]*v1.Instance) error {
+	for _, i := range instances {
 		err := m.bus.Publish(&bus.Event{
 			Type: v1.MetricsCollectedEvent,
-			Data: *instances[i],
+			Data: *i,
 		})
 		if err != nil {
 			return err
